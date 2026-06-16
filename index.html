@@ -2,928 +2,915 @@
 <html lang="ko">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>부루</title>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+ <title>부루</title>
 
-  <link rel="stylesheet" as="style" crossorigin
-    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
-  <link rel="stylesheet" href="./style.css">
+ <link rel="stylesheet" as="style" crossorigin
+ href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+ <link rel="stylesheet" href="./style.css">
 
-  <script
-    src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=9698fb632fa0dfcf26667bdb0e31dbb4&libraries=services&autoload=false"></script>
+ <script
+ src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=9698fb632fa0dfcf26667bdb0e31dbb4&libraries=services&autoload=false"></script>
 </head>
 
 <body>
-  <div id="modalBackdrop" class="modal-backdrop" onclick="window.closeModals();"></div>
-
-  <div id="splash-screen">
-    <div class="splash-container">
-      <div class="splash-wave"></div>
-      <div class="splash-wave wave-2"></div>
-      <div class="splash-wave wave-3"></div>
-      
-      <div class="splash-logo-wrapper">
-        <svg width="120" height="180" viewBox="0 0 36 54" xmlns="http://www.w3.org/2000/svg" class="splash-svg-element">
-          <path stroke-miterlimit="4" stroke-width="2" stroke="var(--primary-color)" fill="var(--primary-color)" d="m17.92332,2.23007c10.56135,0 17.35337,7.23988 17.35337,16.73988c0,6.3 -3.7,12.3 -7,18l-4.7767,7.06625l-10.82147,-14.71349l9.9681,6.32147l5.03742,-9.40184c3.34356,-5.96319 1.81902,-13.27301 -2.79755,-16.35276c-4.61656,-3.07976 -9.56595,-2.69938 -13.69325,0.6227c-4.1273,3.32208 -5.29064,10.78758 -3.27837,15.73735c2.01227,4.94977 1.37193,3.3194 2.89187,6.0878l10.53198,15.06992l-3.26204,5.3626l-11.47546,-16.21472c-3,-4.57669 -6.02454,-7.93865 -5.7454,-17.57975c0.27914,-9.6411 6.50613,-16.7454 17.06748,-16.7454z"/>
-          <path stroke="var(--primary-color)" fill="#ffffff" d="m18.38343,27.7546c-3.94028,0 -7.1319,-3.53481 -7.1319,-7.89877c0,-4.36396 3.19162,-7.89877 7.1319,-7.89877c3.94028,0 7.1319,3.53481 7.1319,7.89877c0,4.36396 -3.19162,7.89877 -7.1319,7.89877z" stroke-width="2"/>
-          <text x="18.5" y="21.5" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="5" font-weight="900" fill="var(--primary-color)" text-anchor="middle" letter-spacing="0.2">부루</text>
-        </svg>
-      </div>
-    </div>
-  </div>
-  <div id="app-container">
-    <main id="content-area">
-
-      <div id="tab-home" class="tab-content padded-tab">
-        
-        <div class="hc-select-outer-container">
-          <div class="hc-select-wrapper">
-            <select id="hcHomeFavoriteSelect" onchange="window.handleHomeFavoriteChange(this)" class="hc-home-select">
-              <option value="">즐겨찾기 포인트 선택</option>
-            </select>
-            <div class="hc-select-arrow"></div>
-          </div>
-          <span id="hcHomeRefreshTime" class="hc-refresh-time">00:00 기준</span>
-        </div>
-        
-        <div class="hc-main-card">
-          <div class="hc-premium-card">
-            <svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
-              
-              <defs>
-                <linearGradient id="hc-sky-day" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2a75e6" /><stop offset="100%" stop-color="#a2d2ff" /></linearGradient>
-                <linearGradient id="hc-sea-day" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#006699" /><stop offset="100%" stop-color="#013a63" /></linearGradient>
-                <linearGradient id="hc-island-day" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a364f" /><stop offset="100%" stop-color="#0f1e2e" /></linearGradient>
-                <linearGradient id="hc-yunsul-day" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ffffff" stop-opacity="0" /><stop offset="50%" stop-color="#ffffff" stop-opacity="0.45" /><stop offset="100%" stop-color="#ffffff" stop-opacity="0" /></linearGradient>
-
-                <linearGradient id="hc-sky-sunset" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#161221" /><stop offset="40%" stop-color="#36183b" /><stop offset="70%" stop-color="#662037" /><stop offset="90%" stop-color="#a6382e" /><stop offset="100%" stop-color="#d46f34" /></linearGradient>
-                <linearGradient id="hc-sea-sunset" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#210e1a" /><stop offset="40%" stop-color="#100c1c" /><stop offset="100%" stop-color="#020104" /></linearGradient>
-                <linearGradient id="hc-island-sunset" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0c0712" /><stop offset="100%" stop-color="#010002" /></linearGradient>
-                <linearGradient id="hc-yunsul-sunset" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#d46f34" stop-opacity="0" /><stop offset="50%" stop-color="#ffffff" stop-opacity="0.75" /><stop offset="100%" stop-color="#d46f34" stop-opacity="0" /></linearGradient>
-
-                <linearGradient id="hc-sky-night" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#030408" /><stop offset="100%" stop-color="#0d111d" /></linearGradient>
-                <linearGradient id="hc-sea-night" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#050812" /><stop offset="100%" stop-color="#000102" /></linearGradient>
-                <linearGradient id="hc-island-night" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#06070c" /><stop offset="100%" stop-color="#000001" /></linearGradient>
-                <linearGradient id="hc-yunsul-night" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#a5f3fc" stop-opacity="0" /><stop offset="50%" stop-color="#ffffff" stop-opacity="0.22" /><stop offset="100%" stop-color="#a5f3fc" stop-opacity="0" /></linearGradient>
-
-                <linearGradient id="hc-sky-snow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#404756" /><stop offset="100%" stop-color="#7a8599" /></linearGradient>
-                <linearGradient id="hc-sea-snow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1c2331" /><stop offset="100%" stop-color="#0d1117" /></linearGradient>
-                <linearGradient id="hc-island-snow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#161a24" /><stop offset="100%" stop-color="#0b0d12" /></linearGradient>
-
-                <linearGradient id="hc-sky-fallback" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1e293b" /><stop offset="100%" stop-color="#334155" /></linearGradient>
-                <linearGradient id="hc-sea-fallback" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0f172a" /><stop offset="100%" stop-color="#020617" /></linearGradient>
-              </defs>
-
-              <rect width="400" height="250" fill="url(#hc-sky-day)" class="hc-bg-day hc-bg-rain hc-bg-sunset-rain"/>
-              <rect width="400" height="250" fill="url(#hc-sky-sunset)" class="hc-bg-sunset"/>
-              <rect width="400" height="250" fill="url(#hc-sky-night)" class="hc-bg-night"/>
-              <rect width="400" height="250" fill="url(#hc-sky-snow)" class="hc-bg-snow"/>
-              <rect width="400" height="250" fill="url(#hc-sky-fallback)" class="hc-bg-fallback"/>
-
-              <g class="hc-sun-node">
-                <circle cx="200" cy="65" r="14" fill="#ffffff" />
-                <circle cx="200" cy="65" r="24" fill="#ffffff" opacity="0.15" />
-              </g>
-
-              <rect y="205" width="400" height="45" fill="url(#hc-sea-day)" class="hc-sea-base"/>
-              <rect y="205" width="400" height="45" fill="url(#hc-sea-sunset)" class="hc-sea-sunset"/>
-              <rect y="205" width="400" height="45" fill="url(#hc-sea-night)" class="hc-sea-night"/>
-              <rect y="205" width="400" height="45" fill="url(#hc-sea-snow)" class="hc-sea-snow"/>
-              <rect y="205" width="400" height="45" fill="url(#hc-sea-fallback)" class="hc-sea-fallback"/>
-
-              <g fill="#ffffff" opacity="0.5" class="hc-cloud-day"><path d="M 140,85 Q 165,65 190,85 Q 215,65 240,85 L 125,85 Z" /></g>
-
-              <g fill="url(#hc-island-day)" class="hc-island-base">
-                <path d="M -20,205 Q 35,170 95,185 Q 125,175 155,205 Z" />
-                <path d="M 120,205 L 220,205 L 220,196 L 120,196 Z" />
-              </g>
-              <g fill="url(#hc-island-sunset)" class="hc-island-sunset">
-                <path d="M -20,205 Q 35,170 95,185 Q 125,175 155,205 Z" />
-                <path d="M 120,205 L 220,205 L 220,196 L 120,196 Z" />
-              </g>
-              <g fill="url(#hc-island-night)" class="hc-island-night">
-                <path d="M -20,205 Q 35,170 95,185 Q 125,175 155,205 Z" />
-                <path d="M 120,205 L 220,205 L 220,196 L 120,196 Z" />
-              </g>
-              <g fill="url(#hc-island-snow)" class="hc-island-snow">
-                <path d="M -20,205 Q 35,170 95,185 Q 125,175 155,205 Z" />
-                <path d="M 120,205 L 220,205 L 220,196 L 120,196 Z" />
-              </g>
-              <g fill="#475569" fill-opacity="0.4" class="hc-island-fallback">
-                <path d="M -20,205 Q 35,170 95,185 Q 125,175 155,205 Z" />
-                <path d="M 120,205 L 220,205 L 220,196 L 120,196 Z" />
-              </g>
-
-              <path d="M 201,196 L 202,173 L 210,173 L 211,196 Z" fill="#dc2626" class="hc-lighthouse-base lighthouse-top-red" />
-              <polygon points="201,168 206,162 211,168" fill="#dc2626" class="hc-lighthouse-base lighthouse-top-red" />
-              <rect x="203" y="168" width="6" height="6" fill="#ffffff" class="hc-lighthouse-base lighthouse-light-base" />
-
-              <path d="M 201,196 L 202,173 L 210,173 L 211,196 Z" fill="#475569" class="hc-lighthouse-fallback" />
-              <polygon points="201,168 206,162 211,168" fill="#475569" class="hc-lighthouse-fallback" />
-
-              <g id="hc-moon-phase-group" transform="translate(186, 51)" class="hc-moon-node">
-              </g>
-
-              <g transform="rotate(3, 200, 125)" class="hc-rain-layer">
-                <line x1="30" y1="10" x2="30" y2="28" class="hc-rain-drop" style="animation-duration: 0.51s; animation-delay: 0s;" stroke-width="0.7" />
-                <line x1="85" y1="45" x2="85" y2="67" class="hc-rain-drop" style="animation-duration: 0.62s; animation-delay: 0.15s;" stroke-width="0.8" />
-                <line x1="135" y1="15" x2="135" y2="30" class="hc-rain-drop" style="animation-duration: 0.45s; animation-delay: 0.05s;" stroke-width="0.6" />
-                <line x1="185" y1="75" x2="185" y2="97" class="hc-rain-drop" style="animation-duration: 0.55s; animation-delay: 0.3s;" stroke-width="0.8" />
-                <line x1="235" y1="25" x2="235" y2="48" class="hc-rain-drop" style="animation-duration: 0.58s; animation-delay: 0.1s;" stroke-width="0.9" />
-                <line x1="285" y1="85" x2="285" y2="103" class="hc-rain-drop" style="animation-duration: 0.48s; animation-delay: 0.22s;" stroke-width="0.7" />
-                <line x1="335" y1="20" x2="335" y2="43" class="hc-rain-drop" style="animation-duration: 0.6s; animation-delay: 0.02s;" stroke-width="0.9" />
-                <line x1="375" y1="65" x2="375" y2="83" class="hc-rain-drop" style="animation-duration: 0.53s; animation-delay: 0.38s;" stroke-width="0.6" />
-              </g>
-
-              <g id="hc-snow-particles-matrix" class="hc-snow-layer">
-                <circle cx="40" cy="10" r="1.5" class="hc-snow-flake" style="animation-delay: 0s; animation-duration: 3s;" />
-                <circle cx="90" cy="30" r="2" class="hc-snow-flake" style="animation-delay: 0.5s; animation-duration: 2.5s;" />
-                <circle cx="150" cy="5" r="1.2" class="hc-snow-flake" style="animation-delay: 1.2s; animation-duration: 3.4s;" />
-                <circle cx="220" cy="40" r="2.2" class="hc-snow-flake" style="animation-delay: 0.2s; animation-duration: 2.2s;" />
-                <circle cx="280" cy="15" r="1.5" class="hc-snow-flake" style="animation-delay: 0.8s; animation-duration: 2.9s;" />
-              </g>
-              
-              <g class="hc-anim-yunsul-day hc-yunsul-node">
-                <ellipse cx="200" cy="208" rx="25" ry="1" fill="url(#hc-yunsul-day)" />
-                <ellipse cx="200" cy="220" rx="55" ry="2" fill="url(#hc-yunsul-day)" opacity="0.7" />
-                <ellipse cx="200" cy="235" rx="90" ry="3.5" fill="url(#hc-yunsul-day)" opacity="0.4" />
-              </g>
-
-              <g class="hc-anim-yunsul-sunset hc-yunsul-node">
-                <ellipse cx="200" cy="208" rx="25" ry="1" fill="url(#hc-yunsul-sunset)" />
-                <ellipse cx="200" cy="220" rx="55" ry="2" fill="url(#hc-yunsul-sunset)" opacity="0.7" />
-                <ellipse cx="200" cy="235" rx="90" ry="3.5" fill="url(#hc-yunsul-sunset)" opacity="0.4" />
-              </g>
-
-              <g class="hc-anim-yunsul-night hc-yunsul-node">
-                <ellipse cx="200" cy="208" rx="25" ry="1" fill="url(#hc-yunsul-night)" />
-                <ellipse cx="200" cy="220" rx="55" ry="2" fill="url(#hc-yunsul-night)" opacity="0.6" />
-                <ellipse cx="200" cy="235" rx="90" ry="3.5" fill="url(#hc-yunsul-night)" opacity="0.3" />
-              </g>
-
-              <text x="20" y="38" class="hc-txt-white hc-txt-shadow hc-temp" font-size="26" font-weight="800">23°C</text>
-              <text x="20" y="58" class="hc-txt-white hc-txt-shadow hc-weather" font-size="13" font-weight="700">맑음</text>
-              <text x="20" y="76" class="hc-txt-muted hc-txt-shadow hc-rain" font-size="11">강수 0mm (20%)</text>
-              <text x="20" y="91" class="hc-txt-muted hc-txt-shadow hc-wind" font-size="11">북동풍 · 3.2m/s</text>
-              
-              <g class="hc-txt-white hc-txt-shadow hc-txt-data-upper-right" text-anchor="end" font-size="11" font-weight="700">
-                <text x="380" y="30" class="hc-sunrise">일출 --:--</text>
-                <text x="380" y="46" class="hc-sunset">일몰 --:--</text>
-                <text x="380" y="66" class="hc-tide-idx" font-size="13" font-weight="800" fill="#ffdd00">--물</text>
-              </g>
-              
-              <text x="20" y="174" class="hc-txt-white hc-txt-shadow hc-wave" font-size="11" font-weight="700">파고 --.-m</text>
-              <text x="20" y="194" class="hc-txt-white hc-txt-shadow hc-water-temp" font-size="11" font-weight="700">수온 --.-°C</text>
-              <text x="20" y="214" class="hc-txt-white hc-txt-shadow hc-tide-low" font-size="11" font-weight="700">간조 --:-- ▼--cm</text>
-              <text x="20" y="234" class="hc-txt-white hc-txt-shadow hc-tide-high" font-size="11" font-weight="700">만조 --:-- ▲--cm</text>
-
-              <g id="hc-home-refresh-btn" transform="translate(365, 211)" cursor="pointer" onclick="window.refreshHomeLocation(this)">
-                <circle cx="10" cy="10" r="16" fill="transparent" transform="translate(-5, -5)" />
-                <g transform="scale(0.75)">
-                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </g>
-              </g>
-            </svg>
-          </div>
-        </div>
-        
-      </div>
-
-      <div id="tab-map" class="tab-content active">
-        <div id="map"></div>
-
-        <button class="top-center-ctrl" onclick="refreshMapData()">
-          <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-          </svg>
-        </button>
-
-        <div class="top-right-ctrl-group">
-          <button id="btn-layer" class="floating-btn" onclick="toggleMapLayer()">
-            <svg class="app-icon mode-2d-icon" viewBox="0 0 24 24">
-              <text x="50%" y="70%" fill="var(--text-main)" text-anchor="middle">2D</text>
-            </svg>
-          </button>
-
-          <button id="btn-prohibited" class="floating-btn" onclick="toggleProhibitedZones()">
-            <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
-            </svg>
-          </button>
-
-          <button id="btn-toilet" class="floating-btn" onclick="toggleToiletLayer(this)">
-            <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text-main)" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M7 2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
-              <path d="M5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3z"></path>
-              <path d="M9 19v3"></path>
-              <path d="M15 19v3"></path>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <div id="tab-manage" class="tab-content pm-tab-relative">
-        <div class="points-management-wrapper">
-          <div class="pm-header">포인트 관리</div>
-
-          <div class="pm-container">
-            <div class="pm-section">
-              <div class="pm-section-title pm-title-flex">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--color-port)" stroke="var(--color-port)" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <polygon
-                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                  </polygon>
-                </svg>
-                <span>즐겨찾기</span>
-              </div>
-              <div id="list-favorites" class="pm-list-group">
-                <div class="pm-empty-msg">즐겨찾기에 등록된 포인트가 없습니다.</div>
-              </div>
-            </div>
-
-            <div class="pm-section">
-              <div class="pm-section-title pm-title-flex">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <span>카테고리</span>
-              </div>
-              <div id="category-points-accordion" class="pm-accordion-group">
-                <div class="pm-empty-msg">등록된 포인트가 없습니다.</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>1
-
-      <div id="tab-more" class="tab-content padded-tab">
-        <div class="login-panel">
-          <div class="login-panel-title">로그인이 필요합니다</div>
-          <div class="login-panel-subtitle">데이터 동기화를 위해 로그인해 주세요.</div>
-        </div>
-        <div class="grid-container">
-          <div class="grid-item" onclick="window.showNoticePage('notice')">
-            <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
-            <span class="grid-label">공지사항</span>
-          </div>
-          <div class="grid-item" onclick="window.showNoticePage('event')">
-            <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 12 20 22 4 22 4 12"></polyline>
-              <rect x="2" y="7" width="20" height="5"></rect>
-              <line x1="12" y1="22" x2="12" y2="7"></line>
-              <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
-              <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
-            </svg>
-            <span class="grid-label">이벤트</span>
-          </div>
-          <div class="grid-item">
-            <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
-            </svg>
-            <span class="grid-label">금어기</span>
-          </div>
-          <div class="grid-item">
-            <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="7" width="20" height="10" rx="2" ry="2"></rect>
-              <line x1="6" y1="7" x2="6" y2="11"></line>
-              <line x1="10" y1="7" x2="10" y2="13"></line>
-              <line x1="14" y1="7" x2="14" y2="11"></line>
-              <line x1="18" y1="7" x2="18" y2="11"></line>
-            </svg>
-            <span class="grid-label">금지체장</span>
-          </div>
-          <div class="grid-item">
-            <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M2 6c.6 0 1.2.2 1.6.6L6.8 9.8c.8.8 2 .8 2.8 0l3.2-3.2c.8-.8 2-.8 2.8 0l3.2 3.2c.4.4 1 .6 1.6.6">
-                </path>
-              <path d="M2 12c.6 0 1.2.2 1.6.6l3.2 3.2c.8.8 2 .8 2.8 0l3.2-3.2c.8-.8 2-.8 2.8 0l3.2 3.2c.4.4 1 .6 1.6.6">
-                </path>
-            </svg>
-            <span class="grid-label">물때표</span>
-          </div>
-          <div class="grid-item">
-            <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="1"></circle>
-              <circle cx="19" cy="12" r="1"></circle>
-              <circle cx="5" cy="12" r="1"></circle>
-            </svg>
-            <span class="grid-label">매듭법</span>
-          </div>
-          <div class="grid-item">
-            <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            </svg>
-            <span class="grid-label">1:1문의</span>
-          </div>
-          <div class="grid-item" onclick="showSettingsPage()">
-            <svg class="settings-grid-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"></circle>
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
-              </path>
-            </svg>
-            <span class="grid-label">앱 설정</span>
-          </div>
-          <div class="grid-item" id="btnAdminPanel" onclick="window.openAdminModal();">
-            <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              <circle cx="12" cy="11" r="3"></circle>
-              <path d="M12 14c-2 0-4 1-4 3v1h8v-1c0-2-2-3-4-3z"></path>
-            </svg>
-            <span class="grid-label">관리자 기능</span>
-          </div>
-        </div>
-      </div>
-
-      <div id="settings-page" class="tab-content">
-        <div class="points-management-wrapper">
-          <div class="pm-header settings-header-flex">
-            <button type="button" onclick="hideSettingsPage()" class="settings-back-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            </button>
-            <span>앱 설정</span>
-          </div>
-          <div class="pm-container">
-            <div class="setting-row setting-row-custom">
-              <span class="setting-label-flex">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-                <span>다크 모드</span>
-              </span>
-              <label class="switch">
-                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode(this)">
-                <span class="slider"></span>
-              </label>
-            </div>
-
-            <div class="setting-row setting-row-custom setting-row-margin">
-              <span class="setting-label-flex">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
-                </svg>
-                <span id="naviAppLabel">네비게이션: 카카오맵</span>
-              </span>
-              <label class="switch">
-                <input type="checkbox" id="naviAppToggle" onchange="window.toggleNaviApp(this)">
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="notice-page" class="tab-content">
-        <div class="points-management-wrapper">
-          <div class="pm-header settings-header-flex">
-            <button id="btnNoticeHeaderBack" type="button" onclick="window.handleNoticeBackNavigation()" class="settings-back-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            </button>
-            <span id="lblNoticeHeaderTitle">공지사항</span>
-            <button id="btn-add-notice" class="notice-header-write-btn" onclick="window.openNoticeWriteModal()" title="글 등록">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
-            </button>
-          </div>
-
-          <div class="board-sub-tab-container">
-            <button type="button" id="btnSubTabNotice" class="board-sub-tab-btn active" onclick="window.switchBoardSubTab('notice')">공지사항</button>
-            <button type="button" id="btnSubTabEvent" class="board-sub-tab-btn" onclick="window.switchBoardSubTab('event')">이벤트</button>
-          </div>
-
-          <div class="pm-container">
-            <div id="notice-list-container" class="notice-list-flex active">
-            </div>
-
-            <div id="event-list-container" class="notice-list-flex">
-            </div>
-            
-            <div id="notice-inline-detail-container" class="notice-detail-inline-panel">
-              <div class="notice-inline-header-flex">
-                <h3 id="lblInlineNoticeTitle" class="notice-inline-title"></h3>
-                <div class="notice-inline-actions">
-                  <button type="button" class="icon-action-btn" id="btnNoticeInlineEdit" title="수정">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                      <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                  </button>
-                  <button type="button" class="icon-action-btn delete" id="btnNoticeInlineDelete" title="삭제">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                  </button>
-                </div>
-              </div>
-              <div id="lblInlineNoticeDate" class="notice-inline-date"></div>
-              <div id="lblInlineNoticeContent" class="notice-inline-content"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </main>
-
-    <nav id="bottom-nav">
-      <div class="nav-item" onclick="switchTab('tab-home', this)">
-        <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-          <polyline points="9 22 9 12 15 12 15 22"></polyline>
-        </svg>
-        <span class="nav-label">홈</span>
-      </div>
-      <div class="nav-item active" onclick="switchTab('tab-map', this)">
-        <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-          <line x1="8" y1="2" x2="8" y2="18"></line>
-          <line x1="16" y1="6" x2="16" y2="22"></line>
-        </svg>
-        <span class="nav-label">지도</span>
-      </div>
-      <div class="nav-item" onclick="switchTab('tab-manage', this)">
-        <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round">
-          <line x1="8" y1="6" x2="21" y2="6"></line>
-          <line x1="8" y1="12" x2="21" y2="12"></line>
-          <line x1="8" y1="18" x2="21" y2="18"></line>
-          <line x1="3" y1="6" x2="3.01" y2="6"></line>
-          <line x1="3" y1="12" x2="3.01" y2="12"></line>
-          <line x1="3" y1="18" x2="3.01" y2="18"></line>
-        </svg>
-        <span class="nav-label">포인트관리</span>
-      </div>
-      <div class="nav-item" onclick="switchTab('tab-more', this)">
-        <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="1"></circle>
-          <circle cx="19" cy="12" r="1"></circle>
-          <circle cx="5" cy="12" r="1"></circle>
-        </svg>
-        <span class="nav-label">더보기</span>
-      </div>
-    </nav>
-  </div>
-
-  <div id="firstModal" class="modal">
-    <h3>위치 정보 등록</h3>
-    <div class="modal-action-row-grid first-modal-grid-flex">
-      <button class="btn-main first-modal-btn-register" onclick="openPointModal()">
-        <svg viewBox="0 0 24 24" class="first-modal-btn-icon">
-          <path d="M12 20h9"></path>
-          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-        </svg>
-        <span>포인트 등록</span>
-      </button>
-      <button class="btn-main first-modal-btn-toilet" onclick="openToiletModal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round" class="first-modal-btn-icon">
-          <path d="M7 2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
-          <path d="M5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3z"></path>
-        </svg>
-        <span>화장실 등록</span>
-      </button>
-      <button class="btn-sub first-modal-btn-cancel" onclick="closeModals()">취소</button>
-    </div>
-  </div>
-
-  <div id="pointModal" class="modal">
-    <div class="modal-handle-area" onclick="window.closeModals()">
-      <div class="modal-handle"></div>
-    </div>
-    <h3 class="point-modal-title-flex">
-      <span>포인트 등록</span>
-    </h3>
-    <div class="modal-form-group">
-      <label>위치 주소</label>
-      <div id="pointAddress" class="form-static-text">주소 변환 중...</div>
-    </div>
-    <div class="modal-form-group">
-      <label>포인트 이름</label>
-      <input type="text" id="pointName" placeholder="포인트 이름을 입력하세요">
-    </div>
-    <div class="modal-form-group">
-      <label>카테고리 설정</label>
-      <select id="pointCategory"></select>
-    </div>
-    <div class="modal-form-group">
-      <label>주차 요금</label>
-      <div class="chip-group-row">
-        <button type="button" class="chip-btn active" onclick="selectParking('none', this)">주차 불가</button>
-        <button type="button" class="chip-btn" onclick="selectParking('free', this)">무료 주차</button>
-        <button type="button" class="chip-btn" onclick="selectParking('paid', this)">유료 주차</button>
-      </div>
-    </div>
-
-    <div class="modal-form-group parking-detail-row-flex" id="parkingDetailRow">
-      <button type="button" id="btnParkingUnit" class="chip-btn parking-unit-btn-reset" onclick="shiftParkingUnit(this)">10분</button>
-      <input type="number" id="parkingPrice" placeholder="금액" class="parking-price-input-reset">
-      <span class="parking-currency-label">원</span>
-    </div>
-
-    <div class="modal-form-group">
-      <label>주변 편의시설</label>
-      <div class="chip-group-row">
-        <button type="button" id="btnNewFacStore" class="chip-btn" onclick="this.classList.toggle('active')">편의점</button>
-        <button type="button" id="btnNewFacCafe" class="chip-btn" onclick="this.classList.toggle('active')">카페</button>
-        <button type="button" id="btnNewFacTackle" class="chip-btn" onclick="this.classList.toggle('active')">낚시점</button>
-      </div>
-    </div>
-
-    <div class="modal-form-group">
-      <label>메모 및 특이사항</label>
-      <textarea id="pointMemo" rows="2" placeholder="메모를 입력하세요"></textarea>
-    </div>
-    <div class="modal-action-row-grid">
-      <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
-      <button type="button" class="modal-btn save" onclick="window.savePointMarker()">등록</button>
-    </div>
-  </div>
-
-  <div id="toiletModal" class="modal">
-    <div class="modal-handle-area" onclick="window.closeModals()">
-      <div class="modal-handle"></div>
-    </div>
-    <h3 class="point-modal-title-flex">
-      <span>공중화장실 등록</span>
-    </h3>
-    <div class="modal-form-group">
-      <label>위치 주소</label>
-      <div id="toiletAddress" class="form-static-text">주소 변환 중...</div>
-    </div>
-    <div class="modal-form-group">
-      <label>화장실 이름</label>
-      <input type="text" id="toiletName" placeholder="화장실 위치의 지역 이름이나 건물 이름을 입력하세요.">
-    </div>
-    <div class="modal-form-group">
-      <label>개방시간 설정</label>
-      <div class="chip-group-row" id="newToiletHoursChips">
-        <button type="button" class="chip-btn active" id="chipNewHours24" onclick="window.selectNewToiletHours('24시간', this)">24시간</button>
-        <button type="button" class="chip-btn" id="chipNewHoursUnknown" onclick="window.selectNewToiletHours('모름', this)">모름</button>
-        <button type="button" class="chip-btn" id="chipNewHoursPaid" onclick="window.selectNewToiletHours('지정시간', this)">지정시간</button>
-      </div>
-    </div>
-    <div class="modal-form-group parking-detail-row-flex" id="newToiletHoursDetailRow">
-      <input type="text" id="newToiletStartHour" value="09" placeholder="09" class="hour-input-center" maxlength="2">
-      <span>:</span>
-      <input type="text" id="newToiletStartMin" value="00" placeholder="00" class="hour-input-center" maxlength="2">
-      <span class="hour-range-separator">~</span>
-      <input type="text" id="newToiletEndHour" value="18" placeholder="18" class="hour-input-center" maxlength="2">
-      <span>:</span>
-      <input type="text" id="newToiletEndMin" value="00" placeholder="00" class="hour-input-center" maxlength="2">
-    </div>
-    <div class="modal-form-group">
-      <label>메모 및 특이사항</label>
-      <textarea id="newToiletMemo" rows="3" placeholder="화장실 내부 청결도나 관리 상태를 입력하세요."></textarea>
-    </div>
-    <div class="modal-action-row-grid">
-      <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
-      <button type="button" class="modal-btn save" onclick="window.saveToiletMarker()">등록</button>
-    </div>
-  </div>
-
-  <div id="pointEditModal" class="modal">
-    <div class="modal-handle-area" onclick="window.closeModals()">
-      <div class="modal-handle"></div>
-    </div>
-    <h3>포인트 정보 수정</h3>
-    <input type="hidden" id="editPointDocId">
-    <div class="modal-form-group">
-      <label>위치 주소</label>
-      <div id="pointEditAddress" class="form-static-text">주소 변환 중...</div>
-    </div>
-    <div class="modal-form-group">
-      <label>포인트 이름</label>
-      <input type="text" id="editPointName">
-    </div>
-    <div class="modal-form-group">
-      <label>카테고리 설정</label>
-      <select id="editPointCategory"></select>
-    </div>
-    <div class="modal-form-group">
-      <label>주차 요금</label>
-      <div class="chip-group-row" id="editPointParkingChips">
-        <button type="button" class="chip-btn" id="chipEditParkingNone" onclick="window.selectEditPointParking('none', this)">주차 불가</button>
-        <button type="button" class="chip-btn" id="chipEditParkingFree" onclick="window.selectEditPointParking('free', this)">무료 주차</button>
-        <button type="button" class="chip-btn" onclick="window.selectEditPointParking('paid', this)">유료 주차</button>
-      </div>
-    </div>
-
-    <div class="modal-form-group parking-detail-row-flex" id="editPointParkingDetailRow">
-      <button type="button" id="btnEditPointParkingUnit" class="chip-btn parking-unit-btn-reset" onclick="shiftEditPointParkingUnit(this)">10분</button>
-      <input type="number" id="editPointParkingPrice" placeholder="금액" class="parking-price-input-reset">
-      <span class="parking-currency-label">원</span>
-    </div>
-
-    <div class="modal-form-group">
-      <label>인근 편의시설</label>
-      <div class="chip-group-row">
-        <button type="button" id="btnEditFacStore" class="chip-btn" onclick="this.classList.toggle('active')">편의점</button>
-        <button type="button" id="btnEditFacCafe" class="chip-btn" onclick="this.classList.toggle('active')">카페</button>
-        <button type="button" id="btnEditFacTackle" class="chip-btn" onclick="this.classList.toggle('active')">낚시점</button>
-      </div>
-    </div>
-
-    <div class="modal-form-group">
-      <label>포인트 메모</label>
-      <textarea id="editPointMemo" rows="2"></textarea>
-    </div>
-    <div class="modal-action-row-grid">
-      <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
-      <button type="button" class="modal-btn save" onclick="window.savePointEditData()">수정 완료</button>
-    </div>
-  </div>
-
-  <div id="toiletEditModal" class="modal">
-    <div class="modal-handle-area" onclick="window.closeModals()">
-      <div class="modal-handle"></div>
-    </div>
-    <h3>화장실 정보 수정</h3>
-    <input type="hidden" id="editToiletDocId">
-    <div class="modal-form-group">
-      <label>화장실 이름</label>
-      <input type="text" id="editToiletName" placeholder="화장실 위치의 지역 이름이나 건물 이름을 입력하세요.">
-    </div>
-    <div class="modal-form-group">
-      <label>위치 주소</label>
-      <div id="toiletEditAddress" class="form-static-text">주소 변환 중...</div>
-    </div>
-    <div class="modal-form-group">
-      <label>개방시간 설정</label>
-      <div class="chip-group-row" id="editToiletHoursChips">
-        <button type="button" class="chip-btn" id="chipEditHours24" onclick="window.selectEditToiletHours('24시간', this)">24시간</button>
-        <button type="button" class="chip-btn" id="chipEditHoursUnknown" onclick="window.selectEditToiletHours('모름', this)">모름</button>
-        <button type="button" class="chip-btn" id="chipEditHoursPaid" onclick="window.selectEditToiletHours('지정시간', this)">지정시간</button>
-      </div>
-    </div>
-    <div class="modal-form-group parking-detail-row-flex" id="editToiletHoursDetailRow">
-      <input type="text" id="editToiletStartHour" placeholder="09" class="hour-input-center" maxlength="2">
-      <span>:</span>
-      <input type="text" id="editToiletStartMin" placeholder="00" class="hour-input-center" maxlength="2">
-      <span class="hour-range-separator">~</span>
-      <input type="text" id="editToiletEndHour" placeholder="18" class="hour-input-center" maxlength="2">
-      <span>:</span>
-      <input type="text" id="editToiletEndMin" placeholder="00" class="hour-input-center" maxlength="2">
-    </div>
-    <div class="modal-form-group">
-      <label>화장실 내부 청결도나 관리 상태를 입력하세요.</label>
-      <textarea id="editToiletMemo" rows="3" placeholder="화장실 내부 청결도나 관리 상태를 입력하세요."></textarea>
-    </div>
-    <div class="modal-action-row-grid">
-      <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
-      <button type="button" class="modal-btn save" onclick="window.saveToiletEditData()">변경저장</button>
-    </div>
-  </div>
-
-  <div id="categoryEditModal" class="modal">
-    <h3><span>카테고리 편집</span></h3>
-    <input type="hidden" id="editTargetCategoryOldName">
-    <div class="modal-form-group">
-      <label>카테고리 이름</label>
-      <input type="text" id="editCategoryNameInput" placeholder="이름을 입력하세요">
-    </div>
-    <div class="modal-form-group">
-      <label>그룹 대표 색상</label>
-      <input type="hidden" id="editCategoryColorInput" value="#4f46e5">
-      <div class="cat-edit-row-flex">
-        <div id="categoryEditMarkerIcon" class="leaflet-marker-icon custom-marker-wrapper leaflet-zoom-animated leaflet-interactive cat-edit-preview-box"></div>
-        <div class="color-palette-grid cat-edit-palette-reset" id="categoryColorPalette">
-          <button type="button" class="color-palette-btn" data-color="#4f46e5" onclick="window.selectCategoryColor('#4f46e5')"></button>
-          <button type="button" class="color-palette-btn" data-color="#3f51b5" onclick="window.selectCategoryColor('#3f51b5')"></button>
-          <button type="button" class="color-palette-btn" data-color="#00a896" onclick="window.selectCategoryColor('#00a896')"></button>
-          <button type="button" class="color-palette-btn" data-color="#28a745" onclick="window.selectCategoryColor('#28a745')"></button>
-          <button type="button" class="color-palette-btn" data-color="#b45309" onclick="window.selectCategoryColor('#b45309')"></button>
-          <button type="button" class="color-palette-btn" data-color="#a16207" onclick="window.selectCategoryColor('#a16207')"></button>
-          <button type="button" class="color-palette-btn" data-color="#db2777" onclick="window.selectCategoryColor('#db2777')"></button>
-          <button type="button" class="color-palette-btn" data-color="#ff4d4d" onclick="window.selectCategoryColor('#ff4d4d')"></button>
-          <button type="button" class="color-palette-btn" data-color="#7c3aed" onclick="window.selectCategoryColor('#7c3aed')"></button>
-          <button type="button" class="color-palette-btn" data-color="#607d8b" onclick="window.selectCategoryColor('#607d8b')"></button>
-        </div>
-      </div>
-    </div>
-    <div class="modal-action-row-grid">
-      <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
-      <button type="button" class="modal-btn save" onclick="window.saveCategoryEditData()">저장완료</button>
-    </div>
-  </div>
-
-  <div id="deleteConfirmModal" class="modal">
-    <h3><span>삭제</span></h3>
-    <p class="delete-modal-text"><span id="deleteModalTargetName"></span> 삭제하겠습니까?</p>
-    <div class="modal-action-row-grid delete-modal-grid-flex">
-      <button type="button" class="modal-btn cancel delete-modal-btn-padding" onclick="window.closeModals()">취소</button>
-      <button type="button" class="modal-btn save delete-modal-btn-padding delete-modal-btn-red" id="btnDoDelete">삭제</button>
-    </div>
-  </div>
-
-  <div id="detailModalWrapper" class="detail-popup-wrapper" onclick="window.closeModals()">
-    <div id="detailModal" class="bottom-sheet-modal-native" onclick="event.stopPropagation()">
-      <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
-
-      <div class="detail-modal-header-flex">
-        <div class="header-left-title-box">
-          <span id="lblDetailCategory" class="badge-category-dynamic">일반포인트</span>
-          <h2 id="lblDetailName">포인트 이름</h2>
-        </div>
-        <div class="header-right-action-group">
-          <button type="button" class="icon-action-btn" id="btnDetailModalFavorite" title="즐겨찾기">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-            </svg>
-          </button>
-          <button type="button" class="icon-action-btn" id="btnDetailPointEditTrigger" title="수정">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-              <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-            </svg>
-          </button>
-          <button type="button" class="icon-action-btn delete" id="btnDetailPointDelete" title="삭제">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="3 6 5 6 21 6"></polyline>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg>
-          </button>
-          <button type="button" class="icon-action-btn close-btn-margin" onclick="window.closeModals()" title="닫기">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      <div id="lblDetailAddressField" class="detail-address-subtext">위치 정보를 조회하는 중입니다...</div>
-
-      <div class="detail-tags-scroll-row">
-        <div id="lblDetailToiletHours" class="detail-tag-item inline-flex detail-toilet-hours-hidden">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
-          <span class="tag-txt">24시간</span>
-        </div>
-
-        <div id="lblDetailParking" class="detail-tag-item inline-flex">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <circle cx="12" cy="10" r="3"></circle>
-            <path d="M7 21v-6a2 2 0 0 1 4 0v6"></path>
-          </svg>
-          <span class="tag-txt">주차 정보 검색중</span>
-        </div>
-
-        <div id="lblDetailFacilitiesContainer" class="detail-facilities-flex"></div>
-
-        <div id="lblDetailFacilities" class="detail-tag-item inline-flex detail-facilities-hidden">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-          </svg>
-          <span class="tag-txt">편의시설 조회중</span>
-        </div>
-      </div>
-
-      <div id="pointDetailContainer" class="detail-description-body-box">
-        <div id="lblDetailMemo" class="detail-memo-content-text">기록된 특이사항이나 조과 메모가 없습니다.</div>
-      </div>
-
-      <div class="detail-action-full-row">
-        <button type="button" id="btnDetailNaviOpen" class="weather-link-full-btn detail-navi-btn-color">
-          <span>길찾기</span>
-        </button>
-
-        <button type="button" id="btnDetailWeatherOpen" class="weather-link-full-btn detail-weather-btn-reset">
-          <span>72시간 기상정보</span>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-  <div id="weatherModal" class="bottom-sheet-modal-native weather-modal-overlay">
-    <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
-    <div class="weather-modal-header weather-header-container">
-      <div class="weather-title-wrapper" style="display: flex; align-items: center; gap: 6px;">
-        <div id="weatherModalMarkerIcon" class="leaflet-marker-icon custom-marker-wrapper leaflet-zoom-animated leaflet-interactive weather-preview-box" style="position: static !important; transform: none !important; flex-shrink: 0; width: 18px !important; height: 26px !important; display: flex; align-items: center; justify-content: center;"></div>
-        <h3 id="lblWeatherModalTitle" class="weather-title-text" style="margin: 0; line-height: 1.2; font-size: 18px !important; font-weight: 700;">포인트 기상 정보</h3>
-      </div>
-      <div id="lblDetailDate" class="weather-date-sticky-bar weather-date-margin">날짜 계산 중...</div>
-    </div>
-
-    <div class="weather-modal-body">
-      <div class="timeline-viewport-container-native" style="position: relative; width: 100%;">        
-        <div class="timeline-sync-line"></div>
-        <div class="timeline-sync-bubble" id="lblIndicatorBubble">00:00</div>
-
-        <div class="timeline-scroll-outer" id="timelineScrollWrapper" onscroll="window.syncTimelineDateHeader(this)">
-          <div class="timeline-inner-bridge" id="timelineInnerBridge"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="noticeWriteModal" class="bottom-sheet-modal-native">
-    <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
-    <h3 id="lblNoticeWriteModalTitle" class="notice-write-title-text">글 등록</h3>
-    <input type="hidden" id="noticeWriteMode" value="add">
-    <input type="hidden" id="noticeWriteTargetId" value="">
-    <div class="modal-form-group">
-      <label>제목</label>
-      <input type="text" id="noticeWriteTitle" placeholder="제목을 입력하세요">
-    </div>
-    <div class="modal-form-group notice-write-group-margin">
-      <label>내용</label>
-      <textarea id="noticeWriteContent" placeholder="본문 내용을 상세히 입력하세요" class="notice-write-textarea"></textarea>
-    </div>
-    <div class="modal-action-row-grid notice-write-action-margin">
-      <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
-      <button type="button" class="modal-btn save" onclick="window.saveNoticeData()">등록</button>
-    </div>
-  </div>
-
-  <div id="mdlAdminPanel" class="modal">
-    <div class="modal-handle-area" onclick="window.closeModals()">
-      <div class="modal-handle"></div>
-    </div>
-    <h3 class="point-modal-title-flex">
-      <span>관리자 디버깅 패널</span>
-    </h3>
-    
-    <div class="modal-form-group">
-      <label>오픈 API 연동 수동 제어</label>
-      <div style="display: flex; gap: 8px; margin-top: 6px;">
-        <button type="button" class="modal-btn save" id="btnForceSync" style="margin: 0; flex: 1; height: 40px; font-size: 14px; font-weight: 700; letter-spacing: -0.3px;">
-          <span>기상 공공데이터 강제 수동 동기화</span>
-        </button>
-      </div>
-    </div>
-
-    <div class="modal-form-group">
-      <label>로컬 캐시 적재 무결성 현황</label>
-      <div class="admin-cache-status-board" style="margin-top: 6px; display: flex; flex-direction: column; gap: 10px; background: #f8f9fa; padding: 14px; border-radius: 12px; border: 1px solid #e9ecef;">
-        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600;">
-          <span style="color: #495057;">단기 기상 예보 캐시 (cc_weather)</span>
-          <span id="adminWeatherCacheBadge" class="chip-btn" style="padding: 3px 10px; font-size: 11px; height: auto; pointer-events: none; margin: 0; font-weight: 800; border-radius: 6px;">조회 대기</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600;">
-          <span style="color: #495057;">조석 예측 물때 데이터 (cc_tide)</span>
-          <span id="adminTideCacheBadge" class="chip-btn" style="padding: 3px 10px; font-size: 11px; height: auto; pointer-events: none; margin: 0; font-weight: 800; border-radius: 6px;">조회 대기</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600;">
-          <span style="color: #495057;">천문연구원 일출일몰 (cc_sun)</span>
-          <span id="adminSunCacheBadge" class="chip-btn" style="padding: 3px 10px; font-size: 11px; height: auto; pointer-events: none; margin: 0; font-weight: 800; border-radius: 6px;">조회 대기</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-form-group">
-      <label>실시간 로그 통신 추적 콘솔</label>
-      <div id="adminDebugConsole" style="margin-top: 6px; font-family: 'Courier New', Courier, monospace; font-size: 11px; background: #1a1a1a; color: #00ff66; padding: 14px; border-radius: 12px; height: 110px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.4; border: 1px solid #2a2a2a; box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);">시스템 통신 채널 연결 대기 중...</div>
-    </div>
-
-    <div class="modal-action-row-grid" style="margin-top: 24px;">
-      <button type="button" class="modal-btn cancel" onclick="window.closeModals()" style="grid-column: span 2; font-weight: 700;">닫기</button>
-    </div>
-  </div>
-
-  <script type="module" src="./main.js"></script>
+ <div id="modalBackdrop" class="modal-backdrop" onclick="window.closeModals();"></div>
+
+ <div id="splash-screen">
+ <div class="splash-container">
+ <div class="splash-wave"></div>
+ <div class="splash-wave wave-2"></div>
+ <div class="splash-wave wave-3"></div>
+ 
+<div class="splash-logo-wrapper">
+ <svg width="120" height="180" viewBox="0 0 36 54" xmlns="http://www.w3.org/2000/svg" class="splash-svg-element">
+ <path stroke-miterlimit="4" stroke-width="2" stroke="var(--primary-color)" fill="var(--primary-color)" d="m17.92332,2.23007c10.56135,0 17.35337,7.23988 17.35337,16.73988c0,6.3 -3.7,12.3 -7,18l-4.7767,7.06625l-10.82147,-14.71349l9.9681,6.32147l5.03742,-9.40184c3.34356,-5.96319 1.81902,-13.27301 -2.79755,-16.35276c-4.61656,-3.07976 -9.56595,-2.69938 -13.69325,0.6227c-4.1273,3.32208 -5.29064,10.78758 -3.27837,15.73735c2.01227,4.94977 1.37193,3.3194 2.89187,6.0878l10.53198,15.06992l-3.26204,5.3626l-11.47546,-16.21472c-3,-4.57669 -6.02454,-7.93865 -5.7454,-17.57975c0.27914,-9.6411 6.50613,-16.7454 17.06748,-16.7454z"/>
+ <path stroke="var(--primary-color)" fill="#ffffff" d="m18.38343,27.7546c-3.94028,0 -7.1319,-3.53481 -7.1319,-7.89877c0,-4.36396 3.19162,-7.89877 7.1319,-7.89877c3.94028,0 7.1319,3.53481 7.1319,7.89877c0,4.36396 -3.19162,7.89877 -7.1319,7.89877z" stroke-width="2"/>
+ <text x="18.5" y="21.5" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="5" font-weight="900" fill="var(--primary-color)" text-anchor="middle" letter-spacing="0.2">부루</text>
+ </svg>
+ </div>
+ </div>
+ </div>
+ <div id="app-container">
+ <main id="content-area">
+
+ <div id="tab-home" class="tab-content padded-tab">
+ 
+<div class="hc-select-outer-container">
+ <div class="hc-select-wrapper">
+ <select id="hcHomeFavoriteSelect" onchange="window.handleHomeFavoriteChange(this)" class="hc-home-select">
+ <option value="">즐겨찾기 포인트 선택</option>
+ </select>
+ <div class="hc-select-arrow"></div>
+ </div>
+ <span id="hcHomeRefreshTime" class="hc-refresh-time">00:00 기준</span>
+ </div>
+ 
+<div class="hc-main-card">
+ <div class="hc-premium-card">
+ <svg viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+ 
+<defs>
+ <linearGradient id="hc-sky-day" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2a75e6" /><stop offset="100%" stop-color="#a2d2ff" /></linearGradient>
+ <linearGradient id="hc-sea-day" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#006699" /><stop offset="100%" stop-color="#013a63" /></linearGradient>
+ <linearGradient id="hc-island-day" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1a364f" /><stop offset="100%" stop-color="#0f1e2e" /></linearGradient>
+ <linearGradient id="hc-yunsul-day" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#ffffff" stop-opacity="0" /><stop offset="50%" stop-color="#ffffff" stop-opacity="0.45" /><stop offset="100%" stop-color="#ffffff" stop-opacity="0" /></linearGradient>
+
+ <linearGradient id="hc-sky-sunset" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#161221" /><stop offset="40%" stop-color="#36183b" /><stop offset="70%" stop-color="#662037" /><stop offset="90%" stop-color="#a6382e" /><stop offset="100%" stop-color="#d46f34" /></linearGradient>
+ <linearGradient id="hc-sea-sunset" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#210e1a" /><stop offset="40%" stop-color="#100c1c" /><stop offset="100%" stop-color="#020104" /></linearGradient>
+ <linearGradient id="hc-island-sunset" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0c0712" /><stop offset="100%" stop-color="#010002" /></linearGradient>
+ <linearGradient id="hc-yunsul-sunset" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#d46f34" stop-opacity="0" /><stop offset="50%" stop-color="#ffffff" stop-opacity="0.75" /><stop offset="100%" stop-color="#d46f34" stop-opacity="0" /></linearGradient>
+
+ <linearGradient id="hc-sky-night" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#030408" /><stop offset="100%" stop-color="#0d111d" /></linearGradient>
+ <linearGradient id="hc-sea-night" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#050812" /><stop offset="100%" stop-color="#000102" /></linearGradient>
+ <linearGradient id="hc-island-night" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#06070c" /><stop offset="100%" stop-color="#000001" /></linearGradient>
+ <linearGradient id="hc-yunsul-night" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#a5f3fc" stop-opacity="0" /><stop offset="50%" stop-color="#ffffff" stop-opacity="0.22" /><stop offset="100%" stop-color="#a5f3fc" stop-opacity="0" /></linearGradient>
+
+ <linearGradient id="hc-sky-snow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#404756" /><stop offset="100%" stop-color="#7a8599" /></linearGradient>
+ <linearGradient id="hc-sea-snow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1c2331" /><stop offset="100%" stop-color="#0d1117" /></linearGradient>
+ <linearGradient id="hc-island-snow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#161a24" /><stop offset="100%" stop-color="#0b0d12" /></linearGradient>
+
+ <linearGradient id="hc-sky-fallback" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1e293b" /><stop offset="100%" stop-color="#334155" /></linearGradient>
+ <linearGradient id="hc-sea-fallback" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0f172a" /><stop offset="100%" stop-color="#020617" /></linearGradient>
+ </defs>
+
+ <rect width="400" height="250" fill="url(#hc-sky-day)" class="hc-bg-day hc-bg-rain hc-bg-sunset-rain"/>
+ <rect width="400" height="250" fill="url(#hc-sky-sunset)" class="hc-bg-sunset"/>
+ <rect width="400" height="250" fill="url(#hc-sky-night)" class="hc-bg-night"/>
+ <rect width="400" height="250" fill="url(#hc-sky-snow)" class="hc-bg-snow"/>
+ <rect width="400" height="250" fill="url(#hc-sky-fallback)" class="hc-bg-fallback"/>
+
+ <g class="hc-sun-node">
+ <circle cx="200" cy="65" r="14" fill="#ffffff" />
+ <circle cx="200" cy="65" r="24" fill="#ffffff" opacity="0.15" />
+ </g>
+
+ <rect y="205" width="400" height="45" fill="url(#hc-sea-day)" class="hc-sea-base"/>
+ <rect y="205" width="400" height="45" fill="url(#hc-sea-sunset)" class="hc-sea-sunset"/>
+ <rect y="205" width="400" height="45" fill="url(#hc-sea-night)" class="hc-sea-night"/>
+ <rect y="205" width="400" height="45" fill="url(#hc-sea-snow)" class="hc-sea-snow"/>
+ <rect y="205" width="400" height="45" fill="url(#hc-sea-fallback)" class="hc-sea-fallback"/>
+
+ <g fill="#ffffff" opacity="0.5" class="hc-cloud-day"><path d="M 140,85 Q 165,65 190,85 Q 215,65 240,85 L 125,85 Z" /></g>
+
+ <g fill="url(#hc-island-day)" class="hc-island-base">
+ <path d="M -20,205 Q 35,170 95,185 Q 125,175 155,205 Z" />
+ <path d="M 120,205 L 220,205 L 220,196 L 120,196 Z" />
+ </g>
+ <g fill="url(#hc-island-sunset)" class="hc-island-sunset">
+ <path d="M -20,205 Q 35,170 95,185 Q 125,175 155,205 Z" />
+ <path d="M 120,205 L 220,205 L 220,196 L 120,196 Z" />
+ </g>
+ <g fill="url(#hc-island-night)" class="hc-island-night">
+ <path d="M -20,205 Q 35,170 95,185 Q 125,175 155,205 Z" />
+ <path d="M 120,205 L 220,205 L 220,196 L 120,196 Z" />
+ </g>
+ <g fill="url(#hc-island-snow)" class="hc-island-snow">
+ <path d="M -20,205 Q 35,170 95,185 Q 125,175 155,205 Z" />
+ <path d="M 120,205 L 220,205 L 220,196 L 120,196 Z" />
+ </g>
+ <g fill="#475569" fill-opacity="0.4" class="hc-island-fallback">
+ <path d="M -20,205 Q 35,170 95,185 Q 125,175 155,205 Z" />
+ <path d="M 120,205 L 220,205 L 220,196 L 120,196 Z" />
+ </g>
+
+ <path d="M 201,196 L 202,173 L 210,173 L 211,196 Z" fill="#dc2626" class="hc-lighthouse-base lighthouse-top-red" />
+ <polygon points="201,168 206,162 211,168" fill="#dc2626" class="hc-lighthouse-base lighthouse-top-red" />
+ <rect x="203" y="168" width="6" height="6" fill="#ffffff" class="hc-lighthouse-base lighthouse-light-base" />
+
+ <path d="M 201,196 L 202,173 L 210,173 L 211,196 Z" fill="#475569" class="hc-lighthouse-fallback" />
+ <polygon points="201,168 206,162 211,168" fill="#475569" class="hc-lighthouse-fallback" />
+
+ <g id="hc-moon-phase-group" transform="translate(186, 51)" class="hc-moon-node">
+ </g>
+
+ <g transform="rotate(3, 200, 125)" class="hc-rain-layer">
+ <line x1="30" y1="10" x2="30" y2="28" class="hc-rain-drop" style="animation-duration: 0.51s; animation-delay: 0s;" stroke-width="0.7" />
+ <line x1="85" y1="45" x2="85" y2="67" class="hc-rain-drop" style="animation-duration: 0.62s; animation-delay: 0.15s;" stroke-width="0.8" />
+ <line x1="135" y1="15" x2="135" y2="30" class="hc-rain-drop" style="animation-duration: 0.45s; animation-delay: 0.05s;" stroke-width="0.6" />
+ <line x1="185" y1="75" x2="185" y2="97" class="hc-rain-drop" style="animation-duration: 0.55s; animation-delay: 0.3s;" stroke-width="0.8" />
+ <line x1="235" y1="25" x2="235" y2="48" class="hc-rain-drop" style="animation-duration: 0.58s; animation-delay: 0.1s;" stroke-width="0.9" />
+ <line x1="285" y1="85" x2="285" y2="103" class="hc-rain-drop" style="animation-duration: 0.48s; animation-delay: 0.22s;" stroke-width="0.7" />
+ <line x1="335" y1="20" x2="335" y2="43" class="hc-rain-drop" style="animation-duration: 0.6s; animation-delay: 0.02s;" stroke-width="0.9" />
+ <line x1="375" y1="65" x2="375" y2="83" class="hc-rain-drop" style="animation-duration: 0.53s; animation-delay: 0.38s;" stroke-width="0.6" />
+ </g>
+
+ <g id="hc-snow-particles-matrix" class="hc-snow-layer">
+ <circle cx="40" cy="10" r="1.5" class="hc-snow-flake" style="animation-delay: 0s; animation-duration: 3s;" />
+ <circle cx="90" cy="30" r="2" class="hc-snow-flake" style="animation-delay: 0.5s; animation-duration: 2.5s;" />
+ <circle cx="150" cy="5" r="1.2" class="hc-snow-flake" style="animation-delay: 1.2s; animation-duration: 3.4s;" />
+ <circle cx="220" cy="40" r="2.2" class="hc-snow-flake" style="animation-delay: 0.2s; animation-duration: 2.2s;" />
+ <circle cx="280" cy="15" r="1.5" class="hc-snow-flake" style="animation-delay: 0.8s; animation-duration: 2.9s;" />
+ </g>
+ 
+<g class="hc-anim-yunsul-day hc-yunsul-node">
+ <ellipse cx="200" cy="208" rx="25" ry="1" fill="url(#hc-yunsul-day)" />
+ <ellipse cx="200" cy="220" rx="55" ry="2" fill="url(#hc-yunsul-day)" opacity="0.7" />
+ <ellipse cx="200" cy="235" rx="90" ry="3.5" fill="url(#hc-yunsul-day)" opacity="0.4" />
+ </g>
+
+ <g class="hc-anim-yunsul-sunset hc-yunsul-node">
+ <ellipse cx="200" cy="208" rx="25" ry="1" fill="url(#hc-yunsul-sunset)" />
+ <ellipse cx="200" cy="220" rx="55" ry="2" fill="url(#hc-yunsul-sunset)" opacity="0.7" />
+ <ellipse cx="200" cy="235" rx="90" ry="3.5" fill="url(#hc-yunsul-sunset)" opacity="0.4" />
+ </g>
+
+ <g class="hc-anim-yunsul-night hc-yunsul-node">
+ <ellipse cx="200" cy="208" rx="25" ry="1" fill="url(#hc-yunsul-night)" />
+ <ellipse cx="200" cy="220" rx="55" ry="2" fill="url(#hc-yunsul-night)" opacity="0.6" />
+ <ellipse cx="200" cy="235" rx="90" ry="3.5" fill="url(#hc-yunsul-night)" opacity="0.3" />
+ </g>
+
+ <text x="20" y="38" class="hc-txt-white hc-txt-shadow hc-temp" font-size="26" font-weight="800">23°C</text>
+ <text x="20" y="58" class="hc-txt-white hc-txt-shadow hc-weather" font-size="13" font-weight="700">맑음</text>
+ <text x="20" y="76" class="hc-txt-muted hc-txt-shadow hc-rain" font-size="11">강수 0mm (20%)</text>
+ <text x="20" y="91" class="hc-txt-muted hc-txt-shadow hc-wind" font-size="11">북동풍 · 3.2m/s</text>
+ 
+<g class="hc-txt-white hc-txt-shadow hc-txt-data-upper-right" text-anchor="end" font-size="11" font-weight="700">
+ <text x="380" y="30" class="hc-sunrise">일출 --:--</text>
+ <text x="380" y="46" class="hc-sunset">일몰 --:--</text>
+ <text x="380" y="66" class="hc-tide-idx" font-size="13" font-weight="800" fill="#ffdd00">--물</text>
+ </g>
+ 
+<text x="20" y="174" class="hc-txt-white hc-txt-shadow hc-wave" font-size="11" font-weight="700">파고 --.-m</text>
+ <text x="20" y="194" class="hc-txt-white hc-txt-shadow hc-water-temp" font-size="11" font-weight="700">수온 --.-°C</text>
+ <text x="20" y="214" class="hc-txt-white hc-txt-shadow hc-tide-low" font-size="11" font-weight="700">간조 --:-- ▼--cm</text>
+ <text x="20" y="234" class="hc-txt-white hc-txt-shadow hc-tide-high" font-size="11" font-weight="700">만조 --:-- ▲--cm</text>
+
+ <g id="hc-home-refresh-btn" transform="translate(365, 211)" cursor="pointer" onclick="window.refreshHomeLocation(this)">
+ <circle cx="10" cy="10" r="16" fill="transparent" transform="translate(-5, -5)" />
+ <g transform="scale(0.75)">
+ <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+ </g>
+ </g>
+ </svg>
+ </div>
+ </div>
+ 
+</div>
+
+ <div id="tab-map" class="tab-content active">
+ <div id="map"></div>
+
+ <button class="top-center-ctrl" onclick="refreshMapData()">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+ </svg>
+ </button>
+
+ <div class="top-right-ctrl-group">
+ <button id="btn-layer" class="floating-btn" onclick="toggleMapLayer()">
+ <svg class="app-icon mode-2d-icon" viewBox="0 0 24 24">
+ <text x="50%" y="70%" fill="var(--text-main)" text-anchor="middle">2D</text>
+ </svg>
+ </button>
+
+ <button id="btn-prohibited" class="floating-btn" onclick="toggleProhibitedZones()">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <circle cx="12" cy="12" r="10"></circle>
+ <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+ </svg>
+ </button>
+
+ <button id="btn-toilet" class="floating-btn" onclick="toggleToiletLayer(this)">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text-main)" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <path d="M7 2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
+ <path d="M5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3z"></path>
+ <path d="M9 19v3"></path>
+ <path d="M15 19v3"></path>
+ </svg>
+ </button>
+ </div>
+ </div>
+
+ <div id="tab-manage" class="tab-content pm-tab-relative">
+ <div class="points-management-wrapper">
+ <div class="pm-header pm-title-flex-space">
+ <div class="pm-title-left-group">포인트 관리</div>
+ <button type="button" class="pm-add-category-text-btn" onclick="window.openCategoryAddBottomSheet()"><span>카테고리 추가+</span></button>
+ </div>
+
+ <!-- 상단 가로 스크롤 카테고리 탭 바 -->
+ <div class="pm-category-scroll-outer">
+ <div id="pm-category-tabs" class="pm-category-tabs-row">
+ <!-- JavaScript에서 전체, 즐겨찾기, 개별 카테고리 탭 항목들을 동적으로 삽입 -->
+ </div>
+ </div>
+
+ <div class="pm-container">
+ <!-- 선택된 카테고리의 내부 마커 리스트가 나열되는 단일 영역 -->
+ <div id="pm-points-list" class="pm-list-group">
+ <div class="pm-empty-msg">등록된 포인트가 없습니다.</div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div id="tab-more" class="tab-content padded-tab">
+ <div class="login-panel">
+ <div class="login-panel-title">로그인이 필요합니다</div>
+ <div class="login-panel-subtitle">데이터 동기화를 위해 로그인해 주세요.</div>
+ </div>
+ <div class="grid-container">
+ <div class="grid-item" onclick="window.showNoticePage('notice')">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+ <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+ </svg>
+ <span class="grid-label">공지사항</span>
+ </div>
+ <div class="grid-item" onclick="window.showNoticePage('event')">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <polyline points="20 12 20 22 4 22 4 12"></polyline>
+ <rect x="2" y="7" width="20" height="5"></rect>
+ <line x1="12" y1="22" x2="12" y2="7"></line>
+ <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+ <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+ </svg>
+ <span class="grid-label">이벤트</span>
+ </div>
+ <div class="grid-item">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <circle cx="12" cy="12" r="10"></circle>
+ <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+ </svg>
+ <span class="grid-label">금어기</span>
+ </div>
+ <div class="grid-item">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <rect x="2" y="7" width="20" height="10" rx="2" ry="2"></rect>
+ <line x1="6" y1="7" x2="6" y2="11"></line>
+ <line x1="10" y1="7" x2="10" y2="13"></line>
+ <line x1="14" y1="7" x2="14" y2="11"></line>
+ <line x1="18" y1="7" x2="18" y2="11"></line>
+ </svg>
+ <span class="grid-label">금지체장</span>
+ </div>
+ <div class="grid-item">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <path d="M2 6c.6 0 1.2.2 1.6.6L6.8 9.8c.8.8 2 .8 2.8 0l3.2-3.2c.8-.8 2-.8 2.8 0l3.2 3.2c.4.4 1 .6 1.6.6">
+     </path>
+ <path d="M2 12c.6 0 1.2.2 1.6.6l3.2 3.2c.8.8 2 .8 2.8 0l3.2-3.2c.8-.8 2-.8 2.8 0l3.2 3.2c.4.4 1 .6 1.6.6">
+     </path>
+ </svg>
+ <span class="grid-label">물때표</span>
+ </div>
+ <div class="grid-item">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <circle cx="12" cy="12" r="1"></circle>
+ <circle cx="19" cy="12" r="1"></circle>
+ <circle cx="5" cy="12" r="1"></circle>
+ </svg>
+ <span class="grid-label">매듭법</span>
+ </div>
+ <div class="grid-item">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+ </svg>
+ <span class="grid-label">1:1문의</span>
+ </div>
+ <div class="grid-item" onclick="showSettingsPage()">
+ <svg class="settings-grid-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <circle cx="12" cy="12" r="3"></circle>
+ <path
+ d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+ </path>
+ </svg>
+ <span class="grid-label">앱 설정</span>
+ </div>
+ <div class="grid-item" id="btnAdminPanel" onclick="window.openAdminModal();">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+ <circle cx="12" cy="11" r="3"></circle>
+ <path d="M12 14c-2 0-4 1-4 3v1h8v-1c0-2-2-3-4-3z"></path>
+ </svg>
+ <span class="grid-label">관리자 기능</span>
+ </div>
+ </div>
+ </div>
+
+ <div id="settings-page" class="tab-content">
+ <div class="points-management-wrapper">
+ <div class="pm-header settings-header-flex">
+ <button type="button" onclick="hideSettingsPage()" class="settings-back-btn">
+ <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+ </button>
+ <span>앱 설정</span>
+ </div>
+ <div class="pm-container">
+ <div class="setting-row setting-row-custom">
+ <span class="setting-label-flex">
+ <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+ </svg>
+ <span>다크 모드</span>
+ </span>
+ <label class="switch">
+ <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode(this)">
+ <span class="slider"></span>
+ </label>
+ </div>
+
+ <div class="setting-row setting-row-custom setting-row-margin">
+ <span class="setting-label-flex">
+ <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+ </svg>
+ <span id="naviAppLabel">네비게이션: 카카오맵</span>
+ </span>
+ <label class="switch">
+ <input type="checkbox" id="naviAppToggle" onchange="window.toggleNaviApp(this)">
+ <span class="slider"></span>
+ </label>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div id="notice-page" class="tab-content">
+ <div class="points-management-wrapper">
+ <div class="pm-header settings-header-flex">
+ <button id="btnNoticeHeaderBack" type="button" onclick="window.handleNoticeBackNavigation()" class="settings-back-btn">
+ <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+ </button>
+ <span id="lblNoticeHeaderTitle">공지사항</span>
+ <button id="btn-add-notice" class="notice-header-write-btn" onclick="window.openNoticeWriteModal()" title="글 등록">
+ <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+ <line x1="12" y1="5" x2="12" y2="19"></line>
+ <line x1="5" y1="12" x2="19" y2="12"></line>
+ </svg>
+ </button>
+ </div>
+
+ <div class="board-sub-tab-container">
+ <button type="button" id="btnSubTabNotice" class="board-sub-tab-btn active" onclick="window.switchBoardSubTab('notice')">공지사항</button>
+ <button type="button" id="btnSubTabEvent" class="board-sub-tab-btn" onclick="window.switchBoardSubTab('event')">이벤트</button>
+ </div>
+
+ <div class="pm-container">
+ <div id="notice-list-container" class="notice-list-flex active">
+ </div>
+
+ <div id="event-list-container" class="notice-list-flex">
+ </div>
+ 
+<div id="notice-inline-detail-container" class="notice-detail-inline-panel">
+ <div class="notice-inline-header-flex">
+ <h3 id="lblInlineNoticeTitle" class="notice-inline-title"></h3>
+ <div class="notice-inline-actions">
+ <button type="button" class="icon-action-btn" id="btnNoticeInlineEdit" title="수정">
+ <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+ <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+ </svg>
+ </button>
+ <button type="button" class="icon-action-btn delete" id="btnNoticeInlineDelete" title="삭제">
+ <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+ <polyline points="3 6 5 6 21 6"></polyline>
+ <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+ </svg>
+ </button>
+ </div>
+ </div>
+ <div id="lblInlineNoticeDate" class="notice-inline-date"></div>
+ <div id="lblInlineNoticeContent" class="notice-inline-content"></div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ </main>
+
+ <nav id="bottom-nav">
+ <div class="nav-item" onclick="switchTab('tab-home', this)">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+ <polyline points="9 22 9 12 15 12 15 22"></polyline>
+ </svg>
+ <span class="nav-label">홈</span>
+ </div>
+ <div class="nav-item active" onclick="switchTab('tab-map', this)">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+ <line x1="8" y1="2" x2="8" y2="18"></line>
+ <line x1="16" y1="6" x2="16" y2="22"></line>
+ </svg>
+ <span class="nav-label">지도</span>
+ </div>
+ <div class="nav-item" onclick="switchTab('tab-manage', this)">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2" stroke-linecap="round"
+ stroke-linejoin="round">
+ <line x1="8" y1="6" x2="21" y2="6"></line>
+ <line x1="8" y1="12" x2="21" y2="12"></line>
+ <line x1="8" y1="18" x2="21" y2="18"></line>
+ <line x1="3" y1="6" x2="3.01" y2="6"></line>
+ <line x1="3" y1="12" x2="3.01" y2="12"></line>
+ <line x1="3" y1="18" x2="3.01" y2="18"></line>
+ </svg>
+ <span class="nav-label">포인트관리</span>
+ </div>
+ <div class="nav-item" onclick="switchTab('tab-more', this)">
+ <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <circle cx="12" cy="12" r="1"></circle>
+ <circle cx="19" cy="12" r="1"></circle>
+ <circle cx="5" cy="12" r="1"></circle>
+ </svg>
+ <span class="nav-label">더보기</span>
+ </div>
+ </nav>
+ </div>
+
+ <div id="firstModal" class="modal">
+ <h3>위치 정보 등록</h3>
+ <div class="modal-action-row-grid first-modal-grid-flex">
+ <button class="btn-main first-modal-btn-register" onclick="openPointModal()">
+ <svg viewBox="0 0 24 24" class="first-modal-btn-icon">
+ <path d="M12 20h9"></path>
+ <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+ </svg>
+ <span>포인트 등록</span>
+ </button>
+ <button class="btn-main first-modal-btn-toilet" onclick="openToiletModal()">
+ <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"
+ stroke-linejoin="round" class="first-modal-btn-icon">
+ <path d="M7 2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
+ <path d="M5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3z"></path>
+ </svg>
+ <span>화장실 등록</span>
+ </button>
+ <button class="btn-sub first-modal-btn-cancel" onclick="closeModals()">취소</button>
+ </div>
+ </div>
+
+ <div id="pointModal" class="modal">
+ <div class="modal-handle-area" onclick="window.closeModals()">
+ <div class="modal-handle"></div>
+ </div>
+ <h3 class="point-modal-title-flex">
+ <span>포인트 등록</span>
+ </h3>
+ <div class="modal-form-group">
+ <label>위치 주소</label>
+ <div id="pointAddress" class="form-static-text">주소 변환 중...</div>
+ </div>
+ <div class="modal-form-group">
+ <label>포인트 이름</label>
+ <input type="text" id="pointName" placeholder="포인트 이름을 입력하세요">
+ </div>
+ <div class="modal-form-group">
+ <label>카테고리 설정</label>
+ <select id="pointCategory"></select>
+ </div>
+ <div class="modal-form-group">
+ <label>주차 요금</label>
+ <div class="chip-group-row">
+ <button type="button" class="chip-btn active" onclick="selectParking('none', this)">주차 불가</button>
+ <button type="button" class="chip-btn" onclick="selectParking('free', this)">무료 주차</button>
+ <button type="button" class="chip-btn" onclick="selectParking('paid', this)">유료 주차</button>
+ </div>
+ </div>
+
+ <div class="modal-form-group parking-detail-row-flex" id="parkingDetailRow">
+ <button type="button" id="btnParkingUnit" class="chip-btn parking-unit-btn-reset" onclick="shiftParkingUnit(this)">10분</button>
+ <input type="number" id="parkingPrice" placeholder="금액" class="parking-price-input-reset">
+ <span class="parking-currency-label">원</span>
+ </div>
+
+ <div class="modal-form-group">
+ <label>주변 편의시설</label>
+ <div class="chip-group-row">
+ <button type="button" id="btnNewFacStore" class="chip-btn" onclick="this.classList.toggle('active')">편의점</button>
+ <button type="button" id="btnNewFacCafe" class="chip-btn" onclick="this.classList.toggle('active')">카페</button>
+ <button type="button" id="btnNewFacTackle" class="chip-btn" onclick="this.classList.toggle('active')">낚시점</button>
+ </div>
+ </div>
+
+ <div class="modal-form-group">
+ <label>메모 및 특이사항</label>
+ <textarea id="pointMemo" rows="2" placeholder="메모를 입력하세요"></textarea>
+ </div>
+ <div class="modal-action-row-grid">
+ <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
+ <button type="button" class="modal-btn save" onclick="window.savePointMarker()">등록</button>
+ </div>
+ </div>
+
+ <div id="toiletModal" class="modal">
+ <div class="modal-handle-area" onclick="window.closeModals()">
+ <div class="modal-handle"></div>
+ </div>
+ <h3 class="point-modal-title-flex">
+ <span>공중화장실 등록</span>
+ </h3>
+ <div class="modal-form-group">
+ <label>위치 주소</label>
+ <div id="toiletAddress" class="form-static-text">주소 변환 중...</div>
+ </div>
+ <div class="modal-form-group">
+ <label>화장실 이름</label>
+ <input type="text" id="toiletName" placeholder="화장실 위치의 지역 이름이나 건물 이름을 입력하세요.">
+ </div>
+ <div class="modal-form-group">
+ <label>개방시간 설정</label>
+ <div class="chip-group-row" id="newToiletHoursChips">
+ <button type="button" class="chip-btn active" id="chipNewHours24" onclick="window.selectNewToiletHours('24시간', this)">24시간</button>
+ <button type="button" class="chip-btn" id="chipNewHoursUnknown" onclick="window.selectNewToiletHours('모름', this)">모름</button>
+ <button type="button" class="chip-btn" id="chipNewHoursPaid" onclick="window.selectNewToiletHours('지정시간', this)">지정시간</button>
+ </div>
+ </div>
+ <div class="modal-form-group parking-detail-row-flex" id="newToiletHoursDetailRow">
+ <input type="text" id="newToiletStartHour" value="09" placeholder="09" class="hour-input-center" maxlength="2">
+ <span>:</span>
+ <input type="text" id="newToiletStartMin" value="00" placeholder="00" class="hour-input-center" maxlength="2">
+ <span class="hour-range-separator">~</span>
+ <input type="text" id="newToiletEndHour" value="18" placeholder="18" class="hour-input-center" maxlength="2">
+ <span>:</span>
+ <input type="text" id="newToiletEndMin" value="00" placeholder="00" class="hour-input-center" maxlength="2">
+ </div>
+ <div class="modal-form-group">
+ <label>메모 및 특이사항</label>
+ <textarea id="newToiletMemo" rows="3" placeholder="화장실 내부 청결도나 관리 상태를 입력하세요."></textarea>
+ </div>
+ <div class="modal-action-row-grid">
+ <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
+ <button type="button" class="modal-btn save" onclick="window.saveToiletMarker()">등록</button>
+ </div>
+ </div>
+
+ <div id="pointEditModal" class="modal">
+ <div class="modal-handle-area" onclick="window.closeModals()">
+ <div class="modal-handle"></div>
+ </div>
+ <h3>포인트 정보 수정</h3>
+ <input type="hidden" id="editPointDocId">
+ <div class="modal-form-group">
+ <label>위치 주소</label>
+ <div id="pointEditAddress" class="form-static-text">주소 변환 중...</div>
+ </div>
+ <div class="modal-form-group">
+ <label>포인트 이름</label>
+ <input type="text" id="editPointName">
+ </div>
+ <div class="modal-form-group">
+ <label>카테고리 설정</label>
+ <select id="editPointCategory"></select>
+ </div>
+ <div class="modal-form-group">
+ <label>주차 요금</label>
+ <div class="chip-group-row" id="editPointParkingChips">
+ <button type="button" class="chip-btn" id="chipEditParkingNone" onclick="window.selectEditPointParking('none', this)">주차 불가</button>
+ <button type="button" class="chip-btn" id="chipEditParkingFree" onclick="window.selectEditPointParking('free', this)">무료 주차</button>
+ <button type="button" class="chip-btn" onclick="window.selectEditPointParking('paid', this)">유료 주차</button>
+ </div>
+ </div>
+
+ <div class="modal-form-group parking-detail-row-flex" id="editPointParkingDetailRow">
+ <button type="button" id="btnEditPointParkingUnit" class="chip-btn parking-unit-btn-reset" onclick="shiftEditPointParkingUnit(this)">10분</button>
+ <input type="number" id="editPointParkingPrice" placeholder="금액" class="parking-price-input-reset">
+ <span class="parking-currency-label">원</span>
+ </div>
+
+ <div class="modal-form-group">
+ <label>인근 편의시설</label>
+ <div class="chip-group-row">
+ <button type="button" id="btnEditFacStore" class="chip-btn" onclick="this.classList.toggle('active')">편의점</button>
+ <button type="button" id="btnEditFacCafe" class="chip-btn" onclick="this.classList.toggle('active')">카페</button>
+ <button type="button" id="btnEditFacTackle" class="chip-btn" onclick="this.classList.toggle('active')">낚시점</button>
+ </div>
+ </div>
+
+ <div class="modal-form-group">
+ <label>포인트 메모</label>
+ <textarea id="editPointMemo" rows="2"></textarea>
+ </div>
+ <div class="modal-action-row-grid">
+ <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
+ <button type="button" class="modal-btn save" onclick="window.savePointEditData()">수정 완료</button>
+ </div>
+ </div>
+
+ <div id="toiletEditModal" class="modal">
+ <div class="modal-handle-area" onclick="window.closeModals()">
+ <div class="modal-handle"></div>
+ </div>
+ <h3>화장실 정보 수정</h3>
+ <input type="hidden" id="editToiletDocId">
+ <div class="modal-form-group">
+ <label>화장실 이름</label>
+ <input type="text" id="editToiletName" placeholder="화장실 위치의 지역 이름이나 건물 이름을 입력하세요.">
+ </div>
+ <div class="modal-form-group">
+ <label>위치 주소</label>
+ <div id="toiletEditAddress" class="form-static-text">주소 변환 중...</div>
+ </div>
+ <div class="modal-form-group">
+ <label>개방시간 설정</label>
+ <div class="chip-group-row" id="editToiletHoursChips">
+ <button type="button" class="chip-btn" id="chipEditHours24" onclick="window.selectEditToiletHours('24시간', this)">24시간</button>
+ <button type="button" class="chip-btn" id="chipEditHoursUnknown" onclick="window.selectEditToiletHours('모름', this)">모름</button>
+ <button type="button" class="chip-btn" id="chipEditHoursPaid" onclick="window.selectEditToiletHours('지정시간', this)">지정시간</button>
+ </div>
+ </div>
+ <div class="modal-form-group parking-detail-row-flex" id="editToiletHoursDetailRow">
+ <input type="text" id="editToiletStartHour" placeholder="09" class="hour-input-center" maxlength="2">
+ <span>:</span>
+ <input type="text" id="editToiletStartMin" placeholder="00" class="hour-input-center" maxlength="2">
+ <span class="hour-range-separator">~</span>
+ <input type="text" id="editToiletEndHour" placeholder="18" class="hour-input-center" maxlength="2">
+ <span>:</span>
+ <input type="text" id="editToiletEndMin" placeholder="00" class="hour-input-center" maxlength="2">
+ </div>
+ <div class="modal-form-group">
+ <label>화장실 내부 청결도나 관리 상태를 입력하세요.</label>
+ <textarea id="editToiletMemo" rows="3" placeholder="화장실 내부 청결도나 관리 상태를 입력하세요."></textarea>
+ </div>
+ <div class="modal-action-row-grid">
+ <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
+ <button type="button" class="modal-btn save" onclick="window.saveToiletEditData()">변경저장</button>
+ </div>
+ </div>
+
+ <div id="categoryEditModal" class="modal">
+ <h3><span>카테고리 편집</span></h3>
+ <input type="hidden" id="editTargetCategoryOldName">
+ <div class="modal-form-group">
+ <label>카테고리 이름</label>
+ <input type="text" id="editCategoryNameInput" placeholder="이름을 입력하세요">
+ </div>
+ <div class="modal-form-group">
+ <label>그룹 대표 색상</label>
+ <input type="hidden" id="editCategoryColorInput" value="#4f46e5">
+ <div class="cat-edit-row-flex">
+ <div id="categoryEditMarkerIcon" class="leaflet-marker-icon custom-marker-wrapper leaflet-zoom-animated leaflet-interactive cat-edit-preview-box"></div>
+ <div class="color-palette-grid cat-edit-palette-reset" id="categoryColorPalette">
+ <button type="button" class="color-palette-btn" data-color="#4f46e5" onclick="window.selectCategoryColor('#4f46e5')"></button>
+ <button type="button" class="color-palette-btn" data-color="#3f51b5" onclick="window.selectCategoryColor('#3f51b5')"></button>
+ <button type="button" class="color-palette-btn" data-color="#00a896" onclick="window.selectCategoryColor('#00a896')"></button>
+ <button type="button" class="color-palette-btn" data-color="#28a745" onclick="window.selectCategoryColor('#28a745')"></button>
+ <button type="button" class="color-palette-btn" data-color="#b45309" onclick="window.selectCategoryColor('#b45309')"></button>
+ <button type="button" class="color-palette-btn" data-color="#a16207" onclick="window.selectCategoryColor('#a16207')"></button>
+ <button type="button" class="color-palette-btn" data-color="#db2777" onclick="window.selectCategoryColor('#db2777')"></button>
+ <button type="button" class="color-palette-btn" data-color="#ff4d4d" onclick="window.selectCategoryColor('#ff4d4d')"></button>
+ <button type="button" class="color-palette-btn" data-color="#7c3aed" onclick="window.selectCategoryColor('#7c3aed')"></button>
+ <button type="button" class="color-palette-btn" data-color="#607d8b" onclick="window.selectCategoryColor('#607d8b')"></button>
+ </div>
+ </div>
+ </div>
+ <div class="modal-action-row-grid">
+ <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
+ <button type="button" class="modal-btn save" onclick="window.saveCategoryEditData()">저장완료</button>
+ </div>
+ </div>
+
+ <div id="deleteConfirmModal" class="modal">
+ <h3><span>삭제</span></h3>
+ <p class="delete-modal-text"><span id="deleteModalTargetName"></span> 삭제하겠습니까?</p>
+ <div class="modal-action-row-grid delete-modal-grid-flex">
+ <button type="button" class="modal-btn cancel delete-modal-btn-padding" onclick="window.closeModals()">취소</button>
+ <button type="button" class="modal-btn save delete-modal-btn-padding delete-modal-btn-red" id="btnDoDelete">삭제</button>
+ </div>
+ </div>
+
+ <div id="detailModalWrapper" class="detail-popup-wrapper" onclick="window.closeModals()">
+ <div id="detailModal" class="bottom-sheet-modal-native" onclick="event.stopPropagation()">
+ <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
+
+ <div class="detail-modal-header-flex">
+ <div class="header-left-title-box">
+ <span id="lblDetailCategory" class="badge-category-dynamic">일반포인트</span>
+ <h2 id="lblDetailName">포인트 이름</h2>
+ </div>
+ <div class="header-right-action-group">
+ <button type="button" class="icon-action-btn" id="btnDetailModalFavorite" title="즐겨찾기">
+ <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+ </svg>
+ </button>
+ <button type="button" class="icon-action-btn" id="btnDetailPointEditTrigger" title="수정">
+ <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+ <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+ </svg>
+ </button>
+ <button type="button" class="icon-action-btn delete" id="btnDetailPointDelete" title="삭제">
+ <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <polyline points="3 6 5 6 21 6"></polyline>
+ <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+ </svg>
+ </button>
+ <button type="button" class="icon-action-btn close-btn-margin" onclick="window.closeModals()" title="닫기">
+ <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <line x1="18" y1="6" x2="6" y2="18"></line>
+ <line x1="6" y1="6" x2="18" y2="18"></line>
+ </svg>
+ </button>
+ </div>
+ </div>
+
+ <div id="lblDetailAddressField" class="detail-address-subtext">위치 정보를 조회하는 중입니다...</div>
+
+ <div class="detail-tags-scroll-row">
+ <div id="lblDetailToiletHours" class="detail-tag-item inline-flex detail-toilet-hours-hidden">
+ <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <circle cx="12" cy="12" r="10"></circle>
+ <polyline points="12 6 12 12 16 14"></polyline>
+ </svg>
+ <span class="tag-txt">24시간</span>
+ </div>
+
+ <div id="lblDetailParking" class="detail-tag-item inline-flex">
+ <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+ <circle cx="12" cy="10" r="3"></circle>
+ <path d="M7 21v-6a2 2 0 0 1 4 0v6"></path>
+ </svg>
+ <span class="tag-txt">주차 정보 검색중</span>
+ </div>
+
+ <div id="lblDetailFacilitiesContainer" class="detail-facilities-flex"></div>
+
+ <div id="lblDetailFacilities" class="detail-tag-item inline-flex detail-facilities-hidden">
+ <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+ <polyline points="9 22 9 12 15 12 15 22"></polyline>
+ </svg>
+ <span class="tag-txt">편의시설 조회중</span>
+ </div>
+ </div>
+
+ <div id="pointDetailContainer" class="detail-description-body-box">
+ <div id="lblDetailMemo" class="detail-memo-content-text">기록된 특이사항이나 조과 메모가 없습니다.</div>
+ </div>
+
+ <div class="detail-action-full-row">
+ <button type="button" id="btnDetailNaviOpen" class="weather-link-full-btn detail-navi-btn-color">
+ <span>길찾기</span>
+ </button>
+
+ <button type="button" id="btnDetailWeatherOpen" class="weather-link-full-btn detail-weather-btn-reset">
+ <span>72시간 기상정보</span>
+ <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+ stroke-linecap="round" stroke-linejoin="round">
+ <polyline points="9 18 15 12 9 6"></polyline>
+ </svg>
+ </button>
+ </div>
+
+ </div>
+ </div>
+
+ <div id="weatherModal" class="bottom-sheet-modal-native weather-modal-overlay">
+ <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
+ <div class="weather-modal-header weather-header-container">
+ <div class="weather-title-wrapper" style="display: flex; align-items: center; gap: 6px;">
+ <div id="weatherModalMarkerIcon" class="leaflet-marker-icon custom-marker-wrapper leaflet-zoom-animated leaflet-interactive weather-preview-box" style="position: static !important; transform: none !important; flex-shrink: 0; width: 18px !important; height: 26px !important; display: flex; align-items: center; justify-content: center;"></div>
+ <h3 id="lblWeatherModalTitle" class="weather-title-text" style="margin: 0; line-height: 1.2; font-size: 18px !important; font-weight: 700;">포인트 기상 정보</h3>
+ </div>
+ <div id="lblDetailDate" class="weather-date-sticky-bar weather-date-margin">날짜 계산 중...</div>
+ </div>
+
+ <div class="weather-modal-body">
+ <div class="timeline-viewport-container-native" style="position: relative; width: 100%;"> 
+ <div class="timeline-sync-line"></div>
+ <div class="timeline-sync-bubble" id="lblIndicatorBubble">00:00</div>
+
+ <div class="timeline-scroll-outer" id="timelineScrollWrapper" onscroll="window.syncTimelineDateHeader(this)">
+ <div class="timeline-inner-bridge" id="timelineInnerBridge"></div>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div id="noticeWriteModal" class="bottom-sheet-modal-native">
+ <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
+ <h3 id="lblNoticeWriteModalTitle" class="notice-write-title-text">글 등록</h3>
+ <input type="hidden" id="noticeWriteMode" value="add">
+ <input type="hidden" id="noticeWriteTargetId" value="">
+ <div class="modal-form-group">
+ <label>제목</label>
+ <input type="text" id="noticeWriteTitle" placeholder="제목을 입력하세요">
+ </div>
+ <div class="modal-form-group notice-write-group-margin">
+ <label>내용</label>
+ <textarea id="noticeWriteContent" placeholder="본문 내용을 상세히 입력하세요" class="notice-write-textarea"></textarea>
+ </div>
+ <div class="modal-action-row-grid notice-write-action-margin">
+ <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
+ <button type="button" class="modal-btn save" onclick="window.saveNoticeData()">등록</button>
+ </div>
+ </div>
+
+ <div id="mdlAdminPanel" class="modal">
+ <div class="modal-handle-area" onclick="window.closeModals()">
+ <div class="modal-handle"></div>
+ </div>
+ <h3 class="point-modal-title-flex">
+ <span>관리자 디버깅 패널</span>
+ </h3>
+ 
+<div class="modal-form-group">
+ <label>오픈 API 연동 수동 제어</label>
+ <div style="display: flex; gap: 8px; margin-top: 6px;">
+ <button type="button" class="modal-btn save" id="btnForceSync" style="margin: 0; flex: 1; height: 40px; font-size: 14px; font-weight: 700; letter-spacing: -0.3px;">
+ <span>기상 공공데이터 강제 수동 동기화</span>
+ </button>
+ </div>
+ </div>
+
+ <div class="modal-form-group">
+ <label>로컬 캐시 적재 무결성 현황</label>
+ <div class="admin-cache-status-board" style="margin-top: 6px; display: flex; flex-direction: column; gap: 10px; background: #f8f9fa; padding: 14px; border-radius: 12px; border: 1px solid #e9ecef;">
+ <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600;">
+ <span style="color: #495057;">단기 기상 예보 캐시 (cc_weather)</span>
+ <span id="adminWeatherCacheBadge" class="chip-btn" style="padding: 3px 10px; font-size: 11px; height: auto; pointer-events: none; margin: 0; font-weight: 800; border-radius: 6px;">조회 대기</span>
+ </div>
+ <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600;">
+ <span style="color: #495057;">조석 예측 물때 데이터 (cc_tide)</span>
+ <span id="adminTideCacheBadge" class="chip-btn" style="padding: 3px 10px; font-size: 11px; height: auto; pointer-events: none; margin: 0; font-weight: 800; border-radius: 6px;">조회 대기</span>
+ </div>
+ <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600;">
+ <span style="color: #495057;">천문연구원 일출일몰 (cc_sun)</span>
+ <span id="adminSunCacheBadge" class="chip-btn" style="padding: 3px 10px; font-size: 11px; height: auto; pointer-events: none; margin: 0; font-weight: 800; border-radius: 6px;">조회 대기</span>
+ </div>
+ </div>
+ </div>
+
+ <div class="modal-form-group">
+ <label>실시간 로그 통신 추적 콘솔</label>
+ <div id="adminDebugConsole" style="margin-top: 6px; font-family: 'Courier New', Courier, monospace; font-size: 11px; background: #1a1a1a; color: #00ff66; padding: 14px; border-radius: 12px; height: 110px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.4; border: 1px solid #2a2a2a; box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);">시스템 통신 채널 연결 대기 중...</div>
+ </div>
+
+ <div class="modal-action-row-grid" style="margin-top: 24px;">
+ <button type="button" class="modal-btn cancel" onclick="window.closeModals()" style="grid-column: span 2; font-weight: 700;">닫기</button>
+ </div>
+ </div>
+
+ <script type="module" src="./main.js"></script>
 </body>
 
 </html>
