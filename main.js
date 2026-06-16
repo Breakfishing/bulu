@@ -943,7 +943,7 @@ window.fetchSunriseSunsetForDatesPromise = function(lat, lng, dateStrings) {
           console.warn("KASI 데이터 파싱 예외 발생 수식 대체 처리.", e);
         }
       })
-      .catch(err => console.error("KASI 네트워크 통신 유실:", err));
+      .catch(err => console.error("KASI NETWORK ERROR:", err));
   });
   return Promise.all(promises);
 };
@@ -1083,7 +1083,13 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
 
     const url = `/api-tide/1192136/surveyWaterTempAPI/GetSurveyWaterTempApiService?serviceKey=${PUBLIC_PORTAL_KEY}&type=json&obsCode=${obsCode}&reqDate=${dateStr}&pageNo=1&numOfRows=300`;
     return fetch(url)
-      .then(res => res.json())
+      .then(async res => {
+        const rawText = await res.text();
+        if (!res.ok || rawText.includes("Unexpected errors") || !rawText.trim().startsWith("{")) {
+          throw new Error("KHOA API Server Error 500 or Text String Returned");
+        }
+        return JSON.parse(rawText);
+      })
       .then(json => {
         const body = json?.body || json?.response?.body;
         const itemNode = body?.items?.item;
@@ -1110,7 +1116,7 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
           localStorage.setItem(cacheKey, JSON.stringify(dayCache));
         }
       })
-      .catch(err => console.error("조위관측소 실측 수온 API 연동 에러:", err));
+      .catch(err => console.warn(`[수온 관측소 ${obsCode} 점검중 또는 통신유실 무시]`, err));
   });
 
   return Promise.all(promises).then(() => wtempMap);
@@ -1322,7 +1328,7 @@ window.buildTimelineUI = function(lat, lng, weatherMap, realTides, waterTempMap,
       }
       if (xLow >= 0 && xLow <= 4032) {
         let hL = xLow / 56; let dL = new Date(now.getTime() + hL * 60 * 60 * 1000);
-        window.allTidesSchedule.push({ type: '간조', color: '#007aff', time: `${String(dL.getHours()).padStart(2, '0')}:${String(dL.getMinutes()).padStart(2, '0')}`, hoursFromNow: hL, level: '50', diff: -220, rawDt: `${dL.getFullYear()}-${String(dH.getMonth()+1).padStart(2,'0')}-${String(dH.getDate()).padStart(2,'0')} ${String(dL.getHours()).padStart(2,'0')}:${String(dL.getMinutes()).padStart(2, '0')}:00` });
+        window.allTidesSchedule.push({ type: '간조', color: '#007aff', time: `${String(dL.getHours()).padStart(2, '0')}:${String(dL.getMinutes()).padStart(2, '0')}`, hoursFromNow: hL, level: '50', diff: -220, rawDt: `${dL.getFullYear()}-${String(dL.getMonth()+1).padStart(2,'0')}-${String(dL.getDate()).padStart(2,'0')} ${String(dL.getHours()).padStart(2,'0')}:${String(dL.getMinutes()).padStart(2, '0')}:00` });
       }
       k++;
     }
