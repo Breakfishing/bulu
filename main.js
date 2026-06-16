@@ -2545,6 +2545,7 @@ window.fetchAllPublicOpenAPI = async function(lat, lng) {
       const kma = weatherMap[kmaKey];
       if (kma.TMP) currentTemp = `${kma.TMP}°C`;
       if (kma.PCP) currentRain = kma.PCP === '강수없음' ? '강수 0mm' : `강수 ${kma.PCP}`;
+      if (kma.WAV) currentWave = `파고 ${parseFloat(kma.WAV).toFixed(1)}m`;
       
       let windVal = kma.WSD ? parseFloat(kma.WSD).toFixed(0) + "m/s" : "-m/s";
       let dirVal = "↓";
@@ -2570,6 +2571,16 @@ window.fetchAllPublicOpenAPI = async function(lat, lng) {
       } else {
         currentWeather = "맑음";
       }
+    }
+  } catch(e) { console.warn(e); }
+
+  try {
+    const waterTempMap = await window.fetchRealWaterTempPromise(lat, lng, [dateStr]);
+    if (waterTempMap && waterTempMap[kmaKey]) {
+      currentWaterTemp = `수온 ${waterTempMap[kmaKey]}`;
+    } else if (waterTempMap) {
+      const foundHourKey = Object.keys(waterTempMap).find(k => k.startsWith(dateStr));
+      if (foundHourKey) currentWaterTemp = `수온 ${waterTempMap[foundHourKey]}`;
     }
   } catch(e) { console.warn(e); }
 
