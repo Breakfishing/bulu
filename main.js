@@ -266,7 +266,7 @@ window.toggleProhibitedZones = function () {
 function getFishingPointSvg(color) {
   return `
     <svg width="26" height="39" viewBox="0 0 36 54" xmlns="http://www.w3.org/2000/svg" class="fishing-marker-svg-anchor">
-      <path stroke-miterlimit="4" stroke-width="2" stroke="${color}" fill="${color}" d="m17.92332,2.23007c10.56135,0 17.35337,7.23988 17.35337,16.73988c0,6.3 -3.7,12.3 -7,18l-4.7767,7.06625l-10.82147,-14.71349l9.9681,6.32147l5.03742,-9.40184c3.34356,-5.96319 1.81902,-13.27301 -2.79755,-16.35276c-4.61656,-3.07976 -9.56595,-2.69938 -13.69325,0.6227c-4.1273,3.32208 -5.29064,10.78758 -3.27837,15.73735c2.01227,4.94977 1.37193,3.3194 2.89187,6.0878l10.53198,15.06992l-3.26204,5.3626l-11.47546,-16.21472c-3,-4.57669 -6.02454,-7.93865 -5.7454,-17.57975c0.27914,-9.6411 6.50613,-16.7454 17.06748,-16.7454z"/>
+      <path stroke-miterlimit="4" stroke-width="2" stroke="${color}" fill="${color}" d="m17.92332,2.23007c10.56135,0 17.35337,7.23988 17.35337,16.73988c0,6.3 -3.7,12.3 -7,18l-4.7767,7.06625l-10.82147,-14.71349l9.9681,6.32147l5.03742,-9.40184c3.34356,-5.96319 1.81902,-13.27301 -2.79755,-16.35276c-4.61656,-3.07976 -9.56595,-2.69938 -13.69325,0.6227c-4.1273,3.32208 -5.29064,10.78758 -3.27837,15.73735c2.01227,4.94977 1.37193,3.3194(2.89187,6.0878l10.53198,15.06992l-3.26204,5.3626l-11.47546,-16.21472c-3,-4.57669 -6.02454,-7.93865 -5.7454,-17.57975c0.27914,-9.6411 6.50613,-16.7454 17.06748,-16.7454z"/>
       <path stroke="${color}" fill="#ffffff" d="m18.38343,27.7546c-3.94028,0 -7.1319,-3.53481 -7.1319,-7.89877c0,-4.36396 3.19162,-7.89877 7.1319,-7.89877c3.94028,0 7.1319,3.53481 7.1319,7.89877c0,4.36396 -3.19162,7.89877 -7.1319,7.89877z" stroke-width="2"/>
     </svg>
   `;
@@ -1725,7 +1725,210 @@ window.renderPointDetailBottomSheet = function(docId, name, category, color, mem
   }
 };
 
+// =========================================================================
+// GROUP 14: 포인트 관리 허브 목록 바인딩 및 가로 정렬 드래그 엔진
+// =========================================================================
+window.openPointDetailFromList = function(pt) {
+  window.closeModals();
+  
+  const mapNavItem = document.querySelector('.nav-item[onclick*="tab-map"]') || document.querySelector('.nav-item');
+  if (typeof window.switchTab === 'function') {
+    window.switchTab('tab-map', mapNavItem);
+  }
+  
+  if (map) {
+    map.panTo([pt.lat, pt.lng]);
+  }
+  
+  if (pt.category === 'toilet') {
+    if (window.tempToiletMarker) {
+      map.removeLayer(window.tempToiletMarker);
+    }
 
+    const toiletIcon = L.divIcon({
+      html: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M7 2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
+              <path d="M5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3z"></path>
+              <path d="M9 19v3"></path>
+              <path d="M15 19v3"></path>
+            </svg>`,
+      className: 'custom-marker-wrapper-toilet temp-list-injected-toilet-node',
+      iconSize: [24, 24], iconAnchor: [12, 12]
+    });
+
+    window.tempToiletMarker = L.marker([pt.lat, pt.lng], { icon: toiletIcon, zIndexOffset: 1000 }).addTo(map);
+
+    window.renderPointDetailBottomSheet(pt.id, pt.name || '공중화장실', 'toilet', '#ff9500', pt.memo || '', '', '', 0, false, false, false, pt.lat, pt.lng, false, pt.dbSavedAddress || pt.address || '주소 정보 없음');
+  } else {
+    window.renderPointDetailBottomSheet(pt.id, pt.name, pt.category, pt.color, pt.memo, pt.parkingType || 'none', pt.parkingUnit || '', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, pt.lat, pt.lng, pt.isFavorite || false, pt.address || "주소 정보 없음");
+  }
+};
+
+function createPointRowComponent(pt, isFavSection) {
+  const row = document.createElement('div'); row.className = "pm-item"; row.id = `pm-node-${pt.id}`;
+  const isCurrentlyFav = pt.isFavorite === true; const isToilet = (pt.category === 'toilet');
+
+  row.innerHTML = `
+    <div class="pm-item-left" style="width: calc(100% - 100px);">
+      <div class="pm-drag-handle" style="${isToilet ? 'visibility:hidden; pointer-events:none;' : ''}; touch-action: none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--text-main)" stroke="var(--text-main)" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></div>
+      ${isFavSection ? `<div class="pm-color-dot" style="background-color: ${isToilet ? '#ff9500' : (pt.color || '#007aff')}; margin-right: 4px;"></div>` : ''}
+      <div class="pm-item-info" style="padding-left: 4px; min-width: 0; flex: 1;">
+        <span class="pm-item-name" style="outline:none; font-weight:600;">${pt.name || (isToilet ? '공중화장실' : '무명 포인트')}</span>
+        <span style="font-size:11px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; margin-top:2px;">${pt.address || (isToilet ? "소재지 도로명 주소" : "주소 정보 없음")}</span>
+      </div>
+    </div>
+    <div class="pm-item-actions">
+      <button class="pm-action-btn favorite ${isCurrentlyFav ? 'active' : ''}" style="${isToilet ? 'display:none;' : ''}"><svg width="15" height="15" viewBox="0 0 24 24" fill="${isCurrentlyFav ? '#ffcc00' : 'none'}" stroke="${isCurrentlyFav ? '#ffcc00' : '#adb5bd'}" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></button>
+      <button class="pm-action-btn edit" style="${isToilet ? 'display:none;' : ''}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+      <button class="pm-action-btn delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+    </div>
+  `;
+
+  const fBtn = row.querySelector('.pm-action-btn.favorite'); 
+  if (fBtn && !isToilet) fBtn.onclick = (e) => { e.stopPropagation(); db.collection('fishing_points').doc(pt.id).update({ isFavorite: !isCurrentlyFav, favoritedAt: !isCurrentlyFav ? Date.now() : firebase.firestore.FieldValue.delete() }); };
+  
+  const eBtn = row.querySelector('.pm-action-btn.edit'); 
+  if (eBtn && !isToilet) eBtn.onclick = (e) => { e.stopPropagation(); window.openPointEditModal(pt.id, pt.name || '무명 포인트', pt.category || '미분류', pt.memo || '등록된 메모가 없습니다.', pt.parkingType || 'none', pt.parkingUnit || '10분', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, pt.address || "주소 정보 없음"); };
+  
+  const dBtn = row.querySelector('.pm-action-btn.delete'); 
+  if (dBtn) dBtn.onclick = (e) => { e.stopPropagation(); window.openMarkerDeleteModal(pt.id, isToilet ? 'public_toilets' : 'fishing_points', pt.name || (isToilet ? '공중화장실' : '무명 포인트')); };
+  
+  row.onclick = (e) => { 
+    if (e.target.closest('.pm-action-btn') || e.target.closest('.pm-drag-handle')) return; 
+    window.openPointDetailFromList(pt); 
+  };
+  return row;
+}
+
+window.bindDragAndDropEvents = function(container, isFavSection = false) {
+  if (!container) return;
+  container.addEventListener('pointerdown', (e) => {
+    const handle = e.target.closest('.pm-drag-handle'); if (!handle) return;
+    const item = handle.closest('.pm-item'); if (!item) return;
+    e.preventDefault(); item.classList.add('dragging'); handle.setPointerCapture(e.pointerId);
+
+    const onPointerMove = (evt) => {
+      const draggingItem = container.querySelector('.pm-item.dragging') || document.querySelector('.pm-item.dragging'); if (!draggingItem) return;
+      if (isFavSection) {
+        const nextSibling = [...container.querySelectorAll('.pm-item:not(.dragging)')].find(sib => evt.clientY < sib.getBoundingClientRect().top + sib.getBoundingClientRect().height / 2);
+        if (nextSibling) container.insertBefore(draggingItem, nextSibling); else container.appendChild(draggingItem);
+      } else {
+        const targetBody = document.elementFromPoint(evt.clientX, evt.clientY)?.closest('.pm-cat-body');
+        if (targetBody && targetBody.getAttribute('data-category') !== '공중화장실 정보') {
+          const nextSibling = [...targetBody.querySelectorAll('.pm-item:not(.dragging)')].find(sib => evt.clientY < sib.getBoundingClientRect().top + sib.getBoundingClientRect().height / 2);
+          if (nextSibling) targetBody.insertBefore(draggingItem, nextSibling); else targetBody.appendChild(draggingItem);
+        }
+      }
+    };
+
+    const onPointerUp = (evt) => {
+      item.classList.remove('dragging'); handle.releasePointerCapture(evt.pointerId);
+      window.removeEventListener('pointermove', onPointerMove); window.removeEventListener('pointerup', onPointerUp); window.removeEventListener('pointercancel', onPointerUp);
+      if (isFavSection) saveFavoriteOrderToFirebase(container);
+      else { const finalContainer = item.parentElement; if (finalContainer && finalContainer.getAttribute('data-category')) saveCrossCategoryChangeToFirebase(item.id.replace('pm-node-', ''), finalContainer.getAttribute('data-category'), finalContainer); }
+    };
+    window.addEventListener('pointermove', onPointerMove); window.addEventListener('pointerup', onPointerUp); window.addEventListener('pointercancel', onPointerUp);
+  });
+}
+
+function saveFavoriteOrderToFirebase(container) {
+  const batch = db.batch(); const baseTime = Date.now();
+  [...container.querySelectorAll('.pm-item')].forEach((el, index) => { batch.update(db.collection('fishing_points').doc(el.id.replace('pm-node-', '')), { favoritedAt: baseTime - (index * 1000) }); });
+  batch.commit();
+}
+
+function saveCrossCategoryChangeToFirebase(docId, newCategory, container) {
+  const batch = db.batch(); const baseTime = Date.now();
+  const matchPoint = cachedFishingPoints.find(p => (p.category || '일반포인트').trim() === newCategory.trim());
+  batch.update(db.collection('fishing_points').doc(docId), { category: newCategory, color: matchPoint ? matchPoint.color : '#007aff' });
+  [...container.querySelectorAll('.pm-item')].forEach((el, index) => { batch.update(db.collection('fishing_points').doc(el.id.replace('pm-node-', '')), { createdAt: firebase.firestore.Timestamp.fromMillis(baseTime - (index * 1000)) }); });
+  batch.commit().catch(err => console.error(err));
+}
+
+window.renderPointsManagementTab = function() {
+  const favContainer = document.getElementById('list-favorites'); const accordionContainer = document.getElementById('category-points-accordion');
+  if (!favContainer || !accordionContainer) return;
+
+  document.getElementById('btn-add-category')?.classList.add('pm-add-cat-hidden');
+  document.querySelector('.pm-add-category-text-btn')?.remove();
+
+  const favorites = cachedFishingPoints.filter(p => p.isFavorite === true);
+  if (favorites.length === 0) favContainer.innerHTML = `<div class="pm-empty-msg">별표 체크된 즐겨찾기 포인트가 없습니다.</div>`;
+  else { favContainer.innerHTML = ''; favorites.sort((a, b) => (b.favoritedAt || 0) - (a.favoritedAt || 0)); favorites.forEach(item => { favContainer.appendChild(createPointRowComponent(item, true)); }); bindDragAndDropEvents(favContainer, true); }
+
+  const combinedPoints = [ 
+    ...cachedFishingPoints.map(p => ({ ...p, category: (p.category && p.category.trim() !== "") ? p.category.trim() : "미분류" })), 
+    ...cachedPublicToilets.slice(0, 5).map(t => ({ ...t, category: "toilet" })) 
+  ];
+  accordionContainer.innerHTML = '';
+
+  let catSectionHeader = accordionContainer.parentElement.querySelector('.pm-header.settings-header-flex') || accordionContainer.parentElement.querySelector('.pm-section-title.pm-title-flex-space');
+  if (!catSectionHeader) {
+    const titles = accordionContainer.parentElement.querySelectorAll('.pm-section-title, .pm-header');
+    for (const title of titles) { if (title.textContent.includes('카테고리')) { catSectionHeader = title; break; } }
+  }
+  if (catSectionHeader) {
+    catSectionHeader.className = 'pm-header settings-header-flex';
+    catSectionHeader.innerHTML = `<span>카테고리</span><button type="button" class="pm-add-category-btn" onclick="window.openCategoryAddBottomSheet()">+</button>`;
+  }
+
+  const grouped = combinedPoints.reduce((acc, obj) => { const key = obj.category === 'toilet' ? '공중화장실 정보' : obj.category; if (key === '공중화장실 정보') return acc; if (!acc[key]) acc[key] = []; acc[key].push(obj); return acc; }, {});
+  let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]').filter(cat => cat !== '공중화장실 정보' && cat !== 'toilet' && cat !== '미분류');
+  savedCatOrder.forEach(cat => { if (!grouped[cat]) grouped[cat] = []; });
+  if (Object.keys(grouped).length === 0 || (Object.keys(grouped).length === 1 && grouped['공중화장실 정보'])) { if (!grouped['미분류']) grouped['미분류'] = []; }
+
+  const savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
+  Object.keys(grouped).sort((a, b) => {
+    if (a === '공중화장실 정보') return 1; if (b === '공중화장실 정보') return -1; if (a === '미분류') return 1; if (b === '미분류') return -1;
+    const idxA = savedCatOrder.indexOf(a); const idxB = savedCatOrder.indexOf(b);
+    return (idxA !== -1 && idxB !== -1) ? idxA - idxB : (idxA !== -1) ? -1 : (idxB !== -1) ? 1 : a.localeCompare(b, 'ko');
+  }).forEach(catName => {
+    if (catName === '공중화장실 정보') return;
+    const isToiletGroup = (catName === '공중화장실 정보'); const catPoints = grouped[catName];
+    const catColor = isToiletGroup ? '#ff9500' : (catPoints.length > 0 ? (catPoints[0].color || '#007aff') : (savedCatColors[catName] || '#868e96'));
+    const catCard = document.createElement('div'); catCard.className = 'pm-cat-card expanded';
+    
+    catCard.innerHTML = `
+      <div class="pm-cat-header" style="cursor: grab; user-select: none; touch-action: none;">
+        <div class="pm-cat-header-left-box-reset"><svg class="pm-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="3"><polyline points="6 9 12 15 18 9"></polyline></svg><span class="pm-color-dot" style="background:${catColor}"></span><span class="pm-cat-title-text-reset">${catName} <span class="pm-cat-count-badge">(${catPoints.length})</span></span></div>
+        <div class="pm-item-actions">${!isToiletGroup && catName !== '미분류' ? `
+          <button class="pm-action-btn edit" onclick="window.openCategoryEditBottomSheet('${catName}', '${catColor}', event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+          <button class="pm-action-btn delete" onclick="window.deleteCategoryWithGuard('${catName}', event)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+        ` : ''}</div>
+      </div>
+      <div class="pm-cat-body pm-list-group" data-category="${catName}"></div>
+    `;
+    const bodyContainer = catCard.querySelector('.pm-cat-body'); catPoints.forEach(item => { bodyContainer.appendChild(createPointRowComponent(item, false)); });
+    accordionContainer.appendChild(catCard); if (!isToiletGroup && catName !== '미분류') bindDragAndDropEvents(bodyContainer, false);
+  });
+
+  accordionContainer.addEventListener('pointerdown', function(e) {
+    const header = e.target.closest('.pm-cat-header'); if (!header || e.target.closest('.pm-item-actions')) return;
+    const targetCard = header.closest('.pm-cat-card'); if (!targetCard) return;
+    const catAttr = targetCard.querySelector('.pm-cat-body')?.getAttribute('data-category'); if (catAttr === '공중화장실 정보' || catAttr === '미분류') return;
+
+    e.preventDefault(); header.classList.add('pm-header-grabbing');
+    let isMovingMode = false; const startY = e.clientY; const startX = e.clientX;
+    targetCard.classList.add('dragging-category'); header.setPointerCapture(e.pointerId);
+
+    const onCategoryMove = function(evt) {
+      if (!isMovingMode && (Math.abs(evt.clientY - startY) > 5 || Math.abs(evt.clientX - startX) > 5)) isMovingMode = true;
+      if (!isMovingMode) return;
+      const siblings = [...accordionContainer.querySelectorAll('.pm-cat-card:not(.dragging-category)')];
+      const nextSibling = siblings.find(sibling => { const checkCat = sibling.querySelector('.pm-cat-body')?.getAttribute('data-category'); if (checkCat === '공중화장실 정보' || checkCat === '미분류') return false; return evt.clientY < sibling.getBoundingClientRect().top + sibling.getBoundingClientRect().height / 2; });
+      const unmovableCard = accordionContainer.querySelector('.pm-cat-card [data-category="미분류"]')?.closest('.pm-cat-card') || accordionContainer.querySelector('.pm-cat-card [data-category="공중화장실 정보"]')?.closest('.pm-cat-card');
+      if (nextSibling) accordionContainer.insertBefore(targetCard, nextSibling); else if (unmovableCard) accordionContainer.insertBefore(targetCard, unmovableCard); else accordionContainer.appendChild(targetCard);
+    };
+
+    const onCategoryUp = function(evt) {
+      header.classList.remove('pm-header-grabbing'); targetCard.classList.remove('dragging-category'); header.releasePointerCapture(evt.pointerId);
+      window.removeEventListener('pointermove', onCategoryMove); window.removeEventListener('pointerup', onCategoryUp); window.removeEventListener('pointercancel', onCategoryUp);
+      if (!isMovingMode) targetCard.classList.toggle('expanded');
+      else localStorage.setItem('pm-category-order', JSON.stringify([...accordionContainer.querySelectorAll('.pm-cat-card')].map(card => card.querySelector('.pm-cat-body')?.getAttribute('data-category')).filter(cat => cat && cat !== '공중화장실 정보' && cat !== 'toilet' && cat !== '미분류')));
+    };
+    window.addEventListener('pointermove', onCategoryMove); window.addEventListener('pointerup', onCategoryUp); window.addEventListener('pointercancel', onCategoryUp);
+  });
+};
 
 // =========================================================================
 // GROUP 15: 실시간 공지사항 및 이벤트 게시판 데이터 연동 및 레이어 토글 엔진
