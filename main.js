@@ -1973,6 +1973,237 @@ window.renderPointsManagementTab = function() {
 };
 
 // =========================================================================
+// GROUP 14: 포인트 관리 허브 목록 바인딩 및 가로 정렬 드래그 엔진
+// =========================================================================
+window.openPointDetailFromList = function(pt) {
+  window.closeModals();
+  
+  const mapNavItem = document.querySelector('.nav-item[onclick*="tab-map"]') || document.querySelector('.nav-item');
+  if (typeof window.switchTab === 'function') {
+    window.switchTab('tab-map', mapNavItem);
+  }
+  
+  if (map) {
+    map.panTo([pt.lat, pt.lng]);
+  }
+  
+  if (pt.category === 'toilet') {
+    if (window.tempToiletMarker) {
+      map.removeLayer(window.tempToiletMarker);
+    }
+
+    const toiletIcon = L.divIcon({
+      html: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
+        <path d="M5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3z"></path>
+        <path d="M9 19v3"></path>
+        <path d="M15 19v3"></path>
+      </svg>`,
+      className: 'custom-marker-wrapper-toilet temp-list-injected-toilet-node',
+      iconSize: [24, 24], iconAnchor: [12, 12]
+    });
+
+    window.tempToiletMarker = L.marker([pt.lat, pt.lng], { icon: toiletIcon, zIndexOffset: 1000 }).addTo(map);
+
+    window.renderPointDetailBottomSheet(pt.id, pt.name || '공중화장실', 'toilet', '#ff9500', pt.memo || '', '', '', 0, false, false, false, pt.lat, pt.lng, false, pt.dbSavedAddress || pt.address || '주소 정보 없음');
+  } else {
+    window.renderPointDetailBottomSheet(pt.id, pt.name, pt.category, pt.color, pt.memo, pt.parkingType || 'none', pt.parkingUnit || '', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, pt.lat, pt.lng, pt.isFavorite || false, pt.address || "주소 정보 없음");
+  }
+};
+
+function createPointRowComponent(pt, isFavSection) {
+  const row = document.createElement('div'); row.className = "pm-item"; row.id = `pm-node-${pt.id}`;
+  const isCurrentlyFav = pt.isFavorite === true; const isToilet = (pt.category === 'toilet');
+
+  row.innerHTML = `
+    <div class="pm-item-left" style="width: calc(100% - 100px);">
+      <div class="pm-drag-handle" style="${isToilet ? 'visibility:hidden; pointer-events:none;' : ''}; touch-action: none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--text-main)" stroke="var(--text-main)" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></div>
+      ${isFavSection ? `<div class="pm-color-dot" style="background-color: ${isToilet ? '#ff9500' : (pt.color || '#007aff')}; margin-right: 4px;"></div>` : ''}
+      <div class="pm-item-info" style="padding-left: 4px; min-width: 0; flex: 1;">
+        <span class="pm-item-name" style="outline:none; font-weight:600;">${pt.name || (isToilet ? '공중화장실' : '무명 포인트')}</span>
+        <span style="font-size:11px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; margin-top:2px;">${pt.address || (isToilet ? "소재지 도로명 주소" : "주소 정보 없음")}</span>
+      </div>
+    </div>
+    <div class="pm-item-actions">
+      <button class="pm-action-btn favorite ${isCurrentlyFav ? 'active' : ''}" style="${isToilet ? 'display:none;' : ''}"><svg width="15" height="15" viewBox="0 0 24 24" fill="${isCurrentlyFav ? '#ffcc00' : 'none'}" stroke="${isCurrentlyFav ? '#ffcc00' : '#adb5bd'}" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></button>
+      <button class="pm-action-btn edit" style="${isToilet ? 'display:none;' : ''}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+      <button class="pm-action-btn delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+    </div>
+  `;
+
+  const fBtn = row.querySelector('.pm-action-btn.favorite'); 
+  if (fBtn && !isToilet) fBtn.onclick = (e) => { e.stopPropagation(); db.collection('fishing_points').doc(pt.id).update({ isFavorite: !isCurrentlyFav, favoritedAt: !isCurrentlyFav ? Date.now() : firebase.firestore.FieldValue.delete() }); };
+  
+  const eBtn = row.querySelector('.pm-action-btn.edit'); 
+  if (eBtn && !isToilet) eBtn.onclick = (e) => { e.stopPropagation(); window.openPointEditModal(pt.id, pt.name || '무명 포인트', pt.category || '미분류', pt.memo || '등록된 메모가 없습니다.', pt.parkingType || 'none', pt.parkingUnit || '10분', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, pt.address || "주소 정보 없음"); };
+  
+  const dBtn = row.querySelector('.pm-action-btn.delete'); 
+  if (dBtn) dBtn.onclick = (e) => { e.stopPropagation(); window.openMarkerDeleteModal(pt.id, isToilet ? 'public_toilets' : 'fishing_points', pt.name || (isToilet ? '공중화장실' : '무명 포인트')); };
+  
+  row.onclick = (e) => { 
+    if (e.target.closest('.pm-action-btn') || e.target.closest('.pm-drag-handle')) return; 
+    window.openPointDetailFromList(pt); 
+  };
+  return row;
+}
+
+window.bindDragAndDropEvents = function(container, isFavSection = false) {
+  if (!container) return;
+  container.addEventListener('pointerdown', (e) => {
+    const handle = e.target.closest('.pm-drag-handle'); if (!handle) return;
+    const item = handle.closest('.pm-item'); if (!item) return;
+    e.preventDefault(); item.classList.add('dragging'); handle.setPointerCapture(e.pointerId);
+
+    const onPointerMove = (evt) => {
+      const draggingItem = container.querySelector('.pm-item.dragging') || document.querySelector('.pm-item.dragging'); if (!draggingItem) return;
+      const nextSibling = [...container.querySelectorAll('.pm-item:not(.dragging)')].find(sib => evt.clientY < sib.getBoundingClientRect().top + sib.getBoundingClientRect().height / 2);
+      if (nextSibling) container.insertBefore(draggingItem, nextSibling); else container.appendChild(draggingItem);
+    };
+
+    const onPointerUp = (evt) => {
+      item.classList.remove('dragging'); handle.releasePointerCapture(evt.pointerId);
+      window.removeEventListener('pointermove', onPointerMove); 
+      window.removeEventListener('pointerup', onPointerUp); 
+      window.removeEventListener('pointercancel', onPointerUp);
+      if (isFavSection) saveFavoriteOrderToFirebase(container);
+      else saveCategoryOrderWithinTabToFirebase(container);
+    };
+
+    window.addEventListener('pointermove', onPointerMove); 
+    window.addEventListener('pointerup', onPointerUp); 
+    window.addEventListener('pointercancel', onPointerUp);
+  });
+}
+
+function saveFavoriteOrderToFirebase(container) {
+  const batch = db.batch(); const baseTime = Date.now();
+  ([...container.querySelectorAll('.pm-item')]).forEach((el, index) => { batch.update(db.collection('fishing_points').doc(el.id.replace('pm-node-', '')), { favoritedAt: baseTime - (index * 1000) }); });
+  batch.commit();
+}
+
+function saveCategoryOrderWithinTabToFirebase(container) {
+  const batch = db.batch(); const baseTime = Date.now();
+  ([...container.querySelectorAll('.pm-item')]).forEach((el, index) => { 
+    const docId = el.id.replace('pm-node-', '');
+    const isToilet = cachedPublicToilets.some(t => t.id === docId);
+    if (!isToilet) {
+      batch.update(db.collection('fishing_points').doc(docId), { createdAt: firebase.firestore.Timestamp.fromMillis(baseTime - (index * 1000)) }); 
+    }
+  });
+  batch.commit().catch(err => console.error(err));
+}
+
+window.renderPointsManagementTab = function() {
+  const tabsContainer = document.getElementById('pm-category-tabs');
+  const listContainer = document.getElementById('pm-points-list');
+  if (!tabsContainer || !listContainer) return;
+
+  if (!window.currentActiveCategory) {
+    window.currentActiveCategory = localStorage.getItem('pm-last-category') || '전체';
+  }
+
+  let categories = ['전체', '즐겨찾기'];
+  
+  let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]').filter(cat => cat !== '공중화장실 정보' && cat !== 'toilet' && cat !== '미분류');
+  let currentCats = [...new Set(cachedFishingPoints.map(p => (p.category || '미분류').trim()))].filter(cat => cat !== '공중화장실 정보' && cat !== 'toilet' && cat !== '미분류');
+  
+  let activeCategories = [...savedCatOrder];
+  currentCats.forEach(cat => {
+    if (!activeCategories.includes(cat)) activeCategories.push(cat);
+  });
+  
+  categories = categories.concat(activeCategories);
+  categories.push('미분류');
+  categories.push('공중화장실 정보');
+
+  if (!categories.includes(window.currentActiveCategory)) {
+    window.currentActiveCategory = '전체';
+  }
+
+  tabsContainer.innerHTML = '';
+  const savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
+
+  categories.forEach(catName => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pm-category-tab-btn';
+    if (catName === window.currentActiveCategory) btn.classList.add('active');
+
+    let catColor = '#868e96';
+    if (catName === '전체') catColor = 'var(--primary-color)';
+    else if (catName === '즐겨찾기') catColor = '#ffcc00';
+    else if (catName === '공중화장실 정보') catColor = '#ff9500';
+    else if (catName === '미분류') catColor = '#868e96';
+    else {
+      const matchPoints = cachedFishingPoints.filter(p => (p.category || '미분류') === catName);
+      catColor = matchPoints.length > 0 ? (matchPoints[0].color || '#007aff') : (savedCatColors[catName] || '#007aff');
+    }
+
+    btn.innerHTML = `<span class="pm-tab-dot" style="background:${catColor}"></span><span>${catName}</span>`;
+
+    btn.onclick = function() {
+      window.currentActiveCategory = catName;
+      localStorage.setItem('pm-last-category', catName);
+
+      tabsContainer.querySelectorAll('.pm-category-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const outerContainer = tabsContainer.parentElement;
+      const scrollLeft = btn.offsetLeft - (outerContainer.clientWidth / 2) + (btn.clientWidth / 2);
+      outerContainer.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+
+      renderActiveCategoryPoints();
+    };
+
+    tabsContainer.appendChild(btn);
+
+    if (catName === window.currentActiveCategory) {
+      setTimeout(() => {
+        const outerContainer = tabsContainer.parentElement;
+        const scrollLeft = btn.offsetLeft - (outerContainer.clientWidth / 2) + (btn.clientWidth / 2);
+        outerContainer.scrollLeft = scrollLeft;
+      }, 50);
+    }
+  });
+
+  function renderActiveCategoryPoints() {
+    listContainer.innerHTML = '';
+    let displayPoints = [];
+
+    if (window.currentActiveCategory === '전체') {
+      displayPoints = [
+        ...cachedFishingPoints.map(p => ({ ...p, category: (p.category && p.category.trim() !== "") ? p.category.trim() : "미분류" })),
+        ...cachedPublicToilets.map(t => ({ ...t, category: "toilet" }))
+      ];
+    } else if (window.currentActiveCategory === '즐겨찾기') {
+      displayPoints = cachedFishingPoints.filter(p => p.isFavorite === true);
+      displayPoints.sort((a, b) => (b.favoritedAt || 0) - (a.favoritedAt || 0));
+    } else if (window.currentActiveCategory === '공중화장실 정보') {
+      displayPoints = cachedPublicToilets.map(t => ({ ...t, category: "toilet" }));
+    } else {
+      displayPoints = cachedFishingPoints.filter(p => (p.category || '미분류').trim() === window.currentActiveCategory.trim());
+    }
+
+    if (displayPoints.length === 0) {
+      listContainer.innerHTML = `<div class="pm-empty-msg">[${window.currentActiveCategory}] 카테고리에 등록된 포인트가 없습니다.</div>`;
+      return;
+    }
+
+    displayPoints.forEach(item => {
+      listContainer.appendChild(createPointRowComponent(item, window.currentActiveCategory === '전체' || window.currentActiveCategory === '즐겨찾기'));
+    });
+
+    if (window.currentActiveCategory === '즐겨찾기') {
+      bindDragAndDropEvents(listContainer, true);
+    } else if (window.currentActiveCategory !== '전체' && window.currentActiveCategory !== '공중화장실 정보') {
+      bindDragAndDropEvents(listContainer, false);
+    }
+  }
+
+  renderActiveCategoryPoints();
+};
+
+// =========================================================================
 // GROUP 15: 실시간 공지사항 및 이벤트 게시판 데이터 연동 및 레이어 토글 엔진
 // =========================================================================
 let cachedNotices = [];
