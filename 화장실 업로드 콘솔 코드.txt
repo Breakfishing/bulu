@@ -1,0 +1,218 @@
+화장실 업로드 콘솔 코드
+
+(function() {
+  const VWORLD_API_KEY = "DE3D467A-F9F7-3193-9485-9BC3ED3C257D";
+
+  if (typeof window.mapObj === 'undefined' || typeof window.mapObj.getBounds !== 'function') {
+    alert("지도의 전역 통로(window.mapObj)를 찾을 수 없습니다. main.js 수정본이 컴파일 되었는지 확인해 주세요.");
+    return;
+  }
+  if (typeof window.db === 'undefined' || typeof window.firebase === 'undefined') {
+    alert("파이어베이스 전역 통로를 찾을 수 없습니다. main.js 코드가 최신인지 확인해 주세요.");
+    return;
+  }
+
+  const currentMap = window.mapObj;
+  const currentDb = window.db;
+  const currentFirebase = window.firebase;
+
+  const bounds = currentMap.getBounds();
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
+
+  function fetchCoordinatesFromVworld(addressStr) {
+    return new Promise((resolve) => {
+      if (!addressStr || addressStr === "주소 정보 없음") return resolve(null);
+      
+      const callbackNameRoad = 'vworld_road_' + Math.random().toString(36).substr(2, 9);
+      
+      window[callbackNameRoad] = function(data) {
+        delete window[callbackNameRoad];
+        document.getElementById(callbackNameRoad)?.remove();
+        
+        if (data.response && data.response.status === "OK") {
+          resolve({
+            lat: parseFloat(data.response.result.point.y),
+            lng: parseFloat(data.response.result.point.x)
+          });
+        } else {
+          tryParcelAddress();
+        }
+      };
+
+      function tryParcelAddress() {
+        const callbackNameParcel = 'vworld_parcel_' + Math.random().toString(36).substr(2, 9);
+        
+        window[callbackNameParcel] = function(dataParcel) {
+          delete window[callbackNameParcel];
+          document.getElementById(callbackNameParcel)?.remove();
+          
+          if (dataParcel.response && dataParcel.response.status === "OK") {
+            resolve({
+              lat: parseFloat(dataParcel.response.result.point.y),
+              lng: parseFloat(dataParcel.response.result.point.x)
+            });
+          } else {
+            resolve(null);
+          }
+        };
+
+        const scriptParcel = document.createElement('script');
+        scriptParcel.id = callbackNameParcel;
+        scriptParcel.src = `https://api.vworld.kr/req/address?service=address&request=getcoord&version=2.0&crs=epsg:4326&address=${encodeURIComponent(addressStr)}&type=PARCEL&key=${VWORLD_API_KEY}&callback=${callbackNameParcel}`;
+        scriptParcel.onerror = () => {
+          delete window[callbackNameParcel];
+          scriptParcel.remove();
+          resolve(null);
+        };
+        document.body.appendChild(scriptParcel);
+      }
+
+      const scriptRoad = document.createElement('script');
+      scriptRoad.id = callbackNameRoad;
+      scriptRoad.src = `https://api.vworld.kr/req/address?service=address&request=getcoord&version=2.0&crs=epsg:4326&address=${encodeURIComponent(addressStr)}&type=ROAD&key=${VWORLD_API_KEY}&callback=${callbackNameRoad}`;
+      scriptRoad.onerror = () => {
+        delete window[callbackNameRoad];
+        scriptRoad.remove();
+        tryParcelAddress();
+      };
+      document.body.appendChild(scriptRoad);
+    });
+  }
+
+  function parseCsvLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') { inQuotes = !inQuotes; } 
+      else if (char === ',' && !inQuotes) { result.push(current.trim().replace(/^"|"$/g, '')); current = ''; } 
+      else { current += char; }
+    }
+    result.push(current.trim().replace(/^"|"$/g, ''));
+    return result;
+  }
+
+  const singleFileInput = document.createElement('input');
+  singleFileInput.type = 'file';
+  singleFileInput.accept = '.csv';
+  
+  console.log("중복 제어형 가시 범위 추출 엔진 가동: 화장실 CSV 파일을 선택해 주세요.");
+  
+  singleFileInput.onchange = function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const csvReader = new FileReader();
+    csvReader.onload = function(ev) {
+      const csvText = ev.target.result;
+      
+      const inputRegions = prompt("현재 화면 영역에 걸쳐 있는 광역 자치단체 키워드들을 입력해 주세요. (예: 부산, 경남, 경북)", "부산, 경남, 경북");
+      if (!inputRegions) {
+        alert("행정구역 입력이 취소되었습니다.");
+        return;
+      }
+      const targetRegions = inputRegions.split(',').map(r => r.trim()).filter(Boolean);
+      console.log("1차 텍스트 스캔 대상 키워드 목록:", targetRegions);
+
+      const lines = csvText.split(/\r?\n/);
+      if (lines.length < 2) return;
+      
+      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+      const idxName = headers.indexOf('화장실명');
+      const idxRoadAddr = headers.indexOf('소재지도로명주소');
+      const idxJiAddr = headers.indexOf('소재지지번주소');
+      const idxTimeDetail = headers.indexOf('개방시간상세');
+      const idxOwner = headers.indexOf('화장실소유구분명');
+      
+      if (idxName === -1 || (idxRoadAddr === -1 && idxJiAddr === -1)) {
+        alert("CSV 데이터 내부에 필수 필드가 누락되었습니다.");
+        return;
+      }
+      
+      const filteredLines = [];
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i].trim()) continue;
+        const cols = parseCsvLine(lines[i]);
+        const roadAddr = (idxRoadAddr !== -1 && cols[idxRoadAddr]) ? cols[idxRoadAddr] : "";
+        const jiAddr = (idxJiAddr !== -1 && cols[idxJiAddr]) ? cols[idxJiAddr] : "";
+        
+        const isMatchedRegion = targetRegions.some(reg => roadAddr.includes(reg) || jiAddr.includes(reg));
+        if (isMatchedRegion) {
+          filteredLines.push(cols);
+        }
+      }
+
+      console.log(`1차 텍스트 필터링 완료: 후보 데이터 총 ${filteredLines.length}개 선별.`);
+      console.log("좌표 변환, 화면 범위 검증 및 중복 데이터 청소 프로세스를 기동합니다...");
+
+      let matchCount = 0;
+      let uploadCount = 0;
+      
+      (async function processSequential() {
+        for (let k = 0; k < filteredLines.length; k++) {
+          const cols = filteredLines[k];
+          const targetAddress = (idxRoadAddr !== -1 && cols[idxRoadAddr]) ? cols[idxRoadAddr] : ((idxJiAddr !== -1 && cols[idxJiAddr]) ? cols[idxJiAddr] : "주소 정보 없음");
+          
+          const coordResult = await fetchCoordinatesFromVworld(targetAddress);
+          if (!coordResult) continue; 
+          
+          const lat = coordResult.lat;
+          const lng = coordResult.lng;
+          
+          if (lat >= sw.lat && lat <= ne.lat && lng >= sw.lng && lng <= ne.lng) {
+            matchCount++;
+            
+            const targetName = cols[idxName] || "공중화장실";
+            const timeDetail = (idxTimeDetail !== -1 && cols[idxTimeDetail]) ? cols[idxTimeDetail] : "모름";
+            const ownerType = (idxOwner !== -1 && cols[idxOwner]) ? cols[idxOwner] : "양호";
+            const combinedMemo = `${timeDetail}||${ownerType}`;
+            
+            try {
+              // 1단계: 파이어베이스에서 동일 주소를 가진 기존 데이터가 있는지 실시간 조회
+              const snapshot = await currentDb.collection('public_toilets')
+                .where('dbSavedAddress', '==', targetAddress)
+                .get();
+
+              // 2단계: 기존 중복 항목이 발견되면 전부 추적하여 DB에서 선제적 삭제
+              if (!snapshot.empty) {
+                const deletePromises = [];
+                snapshot.forEach(doc => {
+                  deletePromises.push(doc.ref.delete());
+                });
+                await Promise.all(deletePromises);
+              }
+
+              // 3단계: 삭제 완료 후 유일한 데이터 1개만 클린하게 새로 등록
+              await currentDb.collection('public_toilets').add({
+                category: "toilet",
+                createdAt: currentFirebase.firestore.FieldValue.serverTimestamp(),
+                dbSavedAddress: targetAddress,
+                lat: lat,
+                lng: lng,
+                memo: combinedMemo,
+                name: targetName
+              });
+              uploadCount++;
+            } catch (err) {
+              console.error("Firestore 중복 제어 처리 중 오류 발생 주소:", targetAddress, err);
+            }
+          }
+
+          if (k % 20 === 0 || k === filteredLines.length - 1) {
+            const progressPercent = Math.round((k / filteredLines.length) * 100);
+            console.log(`화면 매핑 및 중복 검사 진행률: ${progressPercent}% (${k}/${filteredLines.length} 건 완료) | 현재 내 가시 화면 내 유일 항목 저장 수량: ${uploadCount}개`);
+          }
+        }
+
+        console.log(`[작업 완료] 현재 화면 내부 최적화 동기화 완료: 총 ${uploadCount}개의 화장실 데이터가 유일하게 DB에 유지 및 저장되었습니다.`);
+        alert(`동기화 완료! 기존 중복 데이터를 청소하고, 현재 화면 내에 위치한 화장실 총 ${uploadCount}개를 최신 상태로 업로드했습니다.`);
+      })();
+
+    };
+    csvReader.readAsText(file, 'EUC-KR');
+  };
+
+  singleFileInput.click();
+})();
