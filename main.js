@@ -869,7 +869,7 @@ const TIDE_STATIONS = [
   { code: 'DT_0023', name: '통영', lat: 34.8286, lng: 128.4328 },
   { code: 'DT_0026', name: '삼천포', lat: 34.9258, lng: 128.0336 },
   { code: 'DT_0004', name: '마산', lat: 35.2044, lng: 128.5786 },
-  { code: 'DT_0016', name: '가덕도', lat: 35.0233, lng: 128.8322 },
+  { code: 'DT_0016', name: '가덕도', lat: 35.0233, mesh: 128.8322 },
   { code: 'DT_0013', name: '울산', lat: 35.5033, lng: 129.3853 },
   { code: 'DT_0012', name: '포항', lat: 36.0442, lng: 129.3839 }
 ];
@@ -877,7 +877,8 @@ const TIDE_STATIONS = [
 function getNearestTideStation(lat, lng) {
   let minDistance = Infinity; let nearestStation = TIDE_STATIONS[0]; 
   TIDE_STATIONS.forEach(station => {
-    const dist = Math.sqrt(Math.pow(station.lat - lat, 2) + Math.pow(station.lng - lng, 2));
+    const stationLng = station.lng !== undefined ? station.lng : station.mesh;
+    const dist = Math.sqrt(Math.pow(station.lat - lat, 2) + Math.pow(stationLng - lng, 2));
     if (dist < minDistance) { minDistance = dist; nearestStation = station; }
   });
   return nearestStation.code;
@@ -1089,15 +1090,18 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
         const items = Array.isArray(itemNode) ? itemNode : (itemNode ? [itemNode] : []);
         const dayCache = {};
         items.forEach(item => {
-          if (item && item.recordTime && item.waterTemp) {
-            const match = item.recordTime.match(/(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):/);
-            if (match) {
-              const hourStr = match[4];
-              const key = match[1] + match[2] + match[3] + hourStr + "00";
-              const parsedTemp = parseFloat(item.waterTemp);
-              if (!isNaN(parsedTemp)) {
-                wtempMap[key] = parsedTemp.toFixed(1) + "°C";
-                dayCache[key] = parsedTemp.toFixed(1) + "°C";
+          if (item) {
+            const rTime = item.recordTime || item.record_time;
+            const wTemp = item.waterTemp || item.water_temp;
+            if (rTime && wTemp) {
+              const digits = rTime.replace(/\D/g, '');
+              if (digits.length >= 10) {
+                const key = digits.substring(0, 10) + "00";
+                const parsedTemp = parseFloat(wTemp);
+                if (!isNaN(parsedTemp)) {
+                  wtempMap[key] = parsedTemp.toFixed(1) + "°C";
+                  dayCache[key] = parsedTemp.toFixed(1) + "°C";
+                }
               }
             }
           }
@@ -1140,25 +1144,28 @@ window.loadTimelineWithOptimisticUI = function(lat, lng) {
   }
 
   const dateStrings = []; const baseNow = new Date();
-  
   for (let d = 0; d < 5; d++) {
     const tDate = new Date(baseNow.getTime() + d * 24 * 60 * 60 * 1000);
     dateStrings.push(`${tDate.getFullYear()}${String(tDate.getMonth() + 1).padStart(2, '0')}${String(tDate.getDate()).padStart(2, '0')}`);
   }
 
+  const obsCode = getNearestTideStation(lat, lng);
+  const stationObj = TIDE_STATIONS.find(s => s.code === obsCode) || TIDE_STATIONS[0];
+
   Promise.all([
     window.fetchSunriseSunsetForDatesPromise(lat, lng, dateStrings),
     window.fetchKMAWeatherPromise(lat, lng),
     window.fetchTideData3DaysPromise(lat, lng),
-    window.fetchRealWaterTempPromise(lat, lng, dateStrings)
-  ]).then(([_, liveWeatherMap, realTidesSchedule, realWaterTempMap]) => {
+    window.fetchRealWaterTempPromise(lat, lng, dateStrings),
+    window.fetchKMAWeatherPromise(stationObj.lat, stationObj.lng !== undefined ? stationObj.lng : stationObj.mesh)
+  ]).then(([_, liveWeatherMap, realTidesSchedule, realWaterTempMap, seaWeatherMap]) => {
     const splashBlock = document.getElementById('miniSplashBodyBlock');
     if (splashBlock) splashBlock.remove();
     
     if (dateSticky) dateSticky.style.visibility = 'visible';
     if (bridge) { bridge.style.visibility = 'visible'; bridge.innerHTML = ''; }
     
-    window.buildTimelineUI(lat, lng, liveWeatherMap, realTidesSchedule, realWaterTempMap);
+    window.buildTimelineUI(lat, lng, liveWeatherMap, realTidesSchedule, realWaterTempMap, seaWeatherMap);
   }).catch(err => {
     console.error("통합 인터랙션 데이터 스트림 크래시 복구 작동:", err);
     const splashBlock = document.getElementById('miniSplashBodyBlock');
@@ -1180,7 +1187,7 @@ window.fetchTideData3Days = function(lat, lng) {};
 // =========================================================================
 // GROUP 13-2: 72시간 기상 물때 타임라인 UI 빌더 및 꼭지점 수위 보존 엔진
 // =========================================================================
-window.buildTimelineUI = function(lat, lng, weatherMap, realTides, waterTempMap) {
+window.buildTimelineUI = function(lat, lng, weatherMap, realTides, waterTempMap, seaWeatherMap) {
   const scroller = document.getElementById('timelineScrollWrapper'); 
   const bridge = document.getElementById('timelineInnerBridge');
   if (!bridge) return;
@@ -1261,7 +1268,13 @@ window.buildTimelineUI = function(lat, lng, weatherMap, realTides, waterTempMap)
       const kma = weatherMap[kmaKey]; if (kma.TMP) tempVal = kma.TMP + "°";
       if (kma.PCP) rainVal = kma.PCP === '강수없음' ? '0mm' : kma.PCP;
       if (kma.WSD) windVal = parseFloat(kma.WSD).toFixed(0) + "m/s";
-      if (kma.WAV) waveVal = parseFloat(kma.WAV).toFixed(1) + "m";
+      
+      if (kma.WAV) {
+        waveVal = parseFloat(kma.WAV).toFixed(1) + "m";
+      } else if (seaWeatherMap && seaWeatherMap[kmaKey] && seaWeatherMap[kmaKey].WAV) {
+        waveVal = parseFloat(seaWeatherMap[kmaKey].WAV).toFixed(1) + "m";
+      }
+
       if (kma.VEC) {
         const deg = parseFloat(kma.VEC);
         if (deg >= 337.5 || deg < 22.5) dirVal = "↓"; else if (deg >= 22.5 && deg < 67.5) dirVal = "↙"; else if (deg >= 67.5 && deg < 112.5) dirVal = "←"; else if (deg >= 112.5 && deg < 157.5) dirVal = "↖"; else if (deg >= 157.5 && deg < 202.5) dirVal = "↑"; else if (deg >= 202.5 && deg < 247.5) dirVal = "↗"; else if (deg >= 247.5 && deg < 292.5) dirVal = "→"; else if (deg >= 292.5 && deg < 337.5) dirVal = "↘";
@@ -1269,6 +1282,9 @@ window.buildTimelineUI = function(lat, lng, weatherMap, realTides, waterTempMap)
       if (kma.PTY && kma.PTY !== "0") { skyIcon = "비"; iconColor = "#2f96ff"; }
       else if (kma.SKY === "3") { skyIcon = "구름많음"; iconColor = "#a2a2a7"; }
       else if (kma.SKY === "4") { skyIcon = "흐림"; iconColor = "#747479"; }
+    } else if (seaWeatherMap && seaWeatherMap[kmaKey]) {
+      const kmaSea = seaWeatherMap[kmaKey];
+      if (kmaSea.WAV) waveVal = parseFloat(kmaSea.WAV).toFixed(1) + "m";
     }
 
     if (waterTempMap && waterTempMap[kmaKey]) {
@@ -2539,13 +2555,25 @@ window.fetchAllPublicOpenAPI = async function(lat, lng) {
   let currentWave = "파고 --.-m";
   let currentWaterTemp = "수온 --.-°C";
 
+  const obsCode = getNearestTideStation(lat, lng);
+  const stationObj = TIDE_STATIONS.find(s => s.code === obsCode) || TIDE_STATIONS[0];
+
   try {
-    const weatherMap = await window.fetchKMAWeatherPromise(lat, lng);
+    const [weatherMap, seaWeatherMap] = await Promise.all([
+      window.fetchKMAWeatherPromise(lat, lng),
+      window.fetchKMAWeatherPromise(stationObj.lat, stationObj.lng !== undefined ? stationObj.lng : stationObj.mesh)
+    ]);
+
     if (weatherMap && weatherMap[kmaKey]) {
       const kma = weatherMap[kmaKey];
       if (kma.TMP) currentTemp = `${kma.TMP}°C`;
       if (kma.PCP) currentRain = kma.PCP === '강수없음' ? '강수 0mm' : `강수 ${kma.PCP}`;
-      if (kma.WAV) currentWave = `파고 ${parseFloat(kma.WAV).toFixed(1)}m`;
+      
+      if (kma.WAV) {
+        currentWave = `파고 ${parseFloat(kma.WAV).toFixed(1)}m`;
+      } else if (seaWeatherMap && seaWeatherMap[kmaKey] && seaWeatherMap[kmaKey].WAV) {
+        currentWave = `파고 ${parseFloat(seaWeatherMap[kmaKey].WAV).toFixed(1)}m`;
+      }
       
       let windVal = kma.WSD ? parseFloat(kma.WSD).toFixed(0) + "m/s" : "-m/s";
       let dirVal = "↓";
@@ -2571,6 +2599,8 @@ window.fetchAllPublicOpenAPI = async function(lat, lng) {
       } else {
         currentWeather = "맑음";
       }
+    } else if (seaWeatherMap && seaWeatherMap[kmaKey] && seaWeatherMap[kmaKey].WAV) {
+      currentWave = `파고 ${parseFloat(seaWeatherMap[kmaKey].WAV).toFixed(1)}m`;
     }
   } catch(e) { console.warn(e); }
 
