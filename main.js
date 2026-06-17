@@ -484,41 +484,28 @@ window.findNearestDepth = function(lat, lng) {
 // 숫자 표시를 위한 스타일 클래스 (CSS에 추가 필요)
 // .depth-label { font-size: 11px; font-weight: bold; text-shadow: 1px 1px 1px #fff; }
 
-// 전역 레이어 관리
-let depthLayer = L.layerGroup().addTo(map);
-
-// 화면에 보이는 데이터만 즉시 렌더링하는 함수
-// GROUP 17의 일부: 비동기 렌더링 안정화
-window.renderAllVisibleDepths = function() {
-  if (!window.coastalDepthData || !Array.isArray(window.coastalDepthData)) {
-    console.warn("수심 데이터가 아직 로드되지 않았습니다.");
-    return; // 데이터 없으면 종료
-  }
+window.renderDepthLabel = function(lat, lng, depth) {
+  // 수심별 색상 구분
+  let color = '#007aff'; // 기본 파랑
+  if (depth < 5) color = '#ff3b30';      // 5m 미만 빨강
+  if (depth >= 5 && depth < 10) color = '#ff9500'; // 5~10m 주황
   
-  depthLayer.clearLayers();
-  const bounds = map.getBounds();
-  
-  window.coastalDepthData.forEach(pt => {
-    // pt 구조가 [lat, lng, depth] 인지 확인
-    if (pt && pt.length >= 3 && bounds.contains([pt[0], pt[1]])) {
-      let color = pt[2] < 5 ? '#ff3b30' : (pt[2] < 10 ? '#ff9500' : '#007aff');
-      
-      L.marker([pt[0], pt[1]], {
-        icon: L.divIcon({
-          className: 'depth-label',
-          html: `<div style="color: ${color}; font-size: 10px; font-weight: bold;">${pt[2]}</div>`,
-          iconSize: [20, 20]
-        })
-      }).addTo(depthLayer);
-    }
-  });
+  L.marker([lat, lng], {
+    icon: L.divIcon({
+      className: 'depth-label',
+      html: `<div style="color: ${color};">${depth}m</div>`,
+      iconSize: [20, 20]
+    })
+  }).addTo(map);
 };
 
-// 지도 이동/줌 변경 시마다 갱신
-map.on('moveend', window.renderAllVisibleDepths);
-
-// 초기 로딩 시 한 번 실행
-window.renderAllVisibleDepths();
+// 기존 map.on('click') 이벤트 수정
+map.on('click', function (e) {
+  const depth = window.findNearestDepth(e.latlng.lat, e.latlng.lng);
+  if (depth !== null) {
+    window.renderDepthLabel(e.latlng.lat, e.latlng.lng, depth);
+  }
+});
 
 
 // =========================================================================
