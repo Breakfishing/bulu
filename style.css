@@ -716,9 +716,7 @@ button, input, select, textarea, .modal, .detail-tag, .timeline-date-sticky {
 .pm-empty-msg { padding: 20px; text-align: center; font-size: 13px; color: var(--text-muted); background: var(--bg-panel); border-radius: 12px; }
 
 .pm-title-flex-space { display: flex !important; align-items: center !important; justify-content: space-between !important; width: 100% !important; padding: 10px 16px !important; }
-.pm-title-left-group { display: flex !important; align-items: center !important; gap: 6px !important; font-size: 17px; font-weight: 700; color: var(--text-main); }
-.pm-add-category-text-btn { background: none !important; border: none !important; color: var(--primary-color) !important; font-size: 13px !important; font-weight: 700 !important; cursor: pointer !important; padding: 4px 6px !important; border-radius: 6px !important; user-select: none !important; transition: opacity 0.2s, background-color 0.2s !important; }
-.pm-add-category-text-btn:active { opacity: 0.5; background-color: rgba(0, 122, 255, 0.06); }
+.pm-title-left-group { display: flex; align-items: center; justify-content: center; position: relative; height: 54px; }
 
 .pm-item.dragging { opacity: 0.35; background: var(--bg-main); border: 1px dashed var(--primary-color); box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.05); }
 .pm-cat-card.dragging-category { opacity: 0.4; border: 1px dashed var(--primary-color); }
