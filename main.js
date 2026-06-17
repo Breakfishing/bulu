@@ -1067,11 +1067,15 @@ window.fetchTideData3DaysPromise = function(lat, lng) {
 };
 
 window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
-  const obsCode = getNearestTideStation(lat, lng);
   const wtempMap = {};
+  const offset = 0.02;
+  const minLat = (lat - offset).toFixed(4);
+  const maxLat = (lat + offset).toFixed(4);
+  const minLng = (lng - offset).toFixed(4);
+  const maxLng = (lng + offset).toFixed(4);
 
   const promises = dateStrings.map(dateStr => {
-    const cacheKey = `cc_wtemp_${obsCode}_${dateStr}`;
+    const cacheKey = `cc_roms_${lat.toFixed(2)}_${lng.toFixed(2)}_${dateStr}`;
     const localData = localStorage.getItem(cacheKey);
     if (localData) {
       try {
@@ -1081,12 +1085,12 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
       } catch (e) { localStorage.removeItem(cacheKey); }
     }
 
-    const url = `/api-tide/1192136/surveyWaterTempAPI/GetSurveyWaterTempApiService?serviceKey=${PUBLIC_PORTAL_KEY}&type=json&obsCode=${obsCode}&reqDate=${dateStr}&pageNo=1&numOfRows=300`;
+    const url = `/api-tide/1192136/roms/GetRomsApiService?ServiceKey=${PUBLIC_PORTAL_KEY}&ResultType=json&MinLat=${minLat}&MaxLat=${maxLat}&MinLng=${minLng}&MaxLng=${maxLng}&ReqDate=${dateStr}&pageNo=1&numOfRows=300`;
     return fetch(url)
       .then(async res => {
         const rawText = await res.text();
         if (!res.ok || rawText.includes("Unexpected errors") || !rawText.trim().startsWith("{")) {
-          throw new Error("KHOA API Server Error 500 or Text String Returned");
+          throw new Error("KHOA ROMS API Server Error or Invalid Response");
         }
         return JSON.parse(rawText);
       })
@@ -1097,10 +1101,10 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
         const dayCache = {};
         items.forEach(item => {
           if (item) {
-            const rTime = item.recordTime || item.record_time;
+            const pTime = item.predcDt || item.predc_dt || item.recordTime;
             const wTemp = item.waterTemp || item.water_temp;
-            if (rTime && wTemp) {
-              const digits = rTime.replace(/\D/g, '');
+            if (pTime && wTemp) {
+              const digits = String(pTime).replace(/\D/g, '');
               if (digits.length >= 10) {
                 const key = digits.substring(0, 10) + "00";
                 const parsedTemp = parseFloat(wTemp);
@@ -1116,7 +1120,7 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
           localStorage.setItem(cacheKey, JSON.stringify(dayCache));
         }
       })
-      .catch(err => console.warn(`[수온 관측소 ${obsCode} 점검중 또는 통신유실 무시]`, err));
+      .catch(err => console.warn(`[ROMS 예측 수온 영역 연동 제한 건너뜸]:`, err.message));
   });
 
   return Promise.all(promises).then(() => wtempMap);
