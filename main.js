@@ -1085,7 +1085,7 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
       } catch (e) { localStorage.removeItem(cacheKey); }
     }
 
-    const url = `/api-tide/1192136/roms/GetRomsApiService?ServiceKey=${PUBLIC_PORTAL_KEY}&ResultType=json&MinLat=${minLat}&MaxLat=${maxLat}&MinLng=${minLng}&MaxLng=${maxLng}&ReqDate=${dateStr}&pageNo=1&numOfRows=300`;
+    const url = `/api-tide/1192136/roms/GetRomsApiService?serviceKey=${PUBLIC_PORTAL_KEY}&type=json&minLat=${minLat}&maxLat=${maxLat}&minLng=${minLng}&maxLng=${maxLng}&reqDate=${dateStr}&pageNo=1&numOfRows=300`;
     return fetch(url)
       .then(async res => {
         const rawText = await res.text();
