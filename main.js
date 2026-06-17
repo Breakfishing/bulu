@@ -482,15 +482,21 @@ window.findNearestDepth = function(lat, lng) {
 };
 
 map.on('click', function (e) {
-  // 모달이나 팝업이 열려있지 않은 순수한 맵 클릭 상태에서만 수심 검색을 작동시킴
   const backdrop = document.getElementById('modalBackdrop');
   if (backdrop && backdrop.classList.contains('active')) return;
   
   const depth = window.findNearestDepth(e.latlng.lat, e.latlng.lng);
+  console.log("클릭 위치 수심:", depth); // 콘솔에 값이 나오는지 확인 필수!
+
   if (depth !== null) {
-    L.popup({ className: 'custom-depth-popup', closeButton: false, offset: [0, -10] })
+    L.popup({ 
+        className: 'custom-depth-popup', 
+        closeButton: false, 
+        offset: [0, -10],
+        autoPan: true 
+    })
       .setLatLng(e.latlng)
-      .setContent(`<div style="font-weight: 800; font-size: 15px; text-align: center; color: var(--text-main); padding: 4px;">수심 <span style="color: #007aff;">${depth}m</span></div>`)
+      .setContent(`<div style="min-width: 80px; font-weight: 800; font-size: 15px; text-align: center; color: var(--text-main); padding: 4px;">수심 <span style="color: #007aff;">${depth}m</span></div>`)
       .openOn(map);
   }
 });
