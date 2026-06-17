@@ -1892,7 +1892,7 @@ window.renderPointDetailBottomSheet = function(docId, name, category, color, mem
     if (lblDetailParking) lblDetailParking.classList.remove('detail-toilet-hours-hidden'); 
     if (lblDetailFacilities) lblDetailFacilities.classList.remove('detail-toilet-hours-hidden'); 
     if (categoryBadge) categoryBadge.classList.remove('detail-toilet-hours-hidden');
-    if (weatherOpenBtn) weatherOpenBtn.classList.add('detail-toilet-hours-hidden');
+    if (weatherOpenBtn) weatherOpenBtn.classList.remove('detail-toilet-hours-hidden'); // 오타 수정 완료: 기상 정보 버튼 정상 노출
     if (lblDetailToiletHours) lblDetailToiletHours.classList.add('detail-toilet-hours-hidden'); 
 
     if (favBtn) {
@@ -1960,7 +1960,7 @@ window.renderPointDetailBottomSheet = function(docId, name, category, color, mem
 };
 
 // =========================================================================
-// GROUP 14: 포인트 관리 허브 목록 바인딩 및 가로 정렬 드래그 엔진 - 개편 및 오류수정 완료
+// GROUP 14: 포인트 관리 허브 목록 바인딩 및 가로 정렬 드래그 엔진
 // =========================================================================
 window.openPointDetailFromList = function(pt) {
   window.closeModals();
