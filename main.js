@@ -1956,13 +1956,13 @@ window.bindDragAndDropEvents = function(container, isFavSection = false) {
 
 function saveFavoriteOrderToFirebase(container) {
   const batch = db.batch(); const baseTime = Date.now();
-  [...container.querySelectorAll('.pm-item')].forEach((el, index) => { batch.update(db.collection('fishing_points').doc(el.id.replace('pm-node-', '')), { favoritedAt: baseTime - (index * 1000) }); });
+  ([...container.querySelectorAll('.pm-item')]).forEach((el, index) => { batch.update(db.collection('fishing_points').doc(el.id.replace('pm-node-', '')), { favoritedAt: baseTime - (index * 1000) }); });
   batch.commit();
 }
 
 function saveCategoryOrderWithinTabToFirebase(container) {
   const batch = db.batch(); const baseTime = Date.now();
-  [...container.querySelectorAll('.pm-item')].forEach((el, index) => { 
+  ([...container.querySelectorAll('.pm-item')]).forEach((el, index) => { 
     const docId = el.id.replace('pm-node-', '');
     const isToilet = cachedPublicToilets.some(t => t.id === docId);
     if (!isToilet) {
@@ -1981,10 +1981,14 @@ window.renderPointsManagementTab = function() {
     window.currentActiveCategory = localStorage.getItem('pm-last-category') || '전체';
   }
 
+  if (window.currentActiveCategory === '공중화장실 정보') {
+    window.currentActiveCategory = '화장실 추가';
+  }
+
   let categories = ['전체', '즐겨찾기'];
   
-  let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]').filter(cat => cat !== '공중화장실 정보' && cat !== 'toilet' && cat !== '미분류');
-  let currentCats = [...new Set(cachedFishingPoints.map(p => (p.category || '미분류').trim()))].filter(cat => cat !== '공중화장실 정보' && cat !== 'toilet' && cat !== '미분류');
+  let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]').filter(cat => cat !== '공중화장실 정보' && cat !== '화장실 추가' && cat !== 'toilet' && cat !== '미분류');
+  let currentCats = [...new Set(cachedFishingPoints.map(p => (p.category || '미분류').trim()))].filter(cat => cat !== '공중화장실 정보' && cat !== '화장실 추가' && cat !== 'toilet' && cat !== '미분류');
   
   let activeCategories = [...savedCatOrder];
   currentCats.forEach(cat => {
@@ -1993,7 +1997,7 @@ window.renderPointsManagementTab = function() {
   
   categories = categories.concat(activeCategories);
   categories.push('미분류');
-  categories.push('공중화장실 정보');
+  categories.push('화장실 추가');
 
   if (!categories.includes(window.currentActiveCategory)) {
     window.currentActiveCategory = '전체';
@@ -2011,7 +2015,7 @@ window.renderPointsManagementTab = function() {
     let catColor = '#868e96';
     if (catName === '전체') catColor = 'var(--primary-color)';
     else if (catName === '즐겨찾기') catColor = '#ffcc00';
-    else if (catName === '공중화장실 정보') catColor = '#ff9500';
+    else if (catName === '화장실 추가') catColor = '#ff9500';
     else if (catName === '미분류') catColor = '#868e96';
     else {
       const matchPoints = cachedFishingPoints.filter(p => (p.category || '미분류') === catName);
@@ -2051,14 +2055,13 @@ window.renderPointsManagementTab = function() {
 
     if (window.currentActiveCategory === '전체') {
       displayPoints = [
-        ...cachedFishingPoints.map(p => ({ ...p, category: (p.category && p.category.trim() !== "") ? p.category.trim() : "미분류" })),
-        ...cachedPublicToilets.map(t => ({ ...t, category: "toilet" }))
+        ...cachedFishingPoints.map(p => ({ ...p, category: (p.category && p.category.trim() !== "") ? p.category.trim() : "미분류" }))
       ];
     } else if (window.currentActiveCategory === '즐겨찾기') {
       displayPoints = cachedFishingPoints.filter(p => p.isFavorite === true);
       displayPoints.sort((a, b) => (b.favoritedAt || 0) - (a.favoritedAt || 0));
-    } else if (window.currentActiveCategory === '공중화장실 정보') {
-      displayPoints = cachedPublicToilets.map(t => ({ ...t, category: "toilet" }));
+    } else if (window.currentActiveCategory === '화장실 추가') {
+      displayPoints = cachedPublicToilets.slice(0, 5).map(t => ({ ...t, category: "toilet" }));
     } else {
       displayPoints = cachedFishingPoints.filter(p => (p.category || '미분류').trim() === window.currentActiveCategory.trim());
     }
@@ -2074,7 +2077,7 @@ window.renderPointsManagementTab = function() {
 
     if (window.currentActiveCategory === '즐겨찾기') {
       window.bindDragAndDropEvents(listContainer, true);
-    } else if (window.currentActiveCategory !== '전체' && window.currentActiveCategory !== '공중화장실 정보') {
+    } else if (window.currentActiveCategory !== '전체' && window.currentActiveCategory !== '화장실 추가') {
       window.bindDragAndDropEvents(listContainer, false);
     }
   }
