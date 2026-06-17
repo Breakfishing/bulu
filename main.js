@@ -1074,7 +1074,7 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
   const xmin = (lng - offset).toFixed(4);
   const xmax = (lng + offset).toFixed(4);
 
-  const cacheKey = `cc_roms_final_v5_${lat.toFixed(2)}_${lng.toFixed(2)}`;
+  const cacheKey = `cc_roms_adaptive_v1_${lat.toFixed(2)}_${lng.toFixed(2)}`;
   const localData = localStorage.getItem(cacheKey);
   if (localData) {
     try {
@@ -1087,38 +1087,87 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
 
   const url = `/api-tide/1192136/roms/GetRomsApiService?serviceKey=${PUBLIC_PORTAL_KEY}&type=json&ymin=${ymin}&ymax=${ymax}&xmin=${xmin}&xmax=${xmax}&pageNo=1&numOfRows=300`;
 
+  function extractArrayDynamic(obj) {
+    if (!obj) return [];
+    if (Array.isArray(obj)) return obj;
+    if (typeof obj === 'object') {
+      for (const key in obj) {
+        if (Array.isArray(obj[key])) return obj[key];
+      }
+      for (const key in obj) {
+        const res = extractArrayDynamic(obj[key]);
+        if (res && res.length > 0) return res;
+      }
+    }
+    return [];
+  }
+
   return fetch(url)
     .then(async res => {
       const rawText = await res.text();
-      if (!res.ok || rawText.includes("Unexpected errors") || !rawText.trim().startsWith("{")) {
-        throw new Error("KHOA ROMS Gateway Response Error");
+      if (!res.ok || rawText.includes("Unexpected errors")) {
+        throw new Error("KHOA ROMS Connection Interrupted");
       }
       return JSON.parse(rawText);
     })
     .then(json => {
-      const body = json?.body || json?.response?.body || json;
-      const itemNode = body?.items?.item || body?.items || body?.item;
-      const items = Array.isArray(itemNode) ? itemNode : (itemNode ? [itemNode] : []);
+      const items = extractArrayDynamic(json);
       
       items.forEach(item => {
-        if (item) {
-          const pTime = item.predcDt || item.predc_dt || item.recordTime || item.record_time || item.p_time;
-          const wTemp = item.waterTemp || item.water_temp || item.w_temp || item.wtemp;
-          if (pTime && wTemp) {
-            let key = "";
-            const digits = String(pTime).replace(/\D/g, '');
-            if (digits.length >= 10) {
-              key = digits.substring(0, 10) + "00";
-            } else {
-              const d = new Date(pTime);
-              if (!isNaN(d.getTime())) {
-                key = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}${String(d.getHours()).padStart(2, '0')}00`;
-              }
+        if (!item || typeof item !== 'object') return;
+        
+        let pTime = null;
+        let wTemp = null;
+        
+        for (const key in item) {
+          const lowerKey = key.toLowerCase();
+          if (lowerKey.includes('dt') || lowerKey.includes('time') || lowerKey.includes('date') || lowerKey.includes('predc')) {
+            pTime = item[key];
+            break;
+          }
+        }
+        
+        for (const key in item) {
+          const lowerKey = key.toLowerCase();
+          if (lowerKey.includes('temp') || lowerKey.includes('wt') || lowerKey.includes('w_t')) {
+            wTemp = item[key];
+            break;
+          }
+        }
+        
+        if (!pTime) {
+          for (const key in item) {
+            if (typeof item[key] === 'string' && /\d{4}[-\/.]?\d{2}[-\/.]?\d{2}/.test(item[key])) {
+              pTime = item[key];
+              break;
             }
-            const parsedTemp = parseFloat(wTemp);
-            if (key && !isNaN(parsedTemp)) {
-              wtempMap[key] = parsedTemp.toFixed(1) + "°C";
+          }
+        }
+        if (!wTemp) {
+          for (const key in item) {
+            const val = parseFloat(item[key]);
+            if (!isNaN(val) && val > 0 && val < 40 && !['lat', 'lon', 'lng', 'xmin', 'xmax', 'ymin', 'ymax'].includes(key.toLowerCase())) {
+              wTemp = item[key];
+              break;
             }
+          }
+        }
+
+        if (pTime && wTemp) {
+          let key = "";
+          const digits = String(pTime).replace(/\D/g, '');
+          if (digits.startsWith('20') && digits.length >= 10) {
+            key = digits.substring(0, 10) + "00";
+          } else {
+            const d = new Date(typeof pTime === 'number' ? pTime : (isNaN(pTime) ? pTime : parseInt(pTime)));
+            if (!isNaN(d.getTime())) {
+              key = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}${String(d.getHours()).padStart(2, '0')}00`;
+            }
+          }
+          
+          const parsedTemp = parseFloat(wTemp);
+          if (key && !isNaN(parsedTemp)) {
+            wtempMap[key] = parsedTemp.toFixed(1) + "°C";
           }
         }
       });
@@ -1129,7 +1178,7 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
       return wtempMap;
     })
     .catch(err => {
-      console.warn(`[ROMS 수온 통신 바이패스 예외 처리됨]`, err.message);
+      console.warn(`[ROMS 수온 레이어 결합 동적 탐색 우회]:`, err.message);
       return wtempMap;
     });
 };
