@@ -1068,13 +1068,13 @@ window.fetchTideData3DaysPromise = function(lat, lng) {
 
 window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
   const wtempMap = {};
-  const offset = 0.02;
+  const offset = 0.15;
   const ymin = (lat - offset).toFixed(4);
   const ymax = (lat + offset).toFixed(4);
   const xmin = (lng - offset).toFixed(4);
   const xmax = (lng + offset).toFixed(4);
 
-  const cacheKey = `cc_roms_v3_${lat.toFixed(2)}_${lng.toFixed(2)}`;
+  const cacheKey = `cc_roms_final_${lat.toFixed(2)}_${lng.toFixed(2)}`;
   const localData = localStorage.getItem(cacheKey);
   if (localData) {
     try {
@@ -1085,14 +1085,13 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
     } catch (e) { localStorage.removeItem(cacheKey); }
   }
 
-  // 명세서에 규정된 요청 변수명(ymin, ymax, xmin, xmax, type=json)으로 완벽 전환
   const url = `/api-tide/1192136/roms/GetRomsApiService?serviceKey=${PUBLIC_PORTAL_KEY}&type=json&ymin=${ymin}&ymax=${ymax}&xmin=${xmin}&xmax=${xmax}&pageNo=1&numOfRows=300`;
 
   return fetch(url)
     .then(async res => {
       const rawText = await res.text();
       if (!res.ok || rawText.includes("Unexpected errors") || !rawText.trim().startsWith("{")) {
-        throw new Error("KHOA ROMS API Response Error: " + rawText.substring(0, 150));
+        throw new Error("KHOA ROMS Gateway Response Error");
       }
       return JSON.parse(rawText);
     })
@@ -1103,7 +1102,7 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
       
       items.forEach(item => {
         if (item) {
-          const pTime = item.predcDt || item.predc_dt || item.recordTime;
+          const pTime = item.predcDt || item.predc_dt;
           const wTemp = item.waterTemp || item.water_temp;
           if (pTime && wTemp) {
             const digits = String(pTime).replace(/\D/g, '');
@@ -1117,13 +1116,14 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
           }
         }
       });
+
       if (Object.keys(wtempMap).length > 0) {
         localStorage.setItem(cacheKey, JSON.stringify({ data: wtempMap, timestamp: Date.now() }));
       }
       return wtempMap;
     })
     .catch(err => {
-      console.warn(`[ROMS 수치예측 모델 영역 데이터 매칭 제한 건너뜸]:`, err.message);
+      console.warn(`[ROMS 수온 통신 바이패스 예외 처리됨]`, err.message);
       return wtempMap;
     });
 };
