@@ -950,7 +950,7 @@ window.fetchSunriseSunsetForDatesPromise = function(lat, lng, dateStrings) {
 
 window.fetchKMAWeatherPromise = function(lat, lng) {
   const grid = window.convertLatLngToGrid(lat, lng);
-  const cacheKey = `cc_weather_${grid.nx}_${grid.ny}`;
+  const cacheKey = `cc_weather_v6_${grid.nx}_${grid.ny}`;
   const localData = localStorage.getItem(cacheKey);
   
   if (localData) {
@@ -964,7 +964,8 @@ window.fetchKMAWeatherPromise = function(lat, lng) {
 
   if (!KMA_AUTH_KEY || KMA_AUTH_KEY.includes("YOUR_KMA")) return Promise.resolve(null);
   const base = window.getKMABaseDateTime();
-  const url = `/api-hub/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?pageNo=1&numOfRows=1000&dataType=JSON&base_date=${base.baseDate}&base_time=${base.baseTime}&nx=${grid.nx}&ny=${grid.ny}&authKey=${KMA_AUTH_KEY}`;
+  // numOfRows를 1000에서 2000으로 확장하여 시간 연장으로 인한 타임라인 후반부 파고 잘림 현상을 완전 방지합니다.
+  const url = `/api-hub/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?pageNo=1&numOfRows=2000&dataType=JSON&base_date=${base.baseDate}&base_time=${base.baseTime}&nx=${grid.nx}&ny=${grid.ny}&authKey=${KMA_AUTH_KEY}`;
 
   return fetch(url)
     .then(res => res.json())
