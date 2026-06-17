@@ -2060,7 +2060,7 @@ window.renderPointsManagementTab = function() {
     } else if (window.currentActiveCategory === '즐겨찾기') {
       displayPoints = cachedFishingPoints.filter(p => p.isFavorite === true);
       displayPoints.sort((a, b) => (b.favoritedAt || 0) - (a.favoritedAt || 0));
-    } else if (window.currentActiveCategory === '화장실 추가') {
+    } else if (window.currentActiveCategory === '최근 추가된 화장실') {
       displayPoints = cachedPublicToilets.slice(0, 5).map(t => ({ ...t, category: "toilet" }));
     } else {
       displayPoints = cachedFishingPoints.filter(p => (p.category || '미분류').trim() === window.currentActiveCategory.trim());
