@@ -277,6 +277,40 @@ function getFishingPointSvg(color) {
 // =========================================================================
 selectedToiletHoursValue = "모름";
 
+// SUB-GROUP: 바다 위치 추적을 위한 카카오 로컬 키워드 역추적 엔진
+function searchNearestCoastalLandmark(lat, lng, successCallback, errorCallback) {
+  if (typeof kakao === 'undefined' || !kakao.maps || !kakao.maps.services || !kakao.maps.services.Places) {
+    if (errorCallback) errorCallback();
+    return;
+  }
+  const ps = new kakao.maps.services.Places();
+  const keywords = ['방파제', '해수욕장', '항구', '선착장', '해안', '갯바위'];
+  let index = 0;
+
+  function tryNextKeyword() {
+    if (index >= keywords.length) {
+      if (errorCallback) errorCallback();
+      return;
+    }
+    const keyword = keywords[index];
+    ps.keywordSearch(keyword, function(data, status) {
+      if (status === kakao.maps.services.Status.OK && data && data.length > 0) {
+        const closest = data[0];
+        const distanceInKm = (parseFloat(closest.distance) / 1000).toFixed(1);
+        if (successCallback) successCallback(`${closest.place_name} 인근 ${distanceInKm}km`);
+      } else {
+        index++;
+        tryNextKeyword();
+      }
+    }, {
+      location: new kakao.maps.LatLng(lat, lng),
+      radius: 20000,
+      sort: kakao.maps.services.SortBy.DISTANCE
+    });
+  }
+  tryNextKeyword();
+}
+
 window.fetchAddressForModal = function(lat, lng, elementId) {
   const addressEl = document.getElementById(elementId);
   if (addressEl) addressEl.innerText = "주소 변환 중...";
@@ -289,7 +323,22 @@ window.fetchAddressForModal = function(lat, lng, elementId) {
           const roadAddress = result[0].road_address ? result[0].road_address.address_name : null;
           const jibunAddress = result[0].address ? result[0].address.address_name : null;
           const finalAddr = roadAddress || jibunAddress || "주소 정보 없음";
-          if (addressEl) addressEl.innerText = finalAddr;
+          
+          if (finalAddr === "주소 정보 없음" || finalAddr.trim() === "") {
+            searchNearestCoastalLandmark(lat, lng, function(nearestAddr) {
+              if (addressEl) addressEl.innerText = nearestAddr;
+            }, function() {
+              if (addressEl) addressEl.innerText = "주소 정보 없음";
+            });
+          } else {
+            if (addressEl) addressEl.innerText = finalAddr;
+          }
+        } else {
+          searchNearestCoastalLandmark(lat, lng, function(nearestAddr) {
+            if (addressEl) addressEl.innerText = nearestAddr;
+          }, function() {
+            if (addressEl) addressEl.innerText = "주소 정보 없음";
+          });
         }
       });
     });
@@ -428,11 +477,27 @@ function setKakaoAddress(lat, lng, elementId, callback) {
         const roadAddress = result[0].road_address ? result[0].road_address.address_name : null;
         const jibunAddress = result[0].address ? result[0].address.address_name : null;
         const finalAddr = roadAddress || jibunAddress || "주소 정보 없음";
-        targetElement.innerText = finalAddr;
-        if (callback) callback(finalAddr);
+        
+        if (finalAddr === "주소 정보 없음" || finalAddr.trim() === "") {
+          searchNearestCoastalLandmark(lat, lng, function(nearestAddr) {
+            targetElement.innerText = nearestAddr;
+            if (callback) callback(nearestAddr);
+          }, function() {
+            targetElement.innerText = "주소 정보 없음";
+            if (callback) callback("주소 정보 없음");
+          });
+        } else {
+          targetElement.innerText = finalAddr;
+          if (callback) callback(finalAddr);
+        }
       } else {
-        targetElement.innerText = "주소 정보 없음";
-        if(callback) callback("주소 정보 없음");
+        searchNearestCoastalLandmark(lat, lng, function(nearestAddr) {
+          targetElement.innerText = nearestAddr;
+          if (callback) callback(nearestAddr);
+        }, function() {
+          targetElement.innerText = "주소 정보 없음";
+          if (callback) callback("주소 정보 없음");
+        });
       }
     });
   });
@@ -964,7 +1029,6 @@ window.fetchKMAWeatherPromise = function(lat, lng) {
 
   if (!KMA_AUTH_KEY || KMA_AUTH_KEY.includes("YOUR_KMA")) return Promise.resolve(null);
   const base = window.getKMABaseDateTime();
-  // numOfRows를 1000에서 2000으로 확장하여 시간 연장으로 인한 타임라인 후반부 파고 잘림 현상을 완전 방지합니다.
   const url = `/api-hub/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?pageNo=1&numOfRows=2000&dataType=JSON&base_date=${base.baseDate}&base_time=${base.baseTime}&nx=${grid.nx}&ny=${grid.ny}&authKey=${KMA_AUTH_KEY}`;
 
   return fetch(url)
@@ -1752,9 +1816,28 @@ window.renderPointDetailBottomSheet = function(docId, name, category, color, mem
       if (window.kakao.maps.services?.Geocoder) {
         new window.window.kakao.maps.services.Geocoder().coord2Address(lng, lat, function(result, status) {
           if (status === window.kakao.maps.services.Status.OK && result[0]) {
-            let finalAddr = result[0].address ? result[0].address.address_name : '주소 없음';
-            if (addrField) addrField.innerText = finalAddr;
-            db.collection(category === 'toilet' ? 'public_toilets' : 'fishing_points').doc(docId).update({ dbSavedAddress: finalAddr });
+            const roadAddress = result[0].road_address ? result[0].road_address.address_name : null;
+            const jibunAddress = result[0].address ? result[0].address.address_name : null;
+            let finalAddr = roadAddress || jibunAddress || "주소 정보 없음";
+            
+            if (finalAddr === "주소 정보 없음" || finalAddr.trim() === "") {
+              searchNearestCoastalLandmark(lat, lng, function(nearestAddr) {
+                if (addrField) addrField.innerText = nearestAddr;
+                db.collection(category === 'toilet' ? 'public_toilets' : 'fishing_points').doc(docId).update({ dbSavedAddress: nearestAddr });
+              }, function() {
+                if (addrField) addrField.innerText = "주소 정보 없음";
+              });
+            } else {
+              if (addrField) addrField.innerText = finalAddr;
+              db.collection(category === 'toilet' ? 'public_toilets' : 'fishing_points').doc(docId).update({ dbSavedAddress: finalAddr });
+            }
+          } else {
+            searchNearestCoastalLandmark(lat, lng, function(nearestAddr) {
+              if (addrField) addrField.innerText = nearestAddr;
+              db.collection(category === 'toilet' ? 'public_toilets' : 'fishing_points').doc(docId).update({ dbSavedAddress: nearestAddr });
+            }, function() {
+              if (addrField) addrField.innerText = "주소 정보 없음";
+            });
           }
         });
       }
@@ -1833,8 +1916,6 @@ window.renderPointDetailBottomSheet = function(docId, name, category, color, mem
       }
       
       document.getElementById('weatherModal')?.classList.add('active');
-
-      // 구형 콜백 누락 흐름을 걷어내고, 5대 공공데이터 동기화 및 6인자 매칭 인스턴스를 즉각 구동합니다.
       window.loadTimelineWithOptimisticUI(lat, lng);
     };
   }
@@ -1875,9 +1956,9 @@ window.openPointDetailFromList = function(pt) {
     const toiletIcon = L.divIcon({
       html: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M7 2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
-              <path d="M5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3z"></path>
-              <path d="M9 19v3"></path>
-              <path d="M15 19v3"></path>
+                  <path d="M5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3z"></path>
+                  <path d="M9 19v3"></path>
+                  <path d="M15 19v3"></path>
             </svg>`,
       className: 'custom-marker-wrapper-toilet temp-list-injected-toilet-node',
       iconSize: [24, 24], iconAnchor: [12, 12]
