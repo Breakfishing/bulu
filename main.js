@@ -481,22 +481,28 @@ window.findNearestDepth = function(lat, lng) {
   return null;
 };
 
+// 클릭한 위치들을 저장할 배열
+let clickedPointsLayer = L.layerGroup().addTo(map);
+
 map.on('click', function (e) {
   const backdrop = document.getElementById('modalBackdrop');
   if (backdrop && backdrop.classList.contains('active')) return;
   
   const depth = window.findNearestDepth(e.latlng.lat, e.latlng.lng);
-  console.log("클릭 위치 수심:", depth); // 콘솔에 값이 나오는지 확인 필수!
-
+  
   if (depth !== null) {
-    L.popup({ 
-        className: 'custom-depth-popup', 
-        closeButton: false, 
-        offset: [0, -10],
-        autoPan: true 
-    })
+    // 1. 클릭한 위치에 점 찍기
+    L.circleMarker(e.latlng, {
+      radius: 5,
+      color: '#007aff',
+      fillColor: '#007aff',
+      fillOpacity: 0.8
+    }).addTo(clickedPointsLayer);
+
+    // 2. 팝업 표시
+    L.popup({ className: 'custom-depth-popup', closeButton: false, offset: [0, -10] })
       .setLatLng(e.latlng)
-      .setContent(`<div style="min-width: 80px; font-weight: 800; font-size: 15px; text-align: center; color: var(--text-main); padding: 4px;">수심 <span style="color: #007aff;">${depth}m</span></div>`)
+      .setContent(`<div style="font-weight: 800; font-size: 14px; text-align: center;">${depth}m</div>`)
       .openOn(map);
   }
 });
