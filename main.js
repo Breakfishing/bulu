@@ -1667,11 +1667,25 @@ window.selectEditToiletHours = function(type, element) {
   if (type === '지정시간') detailRow.classList.add('active'); else detailRow.classList.remove('active');
 };
 
-window.openPointEditModal = function(docId, name, category, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, address) {
+window.openPointEditModal = function(docId, name, category, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, address, lat, lng) {
   document.getElementById('editPointDocId').value = docId; 
   document.getElementById('editPointName').value = name;
-  document.getElementById('pointEditAddress').innerText = address || "주소 정보 없음"; 
   document.getElementById('editPointMemo').value = memo;
+
+  const pointEditAddrEl = document.getElementById('pointEditAddress');
+  if (pointEditAddrEl) pointEditAddrEl.innerText = address || "주소 정보 없음"; 
+
+  // SUB-GROUP 가드: 주소가 유효하지 않은 경우에만 API 최초 1회 제한적 호출 실행 (중복 호출 차단)
+  if ((!address || address.includes("없음") || address.includes("중...")) && lat && lng) {
+    if (typeof searchNearestCoastalLandmark === 'function') {
+      searchNearestCoastalLandmark(lat, lng, function(nearestAddr) {
+        if (pointEditAddrEl) pointEditAddrEl.innerText = nearestAddr;
+        db.collection('fishing_points').doc(docId).update({ address: nearestAddr });
+      }, function() {
+        if (pointEditAddrEl) pointEditAddrEl.innerText = "주소 정보 없음";
+      });
+    }
+  }
 
   const catSelect = document.getElementById('editPointCategory');
   if (catSelect) {
@@ -1823,18 +1837,30 @@ window.renderPointDetailBottomSheet = function(docId, name, category, color, mem
             if (finalAddr === "주소 정보 없음" || finalAddr.trim() === "") {
               searchNearestCoastalLandmark(lat, lng, function(nearestAddr) {
                 if (addrField) addrField.innerText = nearestAddr;
-                db.collection(category === 'toilet' ? 'public_toilets' : 'fishing_points').doc(docId).update({ dbSavedAddress: nearestAddr });
+                if (category === 'toilet' || category === 'public_toilets') {
+                  db.collection('public_toilets').doc(docId).update({ dbSavedAddress: nearestAddr });
+                } else {
+                  db.collection('fishing_points').doc(docId).update({ address: nearestAddr });
+                }
               }, function() {
                 if (addrField) addrField.innerText = "주소 정보 없음";
               });
             } else {
               if (addrField) addrField.innerText = finalAddr;
-              db.collection(category === 'toilet' ? 'public_toilets' : 'fishing_points').doc(docId).update({ dbSavedAddress: finalAddr });
+              if (category === 'toilet' || category === 'public_toilets') {
+                db.collection('public_toilets').doc(docId).update({ dbSavedAddress: finalAddr });
+              } else {
+                db.collection('fishing_points').doc(docId).update({ address: finalAddr });
+              }
             }
           } else {
             searchNearestCoastalLandmark(lat, lng, function(nearestAddr) {
               if (addrField) addrField.innerText = nearestAddr;
-              db.collection(category === 'toilet' ? 'public_toilets' : 'fishing_points').doc(docId).update({ dbSavedAddress: nearestAddr });
+              if (category === 'toilet' || category === 'public_toilets') {
+                db.collection('public_toilets').doc(docId).update({ dbSavedAddress: nearestAddr });
+              } else {
+                db.collection('fishing_points').doc(docId).update({ address: nearestAddr });
+              }
             }, function() {
               if (addrField) addrField.innerText = "주소 정보 없음";
             });
@@ -1866,7 +1892,7 @@ window.renderPointDetailBottomSheet = function(docId, name, category, color, mem
     if (lblDetailParking) lblDetailParking.classList.remove('detail-toilet-hours-hidden'); 
     if (lblDetailFacilities) lblDetailFacilities.classList.remove('detail-toilet-hours-hidden'); 
     if (categoryBadge) categoryBadge.classList.remove('detail-toilet-hours-hidden');
-    if (weatherOpenBtn) weatherOpenBtn.classList.remove('detail-toilet-hours-hidden');
+    if (weatherOpenBtn) weatherOpenBtn.classList.add('detail-toilet-hours-hidden');
     if (lblDetailToiletHours) lblDetailToiletHours.classList.add('detail-toilet-hours-hidden'); 
 
     if (favBtn) {
@@ -1899,7 +1925,7 @@ window.renderPointDetailBottomSheet = function(docId, name, category, color, mem
     if (sheet) sheet.classList.remove('active'); 
     if (wrapper) wrapper.classList.remove('active'); 
     if (category === 'toilet' || category === 'public_toilets') window.openToiletEditModal(docId, name, memo, addrField.innerText); 
-    else window.openPointEditModal(docId, name, category, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, addrField.innerText); 
+    else window.openPointEditModal(docId, name, category, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, addrField.innerText, lat, lng); 
   };
 
   if (weatherOpenBtn) {
@@ -1996,7 +2022,7 @@ function createPointRowComponent(pt, isFavSection) {
   if (fBtn && !isToilet) fBtn.onclick = (e) => { e.stopPropagation(); db.collection('fishing_points').doc(pt.id).update({ isFavorite: !isCurrentlyFav, favoritedAt: !isCurrentlyFav ? Date.now() : firebase.firestore.FieldValue.delete() }); };
   
   const eBtn = row.querySelector('.pm-action-btn.edit'); 
-  if (eBtn && !isToilet) eBtn.onclick = (e) => { e.stopPropagation(); window.openPointEditModal(pt.id, pt.name || '무명 포인트', pt.category || '미분류', pt.memo || '등록된 메모가 없습니다.', pt.parkingType || 'none', pt.parkingUnit || '10분', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, pt.address || "주소 정보 없음"); };
+  if (eBtn && !isToilet) eBtn.onclick = (e) => { e.stopPropagation(); window.openPointEditModal(pt.id, pt.name || '무명 포인트', pt.category || '미분류', pt.memo || '등록된 메모가 없습니다.', pt.parkingType || 'none', pt.parkingUnit || '10분', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, pt.address || "주소 정보 없음", pt.lat, pt.lng); };
   
   const dBtn = row.querySelector('.pm-action-btn.delete'); 
   if (dBtn) dBtn.onclick = (e) => { e.stopPropagation(); window.openMarkerDeleteModal(pt.id, isToilet ? 'public_toilets' : 'fishing_points', pt.name || (isToilet ? '공중화장실' : '무명 포인트')); };
