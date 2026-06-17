@@ -488,14 +488,19 @@ window.findNearestDepth = function(lat, lng) {
 let depthLayer = L.layerGroup().addTo(map);
 
 // 화면에 보이는 데이터만 즉시 렌더링하는 함수
+// GROUP 17의 일부: 비동기 렌더링 안정화
 window.renderAllVisibleDepths = function() {
-  depthLayer.clearLayers(); // 기존 표시된 것 삭제
-  const bounds = map.getBounds(); // 현재 화면 좌표 범위
+  if (!window.coastalDepthData || !Array.isArray(window.coastalDepthData)) {
+    console.warn("수심 데이터가 아직 로드되지 않았습니다.");
+    return; // 데이터 없으면 종료
+  }
   
-  // 데이터 순회 (화면 범위 내에 있는 것만)
+  depthLayer.clearLayers();
+  const bounds = map.getBounds();
+  
   window.coastalDepthData.forEach(pt => {
-    if (bounds.contains([pt[0], pt[1]])) {
-      // 수심에 따른 색상 구분
+    // pt 구조가 [lat, lng, depth] 인지 확인
+    if (pt && pt.length >= 3 && bounds.contains([pt[0], pt[1]])) {
       let color = pt[2] < 5 ? '#ff3b30' : (pt[2] < 10 ? '#ff9500' : '#007aff');
       
       L.marker([pt[0], pt[1]], {
