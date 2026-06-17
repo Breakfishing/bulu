@@ -2077,7 +2077,7 @@ window.renderPointsManagementTab = function() {
 
     if (window.currentActiveCategory === '즐겨찾기') {
       window.bindDragAndDropEvents(listContainer, true);
-    } else if (window.currentActiveCategory !== '전체' && window.currentActiveCategory !== '화장실 추가') {
+    } else if (window.currentActiveCategory !== '전체' && window.currentActiveCategory !== '최근 추가된 화장실') {
       window.bindDragAndDropEvents(listContainer, false);
     }
   }
