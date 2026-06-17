@@ -2599,10 +2599,27 @@ window.logToAdminTerminal = function (message) {
 window.HOME_CARD_CACHE_KEY = "home_card_weather_tide_data";
 window.HOME_SELECTED_FAV_KEY = "home_selected_favorite_id";
 window.CACHE_EXPIRE_TIME = 60 * 60 * 1000;
+window.coastalDepthData = []; // SUB-GROUP: 수심 데이터 전역 적재 변수
 
 document.addEventListener("DOMContentLoaded", () => {
   window.initHomeDataSequence();
+  window.loadCoastalDepthData(); // 앱 구동 시 수심 데이터 비동기 로드 실행
 });
+
+// SUB-GROUP: 백그라운드 수심 데이터 Fetch 엔진
+window.loadCoastalDepthData = async function() {
+  try {
+    const response = await fetch('coastal_depth_compact.json');
+    if (response.ok) {
+      window.coastalDepthData = await response.json();
+      console.log(`수심 데이터 비동기 로드 완료: ${window.coastalDepthData.length}개 격자 확보`);
+    } else {
+      console.warn("coastal_depth_compact.json 파일을 찾을 수 없습니다.");
+    }
+  } catch (err) {
+    console.error("수심 데이터 로드 중 통신 오류 발생:", err);
+  }
+};
 
 window.initHomeDataSequence = async function () {
   window.populateHomeFavoritesDropdown();
@@ -2981,11 +2998,6 @@ window.getFormattedCurrentTime = function () {
   const minutes = String(now.getMinutes()).padStart(2, '0');
   return `${hours}:${minutes}`;
 };
-
-
-
-
-////
 
 const coastalData = [
 {"type":"FeatureCollection", "features": [
