@@ -1069,61 +1069,63 @@ window.fetchTideData3DaysPromise = function(lat, lng) {
 window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
   const wtempMap = {};
   const offset = 0.02;
-  const minLat = (lat - offset).toFixed(4);
-  const maxLat = (lat + offset).toFixed(4);
-  const minLng = (lng - offset).toFixed(4);
-  const maxLng = (lng + offset).toFixed(4);
+  const ymin = (lat - offset).toFixed(4);
+  const ymax = (lat + offset).toFixed(4);
+  const xmin = (lng - offset).toFixed(4);
+  const xmax = (lng + offset).toFixed(4);
 
-  const promises = dateStrings.map(dateStr => {
-    const cacheKey = `cc_roms_${lat.toFixed(2)}_${lng.toFixed(2)}_${dateStr}`;
-    const localData = localStorage.getItem(cacheKey);
-    if (localData) {
-      try {
-        const parsed = JSON.parse(localData);
-        Object.assign(wtempMap, parsed);
-        return Promise.resolve();
-      } catch (e) { localStorage.removeItem(cacheKey); }
-    }
+  const cacheKey = `cc_roms_v3_${lat.toFixed(2)}_${lng.toFixed(2)}`;
+  const localData = localStorage.getItem(cacheKey);
+  if (localData) {
+    try {
+      const parsed = JSON.parse(localData);
+      if (Date.now() - parsed.timestamp < 3 * 60 * 60 * 1000) {
+        return Promise.resolve(parsed.data);
+      }
+    } catch (e) { localStorage.removeItem(cacheKey); }
+  }
 
-    const url = `/api-tide/1192136/roms/GetRomsApiService?serviceKey=${PUBLIC_PORTAL_KEY}&type=json&minLat=${minLat}&maxLat=${maxLat}&minLng=${minLng}&maxLng=${maxLng}&reqDate=${dateStr}&pageNo=1&numOfRows=300`;
-    return fetch(url)
-      .then(async res => {
-        const rawText = await res.text();
-        if (!res.ok || rawText.includes("Unexpected errors") || !rawText.trim().startsWith("{")) {
-          throw new Error("KHOA ROMS API Server Error or Invalid Response");
-        }
-        return JSON.parse(rawText);
-      })
-      .then(json => {
-        const body = json?.body || json?.response?.body;
-        const itemNode = body?.items?.item;
-        const items = Array.isArray(itemNode) ? itemNode : (itemNode ? [itemNode] : []);
-        const dayCache = {};
-        items.forEach(item => {
-          if (item) {
-            const pTime = item.predcDt || item.predc_dt || item.recordTime;
-            const wTemp = item.waterTemp || item.water_temp;
-            if (pTime && wTemp) {
-              const digits = String(pTime).replace(/\D/g, '');
-              if (digits.length >= 10) {
-                const key = digits.substring(0, 10) + "00";
-                const parsedTemp = parseFloat(wTemp);
-                if (!isNaN(parsedTemp)) {
-                  wtempMap[key] = parsedTemp.toFixed(1) + "°C";
-                  dayCache[key] = parsedTemp.toFixed(1) + "°C";
-                }
+  // 명세서에 규정된 요청 변수명(ymin, ymax, xmin, xmax, type=json)으로 완벽 전환
+  const url = `/api-tide/1192136/roms/GetRomsApiService?serviceKey=${PUBLIC_PORTAL_KEY}&type=json&ymin=${ymin}&ymax=${ymax}&xmin=${xmin}&xmax=${xmax}&pageNo=1&numOfRows=300`;
+
+  return fetch(url)
+    .then(async res => {
+      const rawText = await res.text();
+      if (!res.ok || rawText.includes("Unexpected errors") || !rawText.trim().startsWith("{")) {
+        throw new Error("KHOA ROMS API Response Error: " + rawText.substring(0, 150));
+      }
+      return JSON.parse(rawText);
+    })
+    .then(json => {
+      const body = json?.body || json?.response?.body;
+      const itemNode = body?.items?.item;
+      const items = Array.isArray(itemNode) ? itemNode : (itemNode ? [itemNode] : []);
+      
+      items.forEach(item => {
+        if (item) {
+          const pTime = item.predcDt || item.predc_dt || item.recordTime;
+          const wTemp = item.waterTemp || item.water_temp;
+          if (pTime && wTemp) {
+            const digits = String(pTime).replace(/\D/g, '');
+            if (digits.length >= 10) {
+              const key = digits.substring(0, 10) + "00";
+              const parsedTemp = parseFloat(wTemp);
+              if (!isNaN(parsedTemp)) {
+                wtempMap[key] = parsedTemp.toFixed(1) + "°C";
               }
             }
           }
-        });
-        if (Object.keys(dayCache).length > 0) {
-          localStorage.setItem(cacheKey, JSON.stringify(dayCache));
         }
-      })
-      .catch(err => console.warn(`[ROMS 예측 수온 영역 연동 제한 건너뜸]:`, err.message));
-  });
-
-  return Promise.all(promises).then(() => wtempMap);
+      });
+      if (Object.keys(wtempMap).length > 0) {
+        localStorage.setItem(cacheKey, JSON.stringify({ data: wtempMap, timestamp: Date.now() }));
+      }
+      return wtempMap;
+    })
+    .catch(err => {
+      console.warn(`[ROMS 수치예측 모델 영역 데이터 매칭 제한 건너뜸]:`, err.message);
+      return wtempMap;
+    });
 };
 
 window.loadTimelineWithOptimisticUI = function(lat, lng) {
