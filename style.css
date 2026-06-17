@@ -2752,3 +2752,11 @@ textarea,
 [data-theme='dark'] .custom-depth-popup span {
   color: #4da3ff !important; /* 다크모드에서 더 밝은 파란색 */
 }
+
+.depth-label { 
+  background: rgba(255, 255, 255, 0.5); /* 숫자 뒤에 반투명 배경 */
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  width: 25px !important; height: 15px !important;
+  pointer-events: none; /* 클릭 방해 방지 */
+}
