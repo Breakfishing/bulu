@@ -1074,7 +1074,7 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
   const xmin = (lng - offset).toFixed(4);
   const xmax = (lng + offset).toFixed(4);
 
-  const cacheKey = `cc_roms_final_${lat.toFixed(2)}_${lng.toFixed(2)}`;
+  const cacheKey = `cc_roms_final_v5_${lat.toFixed(2)}_${lng.toFixed(2)}`;
   const localData = localStorage.getItem(cacheKey);
   if (localData) {
     try {
@@ -1096,22 +1096,28 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
       return JSON.parse(rawText);
     })
     .then(json => {
-      const body = json?.body || json?.response?.body;
-      const itemNode = body?.items?.item;
+      const body = json?.body || json?.response?.body || json;
+      const itemNode = body?.items?.item || body?.items || body?.item;
       const items = Array.isArray(itemNode) ? itemNode : (itemNode ? [itemNode] : []);
       
       items.forEach(item => {
         if (item) {
-          const pTime = item.predcDt || item.predc_dt;
-          const wTemp = item.waterTemp || item.water_temp;
+          const pTime = item.predcDt || item.predc_dt || item.recordTime || item.record_time || item.p_time;
+          const wTemp = item.waterTemp || item.water_temp || item.w_temp || item.wtemp;
           if (pTime && wTemp) {
+            let key = "";
             const digits = String(pTime).replace(/\D/g, '');
             if (digits.length >= 10) {
-              const key = digits.substring(0, 10) + "00";
-              const parsedTemp = parseFloat(wTemp);
-              if (!isNaN(parsedTemp)) {
-                wtempMap[key] = parsedTemp.toFixed(1) + "°C";
+              key = digits.substring(0, 10) + "00";
+            } else {
+              const d = new Date(pTime);
+              if (!isNaN(d.getTime())) {
+                key = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}${String(d.getHours()).padStart(2, '0')}00`;
               }
+            }
+            const parsedTemp = parseFloat(wTemp);
+            if (key && !isNaN(parsedTemp)) {
+              wtempMap[key] = parsedTemp.toFixed(1) + "°C";
             }
           }
         }
@@ -1778,23 +1784,8 @@ window.renderPointDetailBottomSheet = function(docId, name, category, color, mem
       
       document.getElementById('weatherModal')?.classList.add('active');
 
-      const dateStrings = [];
-      const baseNow = new Date();
-      for (let d = 0; d < 4; d++) {
-        const tDate = new Date(baseNow.getTime() + d * 24 * 60 * 60 * 1000);
-        const yyyy = tDate.getFullYear();
-        const mm = String(tDate.getMonth() + 1).padStart(2, '0');
-        const dd = String(tDate.getDate()).padStart(2, '0');
-        dateStrings.push(`${yyyy}${mm}${dd}`);
-      }
-
-      window.fetchSunriseSunsetForDates(lat, lng, dateStrings, function() {
-        window.fetchKMAWeather(lat, lng, function(liveWeatherMap) { 
-          window.fetchTideData3Days(lat, lng, function(realTidesSchedule) { 
-            window.buildTimelineUI(lat, lng, liveWeatherMap, realTidesSchedule); 
-          }); 
-        });
-      });
+      // 구형 콜백 누락 흐름을 걷어내고, 5대 공공데이터 동기화 및 6인자 매칭 인스턴스를 즉각 구동합니다.
+      window.loadTimelineWithOptimisticUI(lat, lng);
     };
   }
 
