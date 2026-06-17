@@ -875,11 +875,15 @@ const TIDE_STATIONS = [
 ];
 
 function getNearestTideStation(lat, lng) {
-  let minDistance = Infinity; let nearestStation = TIDE_STATIONS[0]; 
+  let minDistance = Infinity; 
+  let nearestStation = TIDE_STATIONS[0]; 
   TIDE_STATIONS.forEach(station => {
     const stationLng = station.lng !== undefined ? station.lng : station.mesh;
     const dist = Math.sqrt(Math.pow(station.lat - lat, 2) + Math.pow(stationLng - lng, 2));
-    if (dist < minDistance) { minDistance = dist; nearestStation = station; }
+    if (dist < minDistance) { 
+      minDistance = dist; 
+      nearestStation = station; 
+    }
   });
   return nearestStation.code;
 }
@@ -900,9 +904,10 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
     }
 
     const url = `/api-tide/1192136/surveyWaterTempAPI/GetSurveyWaterTempApiService?serviceKey=${PUBLIC_PORTAL_KEY}&type=json&obsCode=${obsCode}&reqDate=${dateStr}&pageNo=1&numOfRows=300`;
+    
     return fetch(url)
       .then(async res => {
-        if (!res.ok) throw new Error("API Server 500");
+        if (!res.ok) throw new Error("API Server Error");
         const text = await res.text();
         if (!text || !text.trim().startsWith("{")) throw new Error("Invalid JSON");
         return JSON.parse(text);
@@ -912,6 +917,7 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
         const itemNode = body?.items?.item;
         const items = Array.isArray(itemNode) ? itemNode : (itemNode ? [itemNode] : []);
         const dayCache = {};
+        
         items.forEach(item => {
           const rTime = item.recordTime || item.record_time;
           const wTemp = item.waterTemp || item.water_temp;
@@ -929,17 +935,20 @@ window.fetchRealWaterTempPromise = function(lat, lng, dateStrings) {
         });
         if (Object.keys(dayCache).length > 0) localStorage.setItem(cacheKey, JSON.stringify(dayCache));
       })
-      .catch(err => console.warn(`[수온 관측소 ${obsCode} 점검/데이터 없음]:`, err.message));
+      .catch(err => {
+        console.warn(`[수온 관측소 ${obsCode} 데이터 없음/서버장애]:`, err.message);
+      });
   });
 
   return Promise.all(promises).then(() => wtempMap);
 };
 
 // =========================================================================
-// GROUP 13-2: UI 빌더 및 변수 오타 수정본
+// GROUP 13-2: UI 빌더 및 타임라인 로직 (변수 참조 오류 수정본)
 // =========================================================================
 window.buildTimelineUI = function(lat, lng, weatherMap, realTides, waterTempMap, seaWeatherMap) {
-  // ... [중략: UI 빌더 초기화 로직 유지] ...
+  const now = new Date();
+  window.allTidesSchedule = [];
 
   if (realTides && Array.isArray(realTides) && realTides.length > 0) {
     window.allTidesSchedule = realTides;
@@ -948,28 +957,53 @@ window.buildTimelineUI = function(lat, lng, weatherMap, realTides, waterTempMap,
     while (k < 10) {
       let xHigh = 112 * (Math.PI / 2 + 2 * k * Math.PI); 
       let xLow = 112 * (3 * Math.PI / 2 + 2 * k * Math.PI); 
+      
       if (xHigh >= 0 && xHigh <= 4032) {
-        let hH = xHigh / 56; let dH = new Date(now.getTime() + hH * 60 * 60 * 1000);
+        let hH = xHigh / 56; 
+        let dH = new Date(now.getTime() + hH * 60 * 60 * 1000);
         window.allTidesSchedule.push({ 
-          type: '만조', color: '#ff3b30', 
+          type: '만조', 
+          color: '#ff3b30', 
           time: `${String(dH.getHours()).padStart(2, '0')}:${String(dH.getMinutes()).padStart(2, '0')}`, 
-          hoursFromNow: hH, level: '270', diff: 220, 
+          hoursFromNow: hH, 
+          level: '270', 
+          diff: 220, 
           rawDt: `${dH.getFullYear()}-${String(dH.getMonth()+1).padStart(2,'0')}-${String(dH.getDate()).padStart(2,'0')} ${String(dH.getHours()).padStart(2,'0')}:${String(dH.getMinutes()).padStart(2, '0')}:00` 
         });
       }
+      
       if (xLow >= 0 && xLow <= 4032) {
-        let hL = xLow / 56; let dL = new Date(now.getTime() + hL * 60 * 60 * 1000);
+        let hL = xLow / 56; 
+        let dL = new Date(now.getTime() + hL * 60 * 60 * 1000);
         window.allTidesSchedule.push({ 
-          type: '간조', color: '#007aff', 
+          type: '간조', 
+          color: '#007aff', 
           time: `${String(dL.getHours()).padStart(2, '0')}:${String(dL.getMinutes()).padStart(2, '0')}`, 
-          hoursFromNow: hL, level: '50', diff: -220, 
+          hoursFromNow: hL, 
+          level: '50', 
+          diff: -220, 
           rawDt: `${dL.getFullYear()}-${String(dL.getMonth()+1).padStart(2,'0')}-${String(dL.getDate()).padStart(2,'0')} ${String(dL.getHours()).padStart(2,'0')}:${String(dL.getMinutes()).padStart(2, '0')}:00` 
         });
       }
       k++;
     }
   }
-  // ... [이하 로직 유지] ...
+
+  // 이후 UI 렌더링 로직 (기존 유지)
+  const container = document.getElementById("timeline-container");
+  if (!container) return;
+  
+  container.innerHTML = ""; 
+  window.allTidesSchedule.sort((a, b) => a.hoursFromNow - b.hoursFromNow).forEach(item => {
+    const div = document.createElement("div");
+    div.className = "timeline-item";
+    div.innerHTML = `
+      <div class="time" style="color: ${item.color}">${item.time}</div>
+      <div class="type">${item.type}</div>
+      <div class="level">${item.level}cm</div>
+    `;
+    container.appendChild(div);
+  });
 };
 
 // =========================================================================
