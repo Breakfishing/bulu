@@ -1982,13 +1982,13 @@ window.renderPointsManagementTab = function() {
   }
 
   if (window.currentActiveCategory === '공중화장실 정보') {
-    window.currentActiveCategory = '화장실 추가';
+    window.currentActiveCategory = '최근 추가된 화장실';
   }
 
   let categories = ['전체', '즐겨찾기'];
   
-  let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]').filter(cat => cat !== '공중화장실 정보' && cat !== '화장실 추가' && cat !== 'toilet' && cat !== '미분류');
-  let currentCats = [...new Set(cachedFishingPoints.map(p => (p.category || '미분류').trim()))].filter(cat => cat !== '공중화장실 정보' && cat !== '화장실 추가' && cat !== 'toilet' && cat !== '미분류');
+  let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]').filter(cat => cat !== '공중화장실 정보' && cat !== '최근 추가된 화장실' && cat !== 'toilet' && cat !== '미분류');
+  let currentCats = [...new Set(cachedFishingPoints.map(p => (p.category || '미분류').trim()))].filter(cat => cat !== '공중화장실 정보' && cat !== '최근 추가된 화장실' && cat !== 'toilet' && cat !== '미분류');
   
   let activeCategories = [...savedCatOrder];
   currentCats.forEach(cat => {
@@ -1997,7 +1997,7 @@ window.renderPointsManagementTab = function() {
   
   categories = categories.concat(activeCategories);
   categories.push('미분류');
-  categories.push('화장실 추가');
+  categories.push('최근 추가된 화장실');
 
   if (!categories.includes(window.currentActiveCategory)) {
     window.currentActiveCategory = '전체';
@@ -2015,7 +2015,7 @@ window.renderPointsManagementTab = function() {
     let catColor = '#868e96';
     if (catName === '전체') catColor = 'var(--primary-color)';
     else if (catName === '즐겨찾기') catColor = '#ffcc00';
-    else if (catName === '화장실 추가') catColor = '#ff9500';
+    else if (catName === '최근 추가된 화장실') catColor = '#ff9500';
     else if (catName === '미분류') catColor = '#868e96';
     else {
       const matchPoints = cachedFishingPoints.filter(p => (p.category || '미분류') === catName);
