@@ -453,60 +453,23 @@ window.switchTab = function (tabId, navItem) {
   }
 };
 
-// SUB-GROUP: 초고속 수심 탐색 및 지도 클릭 이벤트 엔진
-window.findNearestDepth = function(lat, lng) {
-  if (!window.coastalDepthData || window.coastalDepthData.length === 0) return null;
-  
-  const margin = 0.005; // 탐색 부하를 없애기 위한 약 500m 이내 바운딩 박스
-  let minDist = Infinity;
-  let nearestDepth = null;
+// SUB-GROUP: 등심선 레이어 스타일 정의 엔진 (바로 보이기 용도)
+window.getContourStyle = function(feature) {
+  const depth = feature.properties.depth;
+  let color = '#007aff'; 
+  let weight = 2;
 
-  for (let i = 0; i < window.coastalDepthData.length; i++) {
-    const pt = window.coastalDepthData[i];
-    const pLat = pt[0];
-    const pLng = pt[1];
-    
-    if (Math.abs(pLat - lat) < margin && Math.abs(pLng - lng) < margin) {
-      const dist = Math.pow(pLat - lat, 2) + Math.pow(pLng - lng, 2);
-      if (dist < minDist) {
-        minDist = dist;
-        nearestDepth = pt[2];
-      }
-    }
-  }
-  
-  if (minDist < 0.000004) { // 근접 오차범위(약 200m) 이내일 경우에만 매칭 데이터 리턴
-    return nearestDepth;
-  }
-  return null;
+  if (depth <= 5) { color = '#ff3b30'; weight = 3; }       // 5m 이하 빨강
+  else if (depth <= 10) { color = '#ff9500'; weight = 2.5; } // 10m 이하 주황
+  else if (depth <= 20) { color = '#ffcc00'; weight = 2; }   // 20m 이하 노랑
+  else if (depth <= 40) { color = '#34c759'; weight = 1.5; } // 40m 이하 초록
+
+  return {
+    color: color,
+    weight: weight,
+    opacity: 0.8
+  };
 };
-
-// 숫자 표시를 위한 스타일 클래스 (CSS에 추가 필요)
-// .depth-label { font-size: 11px; font-weight: bold; text-shadow: 1px 1px 1px #fff; }
-
-window.renderDepthLabel = function(lat, lng, depth) {
-  // 수심별 색상 구분
-  let color = '#007aff'; // 기본 파랑
-  if (depth < 5) color = '#ff3b30';      // 5m 미만 빨강
-  if (depth >= 5 && depth < 10) color = '#ff9500'; // 5~10m 주황
-  
-  L.marker([lat, lng], {
-    icon: L.divIcon({
-      className: 'depth-label',
-      html: `<div style="color: ${color};">${depth}m</div>`,
-      iconSize: [20, 20]
-    })
-  }).addTo(map);
-};
-
-// 기존 map.on('click') 이벤트 수정
-map.on('click', function (e) {
-  const depth = window.findNearestDepth(e.latlng.lat, e.latlng.lng);
-  if (depth !== null) {
-    window.renderDepthLabel(e.latlng.lat, e.latlng.lng, depth);
-  }
-});
-
 
 // =========================================================================
 // GROUP 9: 카카오 API 역지오코딩 동기화 및 맵 바운드 기반 마커 가시성 제어
