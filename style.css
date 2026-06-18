@@ -2752,3 +2752,16 @@ textarea,
 [data-theme='dark'] .custom-depth-popup span {
   color: #4da3ff !important; /* 다크모드에서 더 밝은 파란색 */
 }
+
+
+/* 등심선 수심 툴팁 스타일 커스텀 (선택사항) */
+.leaflet-tooltip {
+  background: rgba(30, 30, 30, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 6px !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+}
