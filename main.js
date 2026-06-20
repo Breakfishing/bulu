@@ -2359,8 +2359,8 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
   L.popup({
     closeButton: false,
     autoPan: false,
-    maxWidth: 350,
-    minWidth: 350,
+    maxWidth: 400,
+    minWidth: 400,
     offset: L.point(0, -26)
   })
   .setLatLng([lat, lng])
