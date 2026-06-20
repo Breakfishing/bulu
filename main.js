@@ -2363,6 +2363,7 @@ const popupWrapper = document.createElement('div');
   
   popupWrapper.appendChild(popupContainer);
   document.getElementById('map').appendChild(popupWrapper);
+  document.getElementById('modalBackdrop')?.classList.add('active');
 
   // 닫기 기능 구현
   popupWrapper.onclick = () => popupWrapper.remove();
