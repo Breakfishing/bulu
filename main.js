@@ -1064,6 +1064,21 @@ let cachedNotices = [];
 let cachedEvents = [];
 let currentBoardTab = 'notice';
 
+// 정보 게시판 전용 모달들의 완전한 온/오프(잔상 제거)를 위한 글로벌 closeModals 인터셉터 래핑
+if (window.closeModals) {
+  const originalCloseModals = window.closeModals;
+  window.closeModals = function () {
+    originalCloseModals();
+    ['infoEditModal', 'fishingBanModal', 'sizeLimitModal', 'knotGuideModal'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.classList.remove('active');
+        el.style.display = 'none';
+      }
+    });
+  };
+}
+
 window.showNoticePage = function (initialTab) {
   window.closeModals();
   document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
@@ -1449,6 +1464,23 @@ window.handleInfoSearch = function (val) {
   window.renderInfoContentCards(val);
 };
 
+// 금어기 상세 기간 영역 가시성 제어 토글 핸들러 함수
+window.toggleBanDetailedPeriod = function (element) {
+  const detailRow = document.getElementById('banDetailedPeriodRow');
+  if (!detailRow) return;
+  
+  const isActive = detailRow.classList.contains('active');
+  if (isActive) {
+    detailRow.classList.remove('active');
+    detailRow.style.display = 'none';
+    if (element) element.classList.remove('active');
+  } else {
+    detailRow.classList.add('active');
+    detailRow.style.display = 'block';
+    if (element) element.classList.add('active');
+  }
+};
+
 window.openInfoWriteFormModal = function (tabType) {
   window.closeModals();
   document.getElementById('modalBackdrop')?.classList.add('active');
@@ -1466,9 +1498,22 @@ window.openInfoWriteFormModal = function (tabType) {
     safeSetElementValue('banRegion', '');
     safeSetElementValue('banNote', '');
     safeSetElementValue('banImageUrl', '');
+    
+    // 상세 기간 토글 행 초기화 (라벨 제어 없음)
+    const detailRow = document.getElementById('banDetailedPeriodRow');
+    if (detailRow) {
+      detailRow.classList.remove('active');
+      detailRow.style.display = 'none';
+    }
+    
     const titleLbl = document.getElementById('lblFishingBanModalTitle');
     if (titleLbl) titleLbl.innerText = '금어기 등록';
-    document.getElementById('fishingBanModal')?.classList.add('active');
+    
+    const modal = document.getElementById('fishingBanModal');
+    if (modal) {
+      modal.style.display = 'block';
+      modal.classList.add('active');
+    }
   } 
   else if (tabType === 'size_limit') {
     safeSetElementValue('limitModalMode', 'add');
@@ -1478,9 +1523,15 @@ window.openInfoWriteFormModal = function (tabType) {
     safeSetElementValue('limitMaxSize', '');
     safeSetElementValue('limitImageUrl', '');
     window.selectLimitType('sea', document.getElementById('chipLimitSea'));
+    
     const titleLbl = document.getElementById('lblSizeLimitModalTitle');
     if (titleLbl) titleLbl.innerText = '금지체장 등록';
-    document.getElementById('sizeLimitModal')?.classList.add('active');
+    
+    const modal = document.getElementById('sizeLimitModal');
+    if (modal) {
+      modal.style.display = 'block';
+      modal.classList.add('active');
+    }
   } 
   else if (tabType === 'knot_guide') {
     safeSetElementValue('knotModalMode', 'add');
@@ -1488,9 +1539,15 @@ window.openInfoWriteFormModal = function (tabType) {
     safeSetElementValue('knotTitle', '');
     safeSetElementValue('knotRecommend', '');
     safeSetElementValue('knotVideoUrl', '');
+    
     const titleLbl = document.getElementById('lblKnotGuideModalTitle');
     if (titleLbl) titleLbl.innerText = '매듭법 등록';
-    document.getElementById('knotGuideModal')?.classList.add('active');
+    
+    const modal = document.getElementById('knotGuideModal');
+    if (modal) {
+      modal.style.display = 'block';
+      modal.classList.add('active');
+    }
   }
 };
 
@@ -1513,9 +1570,31 @@ window.openInfoEditFormModal = function (tabType, docId) {
     safeSetElementValue('banRegion', item.region || '');
     safeSetElementValue('banNote', item.note || '');
     safeSetElementValue('banImageUrl', item.imageUrl || '');
+    
+    // 에딧 데이터 조건별 상세 기간 바인딩 (라벨 제어 없음)
+    const detailRow = document.getElementById('banDetailedPeriodRow');
+    if (detailRow) {
+      if (item.startMonth || item.startDate) {
+        detailRow.classList.add('active');
+        detailRow.style.display = 'block';
+        safeSetElementValue('banStartMonth', item.startMonth || '01');
+        safeSetElementValue('banStartDate', item.startDate || '01');
+        safeSetElementValue('banEndMonth', item.endMonth || '01');
+        safeSetElementValue('banEndDate', item.endDate || '01');
+      } else {
+        detailRow.classList.remove('active');
+        detailRow.style.display = 'none';
+      }
+    }
+    
     const titleLbl = document.getElementById('lblFishingBanModalTitle');
     if (titleLbl) titleLbl.innerText = '금어기 수정';
-    document.getElementById('fishingBanModal')?.classList.add('active');
+    
+    const modal = document.getElementById('fishingBanModal');
+    if (modal) {
+      modal.style.display = 'block';
+      modal.classList.add('active');
+    }
   } 
   else if (tabType === 'size_limit') {
     const item = cachedSizeLimits.find(s => s.id === docId);
@@ -1527,9 +1606,15 @@ window.openInfoEditFormModal = function (tabType, docId) {
     safeSetElementValue('limitMaxSize', item.maxSize || '');
     safeSetElementValue('limitImageUrl', item.imageUrl || '');
     window.selectLimitType(item.type || 'sea', item.type === 'fresh' ? document.getElementById('chipLimitFresh') : document.getElementById('chipLimitSea'));
+    
     const titleLbl = document.getElementById('lblSizeLimitModalTitle');
     if (titleLbl) titleLbl.innerText = '금지체장 수정';
-    document.getElementById('sizeLimitModal')?.classList.add('active');
+    
+    const modal = document.getElementById('sizeLimitModal');
+    if (modal) {
+      modal.style.display = 'block';
+      modal.classList.add('active');
+    }
   } 
   else if (tabType === 'knot_guide') {
     const item = cachedKnotGuides.find(k => k.id === docId);
@@ -1539,9 +1624,15 @@ window.openInfoEditFormModal = function (tabType, docId) {
     safeSetElementValue('knotTitle', item.title || '');
     safeSetElementValue('knotRecommend', item.recommend || '');
     safeSetElementValue('knotVideoUrl', item.videoUrl || '');
+    
     const titleLbl = document.getElementById('lblKnotGuideModalTitle');
     if (titleLbl) titleLbl.innerText = '매듭법 수정';
-    document.getElementById('knotGuideModal')?.classList.add('active');
+    
+    const modal = document.getElementById('knotGuideModal');
+    if (modal) {
+      modal.style.display = 'block';
+      modal.classList.add('active');
+    }
   }
 };
 
@@ -1564,8 +1655,17 @@ window.saveFishingBanData = function () {
 
   const payload = { species, period, region, note, imageUrl, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
 
+  // 상세 기간 활성화 상태일 경우 인풋 쌍 추가 저장
+  const detailRow = document.getElementById('banDetailedPeriodRow');
+  if (detailRow && detailRow.classList.contains('active')) {
+    payload.startMonth = document.getElementById('banStartMonth')?.value || '01';
+    payload.startDate = document.getElementById('banStartDate')?.value || '01';
+    payload.endMonth = document.getElementById('banEndMonth')?.value || '01';
+    payload.endDate = document.getElementById('banEndDate')?.value || '01';
+  }
+
   if (mode === 'edit') {
-    db.collection('fishing_ban').doc(targetId).update({ species, period, region, note, imageUrl }).then(() => {
+    db.collection('fishing_ban').doc(targetId).update(payload).then(() => {
       window.closeModals(); alert('수정되었습니다.');
     });
   } else {
@@ -1638,7 +1738,11 @@ window.openInfoEditModal = function () {
     editContentTextArea.value = window.cachedStaticTideHtml || '';
 
     document.getElementById('modalBackdrop')?.classList.add('active');
-    document.getElementById('infoEditModal')?.classList.add('active');
+    const modal = document.getElementById('infoEditModal');
+    if (modal) {
+      modal.style.display = 'block';
+      modal.classList.add('active');
+    }
   }
 };
 
