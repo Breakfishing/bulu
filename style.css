@@ -1049,6 +1049,16 @@ textarea,
     display: block;
 }
 
+/* Leaflet 팝업 프레임 위치 고정 (지도 줌/이동 영향 차단) */
+.leaflet-popup {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
+    z-index: 10000 !important;
+}
+
 /* Leaflet 고유의 말꼬리 핀과 배경 하드코딩 박스를 완벽히 투명화 */
 .leaflet-popup-content-wrapper {
     padding: 0 !important;
