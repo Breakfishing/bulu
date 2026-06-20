@@ -2215,17 +2215,37 @@ window.selectEditToiletHours = function (type, element) { selectedToiletHoursVal
 // =========================================================================
 // [SHEET AREA] 실시간 연안 종합 타임라인 플로팅 팝업 정보 렌더링 엔진
 // =========================================================================
+
+// 팝업이 닫힐 때 지도의 인터랙션 잠금 상태를 원천 해제하는 전역 이벤트 핸들러 바인딩
+if (window.mapObj) {
+  window.mapObj.on('popupclose', function () {
+    window.mapObj.dragging.enable();
+    window.mapObj.touchZoom.enable();
+    window.mapObj.scrollWheelZoom.enable();
+    window.mapObj.doubleClickZoom.enable();
+    if (window.mapObj.boxZoom) window.mapObj.boxZoom.enable();
+    if (window.mapObj.keyboard) window.mapObj.keyboard.enable();
+  });
+}
+
 window.renderPointDetailBottomSheet = function (docId, name, category, color, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, lat, lng, isFavorite, dbSavedAddress) {
-  // 기존 지도 팝업 객체가 열려있다면 충돌 방지를 위해 즉시 클로즈
+  // 기존 지도 팝업 객체가 열려있다면 충돌 방지를 위해 즉시 초기화 클로즈
   map.closePopup();
 
-  // 요구사항 반영: 마커와 플로팅 화면(상단 배치)이 모두 중앙에 가독성 높게 들어오도록 위도(lat) 오프셋 값 정밀 보정 연산 후 부드러운 초점 이동
-  const targetLatOffset = parseFloat(lat) + 0.0028;
-  map.setView([targetLatOffset, lng], 16);
+  // 요구사항 반영: 확대/축소 배율(Zoom)은 변경하지 않고 마커의 중심 좌표로만 화면을 정확히 피트 이동
+  map.setView([lat, lng], map.getZoom());
+
+  // 플로팅 팝업 조작 과정 중 배경 지도가 밀리거나 줌 오작동이 일어나는 현상을 방지하기 위해 맵 제어 기능 잠금
+  map.dragging.disable();
+  map.touchZoom.disable();
+  map.scrollWheelZoom.disable();
+  map.doubleClickZoom.disable();
+  if (map.boxZoom) map.boxZoom.disable();
+  if (map.keyboard) map.keyboard.disable();
 
   if (dbSavedAddress && dbSavedAddress.startsWith('소재지 도로명 주소:')) dbSavedAddress = dbSavedAddress.replace('소재지 도로명 주소:', '').trim();
 
-  // 기존 정적 마크업을 동적 노드로 복제하여 복합 이벤트 리스너의 독립 샌드박스 컴포넌트 확보
+  // 하단 고정 DOM 레이아웃 프레임을 Leaflet 전용 팝업 인스턴스 내부에 이식하기 위해 컨테이너 노드 샌드박싱 생성
   const popupContainer = document.createElement('div');
   popupContainer.className = 'bottom-sheet-modal-native';
   popupContainer.innerHTML = document.getElementById('detailModal').innerHTML;
@@ -2297,7 +2317,7 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
     naviOpenBtn.onclick = function (e) { e.stopPropagation(); window.open(localStorage.getItem('navi-app') === 'naver' ? `https://map.naver.com/index.nhn?elat=${lat}&elng=${lng}&etext=${encodeURIComponent(name)}&menu=route` : `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`, '_blank'); };
   }
 
-  // Leaflet 내장 팝업 엔진 컴포넌트를 호출하여 마커 직상단에 고정 디스플레이 구현 (자동 스크롤 및 포커싱 방어)
+  // 생성된 동적 노드를 기반으로 Leaflet 오픈 플로팅 뷰 포트 엔진 호출 구동
   L.popup({
     closeButton: false,
     autoPan: false,
