@@ -1049,27 +1049,46 @@ textarea,
     display: block;
 }
 
-.bottom-sheet,
-.bottom-sheet-modal-native {
-    position: fixed;
-    bottom: var(--nav-height) !important;
-    left: 0;
-    width: 100%;
-    height: auto !important;
-    background: var(--bg-panel);
-    border-radius: 20px 20px 0 0;
-    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.2);
-    z-index: 1002 !important;
-    overflow: hidden !important;
-    padding: 0 20px 20px;
-    box-sizing: border-box;
-    transform: translateY(100%);
-    transition: transform 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94);
+/* Leaflet 자체 팝업 외곽 박스 및 그림자 틀을 완전히 제거하여 단일화 처리 */
+.leaflet-popup-content-wrapper {
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
 }
 
-.detail-popup-wrapper.active .bottom-sheet,
-.detail-popup-wrapper.active .bottom-sheet-modal-native {
-    transform: translateY(0);
+/* Leaflet 기본 마진 여백을 파괴하고 350px 규격 프레임 고정 */
+.leaflet-popup-content {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 350px !important;
+}
+
+/* 기본 말꼬리 모양 고정 핀 투명 처리 */
+.leaflet-popup-tip {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* 우측 상단 X 닫기 버튼 강제 비활성화 */
+.leaflet-popup-close-button {
+    display: none !important;
+}
+
+.bottom-sheet,
+.bottom-sheet-modal-native {
+    width: 350px !important;
+    min-width: 350px !important;
+    background: var(--bg-panel);
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+    overflow: hidden !important;
+    padding: 16px !important;
+    box-sizing: border-box;
+    transform: none !important;
+    position: relative !important;
+    bottom: auto !important;
+    left: auto !important;
 }
 
 .bottom-sheet-handle-bar {
@@ -2218,6 +2237,7 @@ textarea,
     width: 100%;
 }
 
+
 .notice-header-write-btn {
     position: absolute;
     right: 16px;
@@ -2282,7 +2302,8 @@ textarea,
     animation: patchSlideUpCenter 0.32s cubic-bezier(0.1, 0.76, 0.55, 0.94) forwards;
 }
 
-.bottom-sheet-modal-native.active {
+/* Leaflet 전용 바텀시트 애니메이션 연계 */
+.leaflet-popup {
     animation: patchSlideUpBottom 0.32s cubic-bezier(0.1, 0.76, 0.55, 0.94) forwards;
 }
 
@@ -2768,14 +2789,14 @@ textarea,
 }
 
 .leaflet-tooltip {
-  background: rgba(30, 30, 30, 0.85) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 6px !important;
-  color: #ffffff !important;
-  font-weight: 700 !important;
-  font-size: 11px !important;
-  padding: 4px 8px !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    background: rgba(30, 30, 30, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 6px !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* =========================================================================
