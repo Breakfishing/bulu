@@ -1,5 +1,5 @@
 /* =========================================================================
-   GROUP 1: 글로벌 디자인 토큰 및 가변 테마 체계
+    GROUP 1: 글로벌 디자인 토큰 및 가변 테마 체계
    ========================================================================= */
 :root {
     --nav-height: 70px;
@@ -39,7 +39,7 @@
 }
 
 /* =========================================================================
-   GROUP 2: 레이아웃 핵심 코어 엔진 스택 및 타이포그래피
+    GROUP 2: 레이아웃 핵심 코어 엔진 스택 및 타이포그래피
    ========================================================================= */
 body,
 html {
@@ -107,7 +107,7 @@ textarea,
 }
 
 /* =========================================================================
-   GROUP 3: 스플래시 로딩 스크린 (다크모드 우회 순수 화이트 고정 규격)
+    GROUP 3: 스플래시 로딩 스크린 (다크모드 우회 순수 화이트 고정 규격)
    ========================================================================= */
 #splash-screen {
     position: fixed !important;
@@ -198,7 +198,7 @@ textarea,
 }
 
 /* =========================================================================
-   GROUP 4: 지도 레이어 및 오버레이 플로팅 패널
+    GROUP 4: 지도 레이어 및 오버레이 플로팅 패널
    ========================================================================= */
 .tab-content {
     display: none;
@@ -479,7 +479,7 @@ textarea,
 }
 
 /* =========================================================================
-   GROUP 5: 하단 내비게이션 탭바 및 공통 메뉴 그리드 허브
+    GROUP 5: 하단 내비게이션 탭바 및 공통 메뉴 그리드 허브
    ========================================================================= */
 #bottom-nav {
     height: var(--nav-height);
@@ -571,7 +571,7 @@ textarea,
 }
 
 /* =========================================================================
-   GROUP 6: 입력 양식 및 하위 팝업 모달 프레임 구조
+    GROUP 6: 입력 양식 및 하위 팝업 모달 프레임 구조
    ========================================================================= */
 .form-group,
 .modal-form-group {
@@ -635,7 +635,9 @@ textarea,
 #pointModal .chip-btn,
 #toiletModal .chip-btn,
 #toiletEditModal .chip-btn,
-#pointEditModal .chip-btn {
+#pointEditModal .chip-btn,
+#sizeLimitModal .chip-btn,
+#fishingBanModal .chip-btn {
     flex: 1;
     padding: 8px 0;
     border-radius: 8px;
@@ -1028,7 +1030,7 @@ textarea,
 }
 
 /* =========================================================================
-   GROUP 7: 바텀시트 상세 정보 및 실시간 해양 기상 타임라인 패널
+    GROUP 7: 바텀시트 상세 정보 및 실시간 해양 기상 타임라인 패널
    ========================================================================= */
 .detail-popup-wrapper,
 .modal-backdrop-for-sheet {
@@ -1263,7 +1265,7 @@ textarea,
     flex: 1;
 }
 
-.tides-floating-text-area {
+.do-not-delete-tides-floating-text-area {
     overflow-x: auto !important;
     width: 100% !important;
 }
@@ -1631,6 +1633,9 @@ textarea,
     display: flex;
     flex-direction: column;
     border-radius: 0 !important;
+    display: grid;
+    grid-template-rows: repeat(10, 1fr);
+    height: 100%;
 }
 
 .timeline-label-column {
@@ -1646,6 +1651,9 @@ textarea,
     align-items: center;
     box-sizing: border-box;
     border-radius: 0 !important;
+    display: grid;
+    grid-template-rows: repeat(10, 1fr);
+    height: 100%;
 }
 
 .timeline-label-column .tl-cell {
@@ -1672,13 +1680,15 @@ textarea,
 .cell-wind,
 .cell-dir,
 .cell-wave,
-.cell-wtemp {
+.cell-wtemp,
+.cell-crdir,
+.cell-crsp {
     height: 36px;
     border-radius: 0 !important;
 }
 
 /* =========================================================================
-   GROUP 8: 포인트 관리 대시보드 프리미엄 시스템 (상단 탭 바 개편 반영)
+    GROUP 8: 포인트 관리 대시보드 프리미엄 시스템 (상단 탭 바 개편 반영)
    ========================================================================= */
 .points-management-wrapper {
     width: 100%;
@@ -2058,7 +2068,7 @@ textarea,
 }
 
 /* =========================================================================
-   GROUP 9: 공지사항 및 이벤트 전용 직각화 게시판 규격 시스템
+    GROUP 9: 공지사항 및 이벤트 전용 직각화 게시판 규격 시스템
    ========================================================================= */
 .board-sub-tab-container {
     display: flex;
@@ -2251,7 +2261,7 @@ textarea,
 }
 
 /* =========================================================================
-   GROUP 10: 바텀시트, 애니메이션 스택 및 예외 레이어 가드 최종 선언
+    GROUP 10: 바텀시트, 애니메이션 스택 및 예외 레이어 가드 최종 선언
    ========================================================================= */
 #detailModalWrapper,
 #detailModal {
@@ -2313,7 +2323,10 @@ textarea,
     }
 }
 
-#noticeWriteModal {
+#noticeWriteModal,
+#fishingBanModal,
+#sizeLimitModal,
+#knotGuideModal {
     display: none !important;
     flex-direction: column !important;
     align-items: stretch !important;
@@ -2321,7 +2334,10 @@ textarea,
     z-index: 1020 !important;
 }
 
-#noticeWriteModal.active {
+#noticeWriteModal.active,
+#fishingBanModal.active,
+#sizeLimitModal.active,
+#knotGuideModal.active {
     display: flex !important;
 }
 
@@ -2384,8 +2400,7 @@ textarea,
 }
 
 /* =========================================================================
-   GROUP 11: 홈 화면 프리미엄 웨더 대시보드 컴포넌트 시스템
-   단일 카드의 스위칭 상태 기하 엔진 및 무한 루프 입자 기상 특수효과 선언
+    GROUP 11: 홈 화면 프리미엄 웨더 대시보드 컴포넌트 시스템
    ========================================================================= */
 .hc-main-card {
     width: 100%;
@@ -2646,7 +2661,6 @@ textarea,
     fill: #ffffff;
     opacity: 0.8;
     animation: hcSnowMove linear infinite;
-    transform-box: view-box;
 }
 
 @keyframes hcSnowMove {
@@ -2750,11 +2764,9 @@ textarea,
 }
 
 [data-theme='dark'] .custom-depth-popup span {
-  color: #4da3ff !important; /* 다크모드에서 더 밝은 파란색 */
+  color: #4da3ff !important;
 }
 
-
-/* 등심선 수심 툴팁 스타일 커스텀 (선택사항) */
 .leaflet-tooltip {
   background: rgba(30, 30, 30, 0.85) !important;
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
@@ -2764,4 +2776,268 @@ textarea,
   font-size: 11px !important;
   padding: 4px 8px !important;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* =========================================================================
+    GROUP 12: 새로고침 버튼 실시간 회전 애니메이션 및 기상 수정 레이어 셋
+   ========================================================================= */
+
+@keyframes hcSpinLinearInfinite {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.hc-spin-anim {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: hcSpinLinearInfinite 0.85s linear infinite !important;
+}
+
+.hc-main-card.cloudy .hc-cloud-day {
+    display: block !important;
+    opacity: 0.85 !important;
+}
+
+.hc-main-card.cloudy .hc-sun-node circle,
+.hc-main-card.cloudy .hc-moon-node path {
+    opacity: 0.35 !important;
+    filter: blur(1px) drop-shadow(0 0 0 transparent) !important;
+}
+
+.hc-main-card.cloudy .hc-yunsul-node ellipse {
+    opacity: 0.12 !important;
+    animation: none !important;
+}
+
+/* =========================================================================
+    신규 추가: 정보 게시판 동적 리스트 및 프리미엄 카드 템플릿 시스템
+   ========================================================================= */
+.info-search-wrapper {
+    padding: 12px 16px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border-color);
+    display: none;
+}
+
+/* 검색 기능 통합 활성화 대응 */
+.info-search-wrapper.active {
+    display: block !important;
+}
+
+.info-search-wrapper input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+/* 금어기, 금지체장 레이아웃 변형 (좌측 이미지, 우측 정보 횡단 정렬) */
+.info-card-item {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: row; /* 가로 배열 정의 */
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    align-items: center;
+}
+
+/* 우측 텍스트 정보 박스 컨테이너 */
+.info-card-content-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.info-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.info-card-species {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.info-card-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.info-card-badge.sea {
+    background-color: #007aff;
+}
+
+.info-card-badge.fresh {
+    background-color: #28a745;
+}
+
+.info-card-body-flex {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.info-card-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.info-detail-row {
+    font-size: 13.5px;
+    line-height: 1.4;
+    color: var(--text-main);
+    text-align: left;
+}
+
+.info-detail-row strong {
+    color: var(--text-muted);
+    font-weight: 600;
+    display: inline-block;
+    width: 65px;
+}
+
+/* 좌측 배치 어종 이미지 박스 규격 */
+.info-card-img-box {
+    width: 84px;
+    height: 84px;
+    border-radius: 10px;
+    background-color: var(--grid-item-bg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info-card-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.info-card-img-box svg {
+    width: 28px;
+    height: 28px;
+    stroke: var(--text-muted);
+    opacity: 0.4;
+}
+
+/* 매듭법 그리드 */
+.info-knot-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: 100%;
+}
+
+.info-knot-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 유튜브 쇼츠 종횡비 고정 세로 썸네일 규격(9:16) 설계 */
+.info-knot-thumb-wrapper {
+    width: 100%;
+    aspect-ratio: 9 / 16; /* 16:9에서 9:16 쇼츠 비율로 교체 */
+    background-color: #000000;
+    position: relative;
+    overflow: hidden;
+}
+
+.info-knot-thumb-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.info-knot-play-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info-knot-play-overlay svg {
+    width: 36px;
+    height: 36px;
+    fill: #ffffff;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+}
+
+.info-knot-info-area {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.info-knot-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--text-main);
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 매듭법 해시태그 텍스트 렌더링 규격 */
+.info-knot-tags {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary-color);
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 카드 하단 출처 채널명 마킹 소형 폰트 설계 */
+.info-knot-source {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: left;
+    margin-top: 2px;
+}
+
+#infoEditModal,
+#infoEditModal textarea {
+    font-family: inherit;
 }

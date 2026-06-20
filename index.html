@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>부루</title>
-
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" as="style" crossorigin
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
     <link rel="stylesheet" href="./style.css">
@@ -381,7 +381,7 @@
                         </svg>
                         <span class="grid-label">이벤트</span>
                     </div>
-                    <div class="grid-item">
+                    <div class="grid-item" onclick="window.showInfoBoardPage('fishing_ban')">
                         <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
@@ -389,7 +389,7 @@
                         </svg>
                         <span class="grid-label">금어기</span>
                     </div>
-                    <div class="grid-item">
+                    <div class="grid-item" onclick="window.showInfoBoardPage('size_limit')">
                         <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
                             <rect x="2" y="7" width="20" height="10" rx="2" ry="2"></rect>
@@ -400,7 +400,7 @@
                         </svg>
                         <span class="grid-label">금지체장</span>
                     </div>
-                    <div class="grid-item">
+                    <div class="grid-item" onclick="window.showInfoBoardPage('tide_table')">
                         <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
                             <path
@@ -412,7 +412,7 @@
                         </svg>
                         <span class="grid-label">물때표</span>
                     </div>
-                    <div class="grid-item">
+                    <div class="grid-item" onclick="window.showInfoBoardPage('knot_guide')">
                         <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="1"></circle>
@@ -547,6 +547,47 @@
                             <div id="lblInlineNoticeDate" class="notice-inline-date"></div>
                             <div id="lblInlineNoticeContent" class="notice-inline-content"></div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="info-board-page" class="tab-content">
+                <div class="points-management-wrapper">
+                    <div class="pm-header settings-header-flex">
+                        <button id="btnInfoBoardHeaderBack" type="button" onclick="window.handleInfoBoardBackNavigation()"
+                            class="settings-back-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                        </button>
+                        <span id="lblInfoBoardHeaderTitle">금어기 정보</span>
+                        <button id="btnInfoBoardAction" class="notice-header-write-btn" title="글 등록">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="board-sub-tab-container" style="overflow-x: auto; white-space: nowrap;">
+                        <button type="button" id="btnSubTabFishingBan" class="board-sub-tab-btn active"
+                            onclick="window.switchInfoSubTab('fishing_ban')">금어기</button>
+                        <button type="button" id="btnSubTabSizeLimit" class="board-sub-tab-btn"
+                            onclick="window.switchInfoSubTab('size_limit')">금지체장</button>
+                        <button type="button" id="btnSubTabTideTable" class="board-sub-tab-btn"
+                            onclick="window.switchInfoSubTab('tide_table')">물때표</button>
+                        <button type="button" id="btnSubTabKnotGuide" class="board-sub-tab-btn"
+                            onclick="window.switchInfoSubTab('knot_guide')">매듭법</button>
+                    </div>
+
+                    <div class="info-search-wrapper" id="infoSearchWrapper">
+                        <input type="text" id="infoSearchInput" placeholder="검색할 어종을 입력하세요" oninput="window.handleInfoSearch(this.value)">
+                    </div>
+
+                    <div class="pm-container" id="infoBoardContentContainer">
                     </div>
                 </div>
             </div>
@@ -826,14 +867,14 @@
     </div>
 
     <div id="categoryEditModal" class="modal">
-        <h3><span>카테고리 편집</span></h3>
+        <h3><span>카테고리 수정</span></h3>
         <input type="hidden" id="editTargetCategoryOldName">
         <div class="modal-form-group">
             <label>카테고리 이름</label>
-            <input type="text" id="editCategoryNameInput" placeholder="이름을 입력하세요">
+            <input type="text" id="editCategoryNameInput" placeholder="이름을 입력하세요" maxlength="8">
         </div>
         <div class="modal-form-group">
-            <label>그룹 대표 색상</label>
+            <label>카테고리 색상</label>
             <input type="hidden" id="editCategoryColorInput" value="#4f46e5">
             <div class="cat-edit-row-flex">
                 <div id="categoryEditMarkerIcon"
@@ -865,7 +906,7 @@
         </div>
         <div class="modal-action-row-grid">
             <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
-            <button type="button" class="modal-btn save" onclick="window.saveCategoryEditData()">저장완료</button>
+            <button type="button" class="modal-btn save" onclick="window.saveCategoryEditData()">수정 완료</button>
         </div>
     </div>
 
@@ -1022,6 +1063,138 @@
         <div class="modal-action-row-grid notice-write-action-margin">
             <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
             <button type="button" class="modal-btn save" onclick="window.saveNoticeData()">등록</button>
+        </div>
+    </div>
+
+    <div id="infoEditModal" class="bottom-sheet-modal-native">
+        <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
+        <h3 id="lblInfoEditModalTitle" class="notice-write-title-text">내용 수정</h3>
+        <input type="hidden" id="infoEditTargetTab" value="">
+        <div class="modal-form-group notice-write-group-margin">
+            <label>내용</label>
+            <textarea id="infoEditContent" placeholder="본문 내용을 HTML 형식이나 일반 텍스트로 입력하세요" class="notice-write-textarea" style="height: 300px !important;"></textarea>
+        </div>
+        <div class="modal-action-row-grid notice-write-action-margin">
+            <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
+            <button type="button" class="modal-btn save" onclick="window.saveInfoEditData()">저장</button>
+        </div>
+    </div>
+
+    <div id="fishingBanModal" class="bottom-sheet-modal-native">
+        <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
+        <h3 id="lblFishingBanModalTitle" class="notice-write-title-text">금어기 등록</h3>
+        <input type="hidden" id="banModalMode" value="add">
+        <input type="hidden" id="banModalTargetId" value="">
+        <div class="modal-form-group">
+            <label>어종</label>
+            <input type="text" id="banSpecies" placeholder="어종명을 입력하세요">
+        </div>
+        <div class="modal-form-group">
+            <label>기간 방식 설정</label>
+            <div class="chip-group-row">
+                <button type="button" class="chip-btn active" id="btnBanPeriodTypeMonth" onclick="window.toggleBanPeriodType('month', this)">월</button>
+                <button type="button" class="chip-btn" id="btnBanPeriodTypeDetail" onclick="window.toggleBanPeriodType('detail', this)">상세 기간</button>
+            </div>
+            <input type="hidden" id="banPeriodType" value="month">
+        </div>
+        <div class="modal-form-group" id="banMonthRow" style="display: block;">
+            <label>지정 월</label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="number" id="banMonthInput" placeholder="05" style="width: 80px; text-align: center;">
+                <span>월</span>
+            </div>
+        </div>
+        <div class="modal-form-group" id="banDetailPeriodRow" style="display: none;">
+            <label>상세 범위 설정</label>
+            <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
+                <input type="number" id="banStartMonth" placeholder="05" class="hour-input-center">
+                <span>월</span>
+                <input type="number" id="banStartDay" placeholder="01" class="hour-input-center">
+                <span>일 ~</span>
+                <input type="number" id="banEndMonth" placeholder="05" class="hour-input-center">
+                <span>월</span>
+                <input type="number" id="banEndDay" placeholder="31" class="hour-input-center">
+                <span>일</span>
+            </div>
+        </div>
+        <div class="modal-form-group">
+            <label>적용 지역</label>
+            <input type="text" id="banRegion" placeholder="예: 전 수역, 일부 수역 제외">
+        </div>
+        <div class="modal-form-group">
+            <label>비고</label>
+            <input type="text" id="banNote" placeholder="특이사항 입력">
+        </div>
+        <div class="modal-form-group">
+            <label>어종 이미지 링크 (URL)</label>
+            <input type="text" id="banImageUrl" placeholder="이미지 주소를 입력하세요">
+        </div>
+        <div class="modal-action-row-grid notice-write-action-margin">
+            <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
+            <button type="button" class="modal-btn save" onclick="window.saveFishingBanData()">저장</button>
+        </div>
+    </div>
+
+    <div id="sizeLimitModal" class="bottom-sheet-modal-native">
+        <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
+        <h3 id="lblSizeLimitModalTitle" class="notice-write-title-text">금지체장 등록</h3>
+        <input type="hidden" id="limitModalMode" value="add">
+        <input type="hidden" id="limitModalTargetId" value="">
+        <div class="modal-form-group">
+            <label>어종</label>
+            <input type="text" id="limitSpecies" placeholder="어종명을 입력하세요">
+        </div>
+        <div class="modal-form-group">
+            <label>분류 선택</label>
+            <div class="chip-group-row" id="limitTypeChips">
+                <button type="button" class="chip-btn active" id="chipLimitSea" onclick="window.selectLimitType('sea', this)">바다</button>
+                <button type="button" class="chip-btn" id="chipLimitFresh" onclick="window.selectLimitType('fresh', this)">민물</button>
+            </div>
+            <input type="hidden" id="limitType" value="sea">
+        </div>
+        <div class="modal-form-group">
+            <label>금지체장 범위 설정</label>
+            <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                <input type="number" id="limitMinSize" placeholder="최소(cm)" style="flex: 1;">
+                <span>이상 ~</span>
+                <input type="number" id="limitMaxSize" placeholder="최대(cm)" style="flex: 1;">
+                <span>이하</span>
+            </div>
+        </div>
+        <div class="modal-form-group">
+            <label>어종 이미지 링크 (URL)</label>
+            <input type="text" id="limitImageUrl" placeholder="이미지 주소를 입력하세요">
+        </div>
+        <div class="modal-action-row-grid notice-write-action-margin">
+            <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
+            <button type="button" class="modal-btn save" onclick="window.saveSizeLimitData()">저장</button>
+        </div>
+    </div>
+
+    <div id="knotGuideModal" class="bottom-sheet-modal-native">
+        <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
+        <h3 id="lblKnotGuideModalTitle" class="notice-write-title-text">매듭법 등록</h3>
+        <input type="hidden" id="knotModalMode" value="add">
+        <input type="hidden" id="knotModalTargetId" value="">
+        <div class="modal-form-group">
+            <label>매듭법 명</label>
+            <input type="text" id="knotTitle" placeholder="매듭법 이름을 입력하세요">
+        </div>
+        <div class="modal-form-group">
+            <label>태그 (콤마로 구분하여 입력)</label>
+            <input type="text" id="knotTags" placeholder="예: 원줄, 쇼크리더, 바늘">
+        </div>
+        <div class="modal-form-group">
+            <label>출처 채널명</label>
+            <input type="text" id="knotSource" placeholder="유튜브 채널명을 입력하세요">
+        </div>
+        <div class="modal-form-group">
+            <label>영상 링크 (유튜브 쇼츠 URL)</label>
+            <input type="text" id="knotVideoUrl" placeholder="https://youtube.com/shorts/...">
+        </div>
+        <div class="modal-action-row-grid notice-write-action-margin">
+            <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
+            <button type="button" class="modal-btn save" onclick="window.saveKnotGuideData()">저장</button>
         </div>
     </div>
 
