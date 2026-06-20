@@ -2354,14 +2354,19 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
     naviOpenBtn.onclick = function (e) { e.stopPropagation(); window.open(localStorage.getItem('navi-app') === 'naver' ? `https://map.naver.com/index.nhn?elat=${lat}&elng=${lng}&etext=${encodeURIComponent(name)}&menu=route` : `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`, '_blank'); };
   }
 
-  // 마커 물리 크기(39px) 보정을 위해 offset 지점을 [0, -40]으로 완벽 격리하고, 화면 중심 자동 보정을 위해 autoPan을 true로 강제 고정
-  L.popup({
-    closeButton: false,
-    autoPan: true
-  })
-  .setLatLng([lat, lng])
-  .setContent(popupContainer)
-  .openOn(map);
+const popupWrapper = document.createElement('div');
+  popupWrapper.className = 'custom-fixed-popup-wrapper';
+  popupWrapper.style.position = 'fixed';
+  popupWrapper.style.top = '50%';
+  popupWrapper.style.left = '50%';
+  popupWrapper.style.transform = 'translate(-50%, -50%)';
+  popupWrapper.style.zIndex = '10000';
+  
+  popupWrapper.appendChild(popupContainer);
+  document.getElementById('map').appendChild(popupWrapper);
+
+  // 닫기 기능 구현
+  popupWrapper.onclick = () => popupWrapper.remove();
 };
 
 window.openPointDetailFromList = function (pt) {
