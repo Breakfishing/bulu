@@ -2295,10 +2295,6 @@ textarea,
     animation: patchSlideUpCenter 0.32s cubic-bezier(0.1, 0.76, 0.55, 0.94) forwards;
 }
 
-/* Leaflet 전용 바텀시트 애니메이션 연계 */
-.leaflet-popup {
-    animation: patchSlideUpBottom 0.32s cubic-bezier(0.1, 0.76, 0.55, 0.94) forwards;
-}
 
 .modal-backdrop.active {
     display: block !important;
