@@ -2357,10 +2357,7 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
   // 마커 물리 크기(39px) 보정을 위해 offset 지점을 [0, -40]으로 완벽 격리하고, 화면 중심 자동 보정을 위해 autoPan을 true로 강제 고정
   L.popup({
     closeButton: false,
-    autoPan: true,
-    maxWidth: 350,
-    minWidth: 350,
-    offset: L.point(0, -40)
+    autoPan: true
   })
   .setLatLng([lat, lng])
   .setContent(popupContainer)
