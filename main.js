@@ -2308,30 +2308,43 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
     weatherOpenBtn.onclick = function (e) {
       e.stopPropagation();
       
-      // 날씨 모달 엘리먼트 활성화 (오류 발생으로 멈추지 않도록 최상단 배치)
+      // 최우선 순위: 날씨 모달 컨테이너부터 무조건 화면에 활성화 노출
       const weatherModal = document.getElementById('weatherModal');
-      if (weatherModal) weatherModal.classList.add('active');
+      if (weatherModal) {
+        weatherModal.classList.add('active');
+      }
       
-      const titleLabel = document.getElementById('lblWeatherModalTitle');
-      if (titleLabel) titleLabel.innerText = name;
+      // 내부 텍스트 및 데이터 바인딩 로직을 개별 try-catch로 격리하여 스크립트 정지 원천 차단
+      try {
+        const titleLabel = document.getElementById('lblWeatherModalTitle');
+        if (titleLabel) titleLabel.innerText = name;
+      } catch (err) {
+        console.error("Title binding fail:", err);
+      }
       
-      const wIcon = document.getElementById('weatherModalMarkerIcon');
-      if (wIcon) {
-        try {
+      try {
+        const wIcon = document.getElementById('weatherModalMarkerIcon');
+        if (wIcon) {
           if (category === 'toilet') {
             wIcon.innerHTML = `<svg width="14" height="17" viewBox="0 0 36 42"><path d="M18 0C8.06 0 0 8.06 0 18C0 28.54 18 42 18 42C18 42 36 28.54 36 18C36 8.06 27.94 0 18 0Z" fill="#ff9500"/><circle cx="18" cy="16" r="5" fill="#ffffff"/><path d="M14 24H22V27H14V24Z" fill="#ffffff"/></svg>`;
           } else if (typeof getFishingPointSvg === 'function') {
             wIcon.innerHTML = getFishingPointSvg(color).replace('width="26" height="39"', 'width="20" height="30"');
           } else {
-            wIcon.innerHTML = `<svg width="20" height="30" viewBox="0 0 24 24" fill="${color || '#var(--primary-color)'}"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-12-7z"/></svg>`;
+            wIcon.innerHTML = `<svg width="20" height="30" viewBox="0 0 24 24" fill="${color || 'var(--primary-color)'}"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-12-7z"/></svg>`;
           }
-        } catch (iconErr) {
-          wIcon.innerHTML = '';
         }
+      } catch (err) {
+        console.error("Icon rendering fail:", err);
       }
       
-      if (typeof window.loadTimelineWithOptimisticUI === 'function') {
-        window.loadTimelineWithOptimisticUI(lat, lng);
+      try {
+        if (typeof window.loadTimelineWithOptimisticUI === 'function') {
+          window.loadTimelineWithOptimisticUI(lat, lng);
+        } else if (typeof loadTimelineWithOptimisticUI === 'function') {
+          loadTimelineWithOptimisticUI(lat, lng);
+        }
+      } catch (err) {
+        console.error("Timeline engine call fail:", err);
       }
     };
   }
@@ -2342,7 +2355,7 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
     naviOpenBtn.onclick = function (e) { e.stopPropagation(); window.open(localStorage.getItem('navi-app') === 'naver' ? `https://map.naver.com/index.nhn?elat=${lat}&elng=${lng}&etext=${encodeURIComponent(name)}&menu=route` : `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`, '_blank'); };
   }
 
-  // 요구사항 반영: 플로팅 모달 가로 넓이를 310에서 350으로 확장 조정
+  // 요구사항 반영: 플로팅 모달 가로 넓이를 안전하게 수용하도록 Leaflet 팝업 프레임 가로폭 확장 설정
   L.popup({
     closeButton: false,
     autoPan: false,
