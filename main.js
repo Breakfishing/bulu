@@ -2362,8 +2362,7 @@ const popupWrapper = document.createElement('div');
   popupWrapper.style.zIndex = '10000';
   
   popupWrapper.appendChild(popupContainer);
-  document.getElementById('map').appendChild(popupWrapper);
-  document.getElementById('modalBackdrop')?.classList.add('active');
+  document.getElementById('modalBackdrop')?.classList.add('active');document.getElementById('map').appendChild(popupWrapper);
 
   // 닫기 기능 구현
   popupWrapper.onclick = () => popupWrapper.remove();
