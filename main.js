@@ -1479,7 +1479,8 @@ window.handleInfoSearch = function (val) {
   window.renderInfoContentCards(val);
 };
 
-window.toggleBanDetailedPeriod = function (element) {
+// HTML 규격 window.toggleBanPeriodType 명칭 일치화 및 지정 월 라벨 제어 완전 제거
+window.toggleBanPeriodType = function (element) {
   const detailRow = document.getElementById('banDetailedPeriodRow');
   if (!detailRow) return;
   
@@ -1584,6 +1585,7 @@ window.openInfoEditFormModal = function (tabType, docId) {
     safeSetElementValue('banNote', item.note || '');
     safeSetElementValue('banImageUrl', item.imageUrl || '');
     
+    // 에딧 데이터 조건별 상세 기간 바인딩 (라벨 제어 일절 없음)
     const detailRow = document.getElementById('banDetailedPeriodRow');
     if (detailRow) {
       if (item.startMonth || item.startDate) {
