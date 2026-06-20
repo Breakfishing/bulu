@@ -1064,16 +1064,31 @@ let cachedNotices = [];
 let cachedEvents = [];
 let currentBoardTab = 'notice';
 
-// 정보 게시판 전용 모달들의 완전한 온/오프(잔상 제거)를 위한 글로벌 closeModals 인터셉터 래핑
+// 하단 탭 뒤에 모달이 숨거나 잔상이 남는 현상을 근본적으로 차단하기 위한 상위 레이어 및 가시성 스타일 가드 주입
+(function() {
+  const style = document.createElement('style');
+  style.innerHTML = `
+    #infoEditModal, #fishingBanModal, #sizeLimitModal, #knotGuideModal, #weatherModal {
+      display: none !important;
+      z-index: 999999 !important;
+    }
+    #infoEditModal.active, #fishingBanModal.active, #sizeLimitModal.active, #knotGuideModal.active, #weatherModal.active {
+      display: block !important;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+// 기존 closeModals 구조와 안전하게 결합하여 자바스크립트 레벨에서도 display 속성을 강제 오프 처리
 if (window.closeModals) {
   const originalCloseModals = window.closeModals;
   window.closeModals = function () {
     originalCloseModals();
-    ['infoEditModal', 'fishingBanModal', 'sizeLimitModal', 'knotGuideModal'].forEach(id => {
+    ['infoEditModal', 'fishingBanModal', 'sizeLimitModal', 'knotGuideModal', 'weatherModal'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
         el.classList.remove('active');
-        el.style.display = 'none';
+        el.style.setProperty('display', 'none', 'important');
       }
     });
   };
@@ -1464,7 +1479,6 @@ window.handleInfoSearch = function (val) {
   window.renderInfoContentCards(val);
 };
 
-// 금어기 상세 기간 영역 가시성 제어 토글 핸들러 함수
 window.toggleBanDetailedPeriod = function (element) {
   const detailRow = document.getElementById('banDetailedPeriodRow');
   if (!detailRow) return;
@@ -1472,11 +1486,11 @@ window.toggleBanDetailedPeriod = function (element) {
   const isActive = detailRow.classList.contains('active');
   if (isActive) {
     detailRow.classList.remove('active');
-    detailRow.style.display = 'none';
+    detailRow.style.setProperty('display', 'none', 'important');
     if (element) element.classList.remove('active');
   } else {
     detailRow.classList.add('active');
-    detailRow.style.display = 'block';
+    detailRow.style.setProperty('display', 'block', 'important');
     if (element) element.classList.add('active');
   }
 };
@@ -1499,11 +1513,10 @@ window.openInfoWriteFormModal = function (tabType) {
     safeSetElementValue('banNote', '');
     safeSetElementValue('banImageUrl', '');
     
-    // 상세 기간 토글 행 초기화 (라벨 제어 없음)
     const detailRow = document.getElementById('banDetailedPeriodRow');
     if (detailRow) {
       detailRow.classList.remove('active');
-      detailRow.style.display = 'none';
+      detailRow.style.setProperty('display', 'none', 'important');
     }
     
     const titleLbl = document.getElementById('lblFishingBanModalTitle');
@@ -1511,7 +1524,7 @@ window.openInfoWriteFormModal = function (tabType) {
     
     const modal = document.getElementById('fishingBanModal');
     if (modal) {
-      modal.style.display = 'block';
+      modal.style.setProperty('display', 'block', 'important');
       modal.classList.add('active');
     }
   } 
@@ -1529,7 +1542,7 @@ window.openInfoWriteFormModal = function (tabType) {
     
     const modal = document.getElementById('sizeLimitModal');
     if (modal) {
-      modal.style.display = 'block';
+      modal.style.setProperty('display', 'block', 'important');
       modal.classList.add('active');
     }
   } 
@@ -1545,7 +1558,7 @@ window.openInfoWriteFormModal = function (tabType) {
     
     const modal = document.getElementById('knotGuideModal');
     if (modal) {
-      modal.style.display = 'block';
+      modal.style.setProperty('display', 'block', 'important');
       modal.classList.add('active');
     }
   }
@@ -1571,19 +1584,18 @@ window.openInfoEditFormModal = function (tabType, docId) {
     safeSetElementValue('banNote', item.note || '');
     safeSetElementValue('banImageUrl', item.imageUrl || '');
     
-    // 에딧 데이터 조건별 상세 기간 바인딩 (라벨 제어 없음)
     const detailRow = document.getElementById('banDetailedPeriodRow');
     if (detailRow) {
       if (item.startMonth || item.startDate) {
         detailRow.classList.add('active');
-        detailRow.style.display = 'block';
+        detailRow.style.setProperty('display', 'block', 'important');
         safeSetElementValue('banStartMonth', item.startMonth || '01');
         safeSetElementValue('banStartDate', item.startDate || '01');
         safeSetElementValue('banEndMonth', item.endMonth || '01');
         safeSetElementValue('banEndDate', item.endDate || '01');
       } else {
         detailRow.classList.remove('active');
-        detailRow.style.display = 'none';
+        detailRow.style.setProperty('display', 'none', 'important');
       }
     }
     
@@ -1592,7 +1604,7 @@ window.openInfoEditFormModal = function (tabType, docId) {
     
     const modal = document.getElementById('fishingBanModal');
     if (modal) {
-      modal.style.display = 'block';
+      modal.style.setProperty('display', 'block', 'important');
       modal.classList.add('active');
     }
   } 
@@ -1612,7 +1624,7 @@ window.openInfoEditFormModal = function (tabType, docId) {
     
     const modal = document.getElementById('sizeLimitModal');
     if (modal) {
-      modal.style.display = 'block';
+      modal.style.setProperty('display', 'block', 'important');
       modal.classList.add('active');
     }
   } 
@@ -1630,7 +1642,7 @@ window.openInfoEditFormModal = function (tabType, docId) {
     
     const modal = document.getElementById('knotGuideModal');
     if (modal) {
-      modal.style.display = 'block';
+      modal.style.setProperty('display', 'block', 'important');
       modal.classList.add('active');
     }
   }
@@ -1655,7 +1667,6 @@ window.saveFishingBanData = function () {
 
   const payload = { species, period, region, note, imageUrl, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
 
-  // 상세 기간 활성화 상태일 경우 인풋 쌍 추가 저장
   const detailRow = document.getElementById('banDetailedPeriodRow');
   if (detailRow && detailRow.classList.contains('active')) {
     payload.startMonth = document.getElementById('banStartMonth')?.value || '01';
@@ -1740,7 +1751,7 @@ window.openInfoEditModal = function () {
     document.getElementById('modalBackdrop')?.classList.add('active');
     const modal = document.getElementById('infoEditModal');
     if (modal) {
-      modal.style.display = 'block';
+      modal.style.setProperty('display', 'block', 'important');
       modal.classList.add('active');
     }
   }
