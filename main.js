@@ -1170,7 +1170,6 @@ window.shiftEditPointParkingUnit = function (btn) { currentEditPointUnitIndex = 
 window.selectEditPointParking = function (type, element) { selectedEditPointParkingType = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editPointParkingDetailRow').classList.toggle('active', type === 'paid'); };
 window.selectEditToiletHours = function (type, element) { selectedToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editToiletHoursDetailRow').classList.toggle('active', type === '지정시간'); };
 
-
 // =========================================================================
 // [TAB AREA 4] 게시판 엔진 (공지사항/이벤트 + 정보 게시판 동적 렌더링 포함)
 // =========================================================================
@@ -1178,7 +1177,7 @@ let cachedNotices = [];
 let cachedEvents = [];
 let currentBoardTab = 'notice';
 
-// 글로벌 모달 레이어 팝업 디스플레이 가드 엔진 및 스타일 우선순위 보정 (Leaflet 따로 노는 현상 해결 CSS 추가)
+// 글로벌 모달 레이어 팝업 디스플레이 가드 엔진 및 스타일 우선순위 보정
 (function() {
   const style = document.createElement('style');
   style.innerHTML = `
@@ -1193,27 +1192,6 @@ let currentBoardTab = 'notice';
       display: flex !important;
       opacity: 1 !important;
       visibility: visible !important;
-    }
-    /* Leaflet 팝업 기본 래퍼와 커스텀 바텀시트 밀착 동기화 레이아웃 */
-    .leaflet-popup-content-wrapper {
-      padding: 0 !important;
-      background: transparent !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-    }
-    .leaflet-popup-content {
-      margin: 0 !important;
-      padding: 0 !important;
-      width: 350px !important;
-    }
-    .leaflet-popup-close-button {
-      display: none !important;
-    }
-    .bottom-sheet-modal-native {
-      margin: 0 !important;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-      border-radius: 16px;
-      overflow: hidden;
     }
   `;
   document.head.appendChild(style);
