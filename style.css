@@ -1074,8 +1074,8 @@ textarea,
 
 /* 너의 커스텀 모달 프레임이 Leaflet 팝업 인스턴스 내부에 자연스럽게 안착되도록 연동 */
 .bottom-sheet-modal-native {
-    width: 350px !important;
-    min-width: 350px !important;
+    width: 400px !important;
+    min-width: 400px !important;
     background: var(--bg-panel);
     border-radius: 16px !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
