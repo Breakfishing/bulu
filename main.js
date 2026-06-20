@@ -2353,7 +2353,7 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
     const naviApp = localStorage.getItem('navi-app'); naviOpenBtn.style.backgroundColor = (naviApp === 'naver') ? '#03C75A' : '#FEE500'; naviOpenBtn.style.color = (naviApp === 'naver') ? '#ffffff' : '#111111';
     naviOpenBtn.onclick = function (e) { e.stopPropagation(); window.open(localStorage.getItem('navi-app') === 'naver' ? `https://map.naver.com/index.nhn?elat=${lat}&elng=${lng}&etext=${encodeURIComponent(name)}&menu=route` : `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`, '_blank'); };
   }
-
+map.setView([parseFloat(lat), lng], map.getZoom());
 const popupWrapper = document.createElement('div');
   popupWrapper.className = 'custom-fixed-popup-wrapper';
   popupWrapper.style.position = 'fixed';
