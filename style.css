@@ -1062,13 +1062,6 @@ textarea,
     display: none !important;
 }
 
-/* Leaflet 컨텐츠 영역 내부의 기본 마진을 제로로 밀어버리고 350px 고정 */
-.leaflet-popup-content {
-    margin: 0 !important;
-    padding: 0 !important;
-    width: 350px !important;
-}
-
 .leaflet-popup-close-button {
     display: none !important;
 }
