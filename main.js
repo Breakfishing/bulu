@@ -1479,7 +1479,7 @@ window.handleInfoSearch = function (val) {
   window.renderInfoContentCards(val);
 };
 
-// HTML 규격 window.toggleBanPeriodType 명칭 일치화 및 지정 월 라벨 제어 완전 제거
+// HTML onclick="window.toggleBanPeriodType(this)" 규격 반영 및 월, 일, 월, 일 4개 칸의 순수한 토글 가시성 확보
 window.toggleBanPeriodType = function (element) {
   const detailRow = document.getElementById('banDetailedPeriodRow');
   if (!detailRow) return;
@@ -1513,6 +1513,12 @@ window.openInfoWriteFormModal = function (tabType) {
     safeSetElementValue('banRegion', '');
     safeSetElementValue('banNote', '');
     safeSetElementValue('banImageUrl', '');
+    
+    // 월 일 월 일 4개 입력 인풋 초기화
+    safeSetElementValue('banStartMonth', '01');
+    safeSetElementValue('banStartDate', '01');
+    safeSetElementValue('banEndMonth', '01');
+    safeSetElementValue('banEndDate', '01');
     
     const detailRow = document.getElementById('banDetailedPeriodRow');
     if (detailRow) {
@@ -1585,10 +1591,10 @@ window.openInfoEditFormModal = function (tabType, docId) {
     safeSetElementValue('banNote', item.note || '');
     safeSetElementValue('banImageUrl', item.imageUrl || '');
     
-    // 에딧 데이터 조건별 상세 기간 바인딩 (라벨 제어 일절 없음)
+    // 월 일 월 일 4개 칸의 상세 기간 로드 데이터 매핑 및 가시성 제어
     const detailRow = document.getElementById('banDetailedPeriodRow');
     if (detailRow) {
-      if (item.startMonth || item.startDate) {
+      if (item.startMonth || item.startDate || item.endMonth || item.endDate) {
         detailRow.classList.add('active');
         detailRow.style.setProperty('display', 'block', 'important');
         safeSetElementValue('banStartMonth', item.startMonth || '01');
@@ -1669,6 +1675,7 @@ window.saveFishingBanData = function () {
 
   const payload = { species, period, region, note, imageUrl, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
 
+  // 상세 기간 활성화 상태일 경우 월, 일, 월, 일 4개 칸의 정보 그대로 적재 처리
   const detailRow = document.getElementById('banDetailedPeriodRow');
   if (detailRow && detailRow.classList.contains('active')) {
     payload.startMonth = document.getElementById('banStartMonth')?.value || '01';
