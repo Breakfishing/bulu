@@ -1453,35 +1453,43 @@ window.openInfoWriteFormModal = function (tabType) {
   window.closeModals();
   document.getElementById('modalBackdrop')?.classList.add('active');
   
+  const safeSetElementValue = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+  
   if (tabType === 'fishing_ban') {
-    document.getElementById('banModalMode').value = 'add';
-    document.getElementById('banModalTargetId').value = '';
-    document.getElementById('banSpecies').value = '';
-    document.getElementById('banPeriod').value = '';
-    document.getElementById('banRegion').value = '';
-    document.getElementById('banNote').value = '';
-    document.getElementById('banImageUrl').value = '';
-    document.getElementById('lblFishingBanModalTitle').innerText = '금어기 등록';
+    safeSetElementValue('banModalMode', 'add');
+    safeSetElementValue('banModalTargetId', '');
+    safeSetElementValue('banSpecies', '');
+    safeSetElementValue('banPeriod', '');
+    safeSetElementValue('banRegion', '');
+    safeSetElementValue('banNote', '');
+    safeSetElementValue('banImageUrl', '');
+    const titleLbl = document.getElementById('lblFishingBanModalTitle');
+    if (titleLbl) titleLbl.innerText = '금어기 등록';
     document.getElementById('fishingBanModal')?.classList.add('active');
   } 
   else if (tabType === 'size_limit') {
-    document.getElementById('limitModalMode').value = 'add';
-    document.getElementById('limitModalTargetId').value = '';
-    document.getElementById('limitSpecies').value = '';
-    document.getElementById('limitMinSize').value = '';
-    document.getElementById('limitMaxSize').value = '';
-    document.getElementById('limitImageUrl').value = '';
+    safeSetElementValue('limitModalMode', 'add');
+    safeSetElementValue('limitModalTargetId', '');
+    safeSetElementValue('limitSpecies', '');
+    safeSetElementValue('limitMinSize', '');
+    safeSetElementValue('limitMaxSize', '');
+    safeSetElementValue('limitImageUrl', '');
     window.selectLimitType('sea', document.getElementById('chipLimitSea'));
-    document.getElementById('lblSizeLimitModalTitle').innerText = '금지체장 등록';
+    const titleLbl = document.getElementById('lblSizeLimitModalTitle');
+    if (titleLbl) titleLbl.innerText = '금지체장 등록';
     document.getElementById('sizeLimitModal')?.classList.add('active');
   } 
   else if (tabType === 'knot_guide') {
-    document.getElementById('knotModalMode').value = 'add';
-    document.getElementById('knotModalTargetId').value = '';
-    document.getElementById('knotTitle').value = '';
-    document.getElementById('knotRecommend').value = '';
-    document.getElementById('knotVideoUrl').value = '';
-    document.getElementById('lblKnotGuideModalTitle').innerText = '매듭법 등록';
+    safeSetElementValue('knotModalMode', 'add');
+    safeSetElementValue('knotModalTargetId', '');
+    safeSetElementValue('knotTitle', '');
+    safeSetElementValue('knotRecommend', '');
+    safeSetElementValue('knotVideoUrl', '');
+    const titleLbl = document.getElementById('lblKnotGuideModalTitle');
+    if (titleLbl) titleLbl.innerText = '매듭법 등록';
     document.getElementById('knotGuideModal')?.classList.add('active');
   }
 };
@@ -1490,41 +1498,49 @@ window.openInfoEditFormModal = function (tabType, docId) {
   window.closeModals();
   document.getElementById('modalBackdrop')?.classList.add('active');
 
+  const safeSetElementValue = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+
   if (tabType === 'fishing_ban') {
     const item = cachedFishingBans.find(b => b.id === docId);
     if (!item) return;
-    document.getElementById('banModalMode').value = 'edit';
-    document.getElementById('banModalTargetId').value = docId;
-    document.getElementById('banSpecies').value = item.species || '';
-    document.getElementById('banPeriod').value = item.period || '';
-    document.getElementById('banRegion').value = item.region || '';
-    document.getElementById('banNote').value = item.note || '';
-    document.getElementById('banImageUrl').value = item.imageUrl || '';
-    document.getElementById('lblFishingBanModalTitle').innerText = '금어기 수정';
+    safeSetElementValue('banModalMode', 'edit');
+    safeSetElementValue('banModalTargetId', docId);
+    safeSetElementValue('banSpecies', item.species || '');
+    safeSetElementValue('banPeriod', item.period || '');
+    safeSetElementValue('banRegion', item.region || '');
+    safeSetElementValue('banNote', item.note || '');
+    safeSetElementValue('banImageUrl', item.imageUrl || '');
+    const titleLbl = document.getElementById('lblFishingBanModalTitle');
+    if (titleLbl) titleLbl.innerText = '금어기 수정';
     document.getElementById('fishingBanModal')?.classList.add('active');
   } 
   else if (tabType === 'size_limit') {
     const item = cachedSizeLimits.find(s => s.id === docId);
     if (!item) return;
-    document.getElementById('limitModalMode').value = 'edit';
-    document.getElementById('limitModalTargetId').value = docId;
-    document.getElementById('limitSpecies').value = item.species || '';
-    document.getElementById('limitMinSize').value = item.minSize || '';
-    document.getElementById('limitMaxSize').value = item.maxSize || '';
-    document.getElementById('limitImageUrl').value = item.imageUrl || '';
+    safeSetElementValue('limitModalMode', 'edit');
+    safeSetElementValue('limitModalTargetId', docId);
+    safeSetElementValue('limitSpecies', item.species || '');
+    safeSetElementValue('limitMinSize', item.minSize || '');
+    safeSetElementValue('limitMaxSize', item.maxSize || '');
+    safeSetElementValue('limitImageUrl', item.imageUrl || '');
     window.selectLimitType(item.type || 'sea', item.type === 'fresh' ? document.getElementById('chipLimitFresh') : document.getElementById('chipLimitSea'));
-    document.getElementById('lblSizeLimitModalTitle').innerText = '금지체장 수정';
+    const titleLbl = document.getElementById('lblSizeLimitModalTitle');
+    if (titleLbl) titleLbl.innerText = '금지체장 수정';
     document.getElementById('sizeLimitModal')?.classList.add('active');
   } 
   else if (tabType === 'knot_guide') {
     const item = cachedKnotGuides.find(k => k.id === docId);
     if (!item) return;
-    document.getElementById('knotModalMode').value = 'edit';
-    document.getElementById('knotModalTargetId').value = docId;
-    document.getElementById('knotTitle').value = item.title || '';
-    document.getElementById('knotRecommend').value = item.recommend || '';
-    document.getElementById('knotVideoUrl').value = item.videoUrl || '';
-    document.getElementById('lblKnotGuideModalTitle').innerText = '매듭법 수정';
+    safeSetElementValue('knotModalMode', 'edit');
+    safeSetElementValue('knotModalTargetId', docId);
+    safeSetElementValue('knotTitle', item.title || '');
+    safeSetElementValue('knotRecommend', item.recommend || '');
+    safeSetElementValue('knotVideoUrl', item.videoUrl || '');
+    const titleLbl = document.getElementById('lblKnotGuideModalTitle');
+    if (titleLbl) titleLbl.innerText = '매듭법 수정';
     document.getElementById('knotGuideModal')?.classList.add('active');
   }
 };
