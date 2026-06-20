@@ -1176,6 +1176,26 @@ let cachedNotices = [];
 let cachedEvents = [];
 let currentBoardTab = 'notice';
 
+// 글로벌 모달 레이어 팝업 디스플레이 가드 엔진 및 스타일 우선순위 보정
+(function() {
+  const style = document.createElement('style');
+  style.innerHTML = `
+    #infoEditModal, #fishingBanModal, #sizeLimitModal, #knotGuideModal, #weatherModal {
+      display: none !important;
+      z-index: 999999 !important;
+    }
+    #infoEditModal.active, #fishingBanModal.active, #sizeLimitModal.active, #knotGuideModal.active {
+      display: block !important;
+    }
+    #weatherModal.active {
+      display: flex !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
 if (window.closeModals) {
   const originalCloseModals = window.closeModals;
   window.closeModals = function () {
@@ -1972,9 +1992,8 @@ function updateVisibleMarkersOnMap() {
     cloudPointsLayer.clearLayers();
     cachedFishingPoints.forEach(item => {
       if (!item || item.lat === undefined || item.lng === undefined || isNaN(item.lat) || isNaN(item.lng) || item.lat === null || item.lng === null) return;
-      // zIndexOffset과 자체 렌더링 레이어 최상위 배치를 통해 modalBackdrop 레이어의 영향도를 원천 차단
       const marker = L.marker([item.lat, item.lng], { icon: L.divIcon({ html: getFishingPointSvg(item.color), className: 'custom-marker-wrapper', iconSize: [26, 39], iconAnchor: [13, 39] }), zIndexOffset: 2000 });
-      marker.on('click', () => { window.closeModals(); window.renderPointDetailBottomSheet(item.id, item.name, item.category, item.color, item.memo, item.parkingType || 'none', item.parkingUnit || '', item.parkingPrice || '0', item.hasStore || false, item.hasCafe || false, item.hasTackle || false, item.lat, item.lng, item.isFavorite || false, item.address || "주소 정보 없음"); });
+      marker.on('click', () => { window.closeModals(); window.renderPointDetailBottomSheet(item.id, item.name, item.category, item.color, item.memo, item.parkingType || 'none', item.parkingUnit || '', item.parkingPrice || '0', item.hasStore || false, hasCafe || false, item.hasTackle || false, item.lat, item.lng, item.isFavorite || false, item.address || "주소 정보 없음"); });
       cloudPointsLayer.addLayer(marker);
     });
   }
@@ -2176,6 +2195,16 @@ window.saveToiletEditData = function () {
   db.collection('public_toilets').doc(docId).update({ name: document.getElementById('editToiletName').value.trim() || '공중화장실', memo: `${finalHours}||${document.getElementById('editToiletMemo').value.trim() || '양호'}` }).then(() => window.closeModals());
 };
 
+window.openMarkerDeleteModal = function (docId, collectionName, displayName, onSuccess) {
+  const deleteModal = document.getElementById('deleteConfirmModal'); if (!deleteModal) return;
+  document.getElementById('deleteModalTargetName').innerText = displayName;
+  document.getElementById('btnDoDelete').onclick = function () { db.collection(collectionName).doc(docId).delete().then(() => { window.closeModals(); if (typeof onSuccess === 'function') onSuccess(); }); };
+
+  document.getElementById('detailModalWrapper')?.classList.remove('active'); document.getElementById('detailModal')?.classList.remove('active');
+  document.querySelectorAll('.modal, .custom-modal-native').forEach(m => { if (m !== deleteModal) m.classList.remove('active'); });
+  document.getElementById('modalBackdrop')?.classList.add('active'); deleteModal.classList.add('active');
+};
+
 // =========================================================================
 // [SHEET AREA] 실시간 연안 종합 타임라인 플로팅 팝업 정보 렌더링 엔진
 // =========================================================================
@@ -2277,13 +2306,21 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
     weatherOpenBtn.onclick = function (e) {
       e.stopPropagation();
       
-      // 최우선 순위: 날씨 모달 컨테이너부터 무조건 화면에 활성화 노출
+      // 기상 모달 및 배경 가드를 강제 활성화하고 화면 상단에 플렉스로 배치 고정
       const weatherModal = document.getElementById('weatherModal');
       if (weatherModal) {
         weatherModal.classList.add('active');
+        weatherModal.style.setProperty('display', 'flex', 'important');
+        weatherModal.style.setProperty('opacity', '1', 'important');
+        weatherModal.style.setProperty('visibility', 'visible', 'important');
       }
       
-      // 내부 텍스트 및 데이터 바인딩 로직을 개별 try-catch로 격리하여 스크립트 정지 원천 차단
+      const backdrop = document.getElementById('modalBackdrop');
+      if (backdrop) {
+        backdrop.classList.add('active');
+        backdrop.style.setProperty('display', 'block', 'important');
+      }
+      
       try {
         const titleLabel = document.getElementById('lblWeatherModalTitle');
         if (titleLabel) titleLabel.innerText = name;
