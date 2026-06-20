@@ -2254,11 +2254,6 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
   // 하단 고정 DOM 레이아웃 프레임을 Leaflet 전용 팝업 인스턴스 내부에 이식하기 위해 컨테이너 노드 샌드박싱 생성
   const popupContainer = document.createElement('div');
   popupContainer.className = 'bottom-sheet-modal-native';
-  
-  // 모달 가로 크기 강제 확장
-  popupContainer.style.width = '350px';
-  popupContainer.style.minWidth = '350px';
-  
   popupContainer.innerHTML = document.getElementById('detailModal').innerHTML;
 
   popupContainer.querySelector('#lblDetailName').innerText = name;
