@@ -2232,8 +2232,10 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
   // 기존 지도 팝업 객체가 열려있다면 충돌 방지를 위해 즉시 초기화 클로즈
   map.closePopup();
 
-  // 요구사항 반영: 확대/축소 배율(Zoom)은 변경하지 않고 마커의 중심 좌표로만 화면을 정확히 피트 이동
-  map.setView([lat, lng], map.getZoom());
+  // 요구사항 반영: 현재 줌 배율을 유지하면서, 마커 위에 생성되는 플로팅 모달 화면이 정중앙에 배치되도록 위도 오프셋 값을 배율별로 연산하여 중심 이동
+  const currentZoom = map.getZoom();
+  const latOffset = 0.0026 * Math.pow(2, 16 - currentZoom);
+  map.setView([parseFloat(lat) + latOffset, lng], currentZoom);
 
   // 플로팅 팝업 조작 과정 중 배경 지도가 밀리거나 줌 오작동이 일어나는 현상을 방지하기 위해 맵 제어 기능 잠금
   map.dragging.disable();
