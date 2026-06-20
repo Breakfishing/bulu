@@ -2235,8 +2235,11 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
   // 기존 지도 팝업 객체가 열려있다면 충돌 방지를 위해 즉시 초기화 클로즈
   map.closePopup();
 
-  // 좌표 꼬임을 유발하던 하드코딩 위도 오프셋 연산을 원천 제거하고 마커의 순수 좌표값으로 화면 뷰 이동
-  map.setView([parseFloat(lat), lng], map.getZoom());
+  // 줌 배율에 영향받지 않는 픽셀 기반 투영 기법 연산: 마커는 화면 하단 영역에 노출되고 모달 팝업 본체는 정중앙에 수렴함
+  const currentZoom = map.getZoom();
+  const projectedPoint = map.project([parseFloat(lat), lng], currentZoom);
+  const targetLatLng = map.unproject(projectedPoint.subtract([0, 150]), currentZoom);
+  map.setView(targetLatLng, currentZoom);
 
   // 플로팅 팝업 조작 과정 중 배경 지도가 밀리거나 줌 오작동이 일어나는 현상을 방지하기 위해 맵 제어 기능 잠금
   map.dragging.disable();
