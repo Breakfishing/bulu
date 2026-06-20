@@ -1049,7 +1049,7 @@ textarea,
     display: block;
 }
 
-/* Leaflet 자체 팝업 외곽 박스 및 그림자 틀을 완전히 제거하여 단일화 처리 */
+/* Leaflet 고유의 말꼬리 핀과 배경 하드코딩 박스를 완벽히 투명화 */
 .leaflet-popup-content-wrapper {
     padding: 0 !important;
     background: transparent !important;
@@ -1057,25 +1057,22 @@ textarea,
     border-radius: 0 !important;
 }
 
-/* Leaflet 기본 마진 여백을 파괴하고 350px 규격 프레임 고정 */
+.leaflet-popup-tip-container {
+    display: none !important;
+}
+
+/* Leaflet 컨텐츠 영역 내부의 기본 마진을 제로로 밀어버리고 350px 고정 */
 .leaflet-popup-content {
     margin: 0 !important;
     padding: 0 !important;
     width: 350px !important;
 }
 
-/* 기본 말꼬리 모양 고정 핀 투명 처리 */
-.leaflet-popup-tip {
-    background: transparent !important;
-    box-shadow: none !important;
-}
-
-/* 우측 상단 X 닫기 버튼 강제 비활성화 */
 .leaflet-popup-close-button {
     display: none !important;
 }
 
-.bottom-sheet,
+/* 너의 커스텀 모달 프레임이 Leaflet 팝업 인스턴스 내부에 자연스럽게 안착되도록 연동 */
 .bottom-sheet-modal-native {
     width: 350px !important;
     min-width: 350px !important;
@@ -1083,12 +1080,8 @@ textarea,
     border-radius: 16px !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
     overflow: hidden !important;
-    padding: 16px !important;
+    padding: 0 20px 20px !important;
     box-sizing: border-box;
-    transform: none !important;
-    position: relative !important;
-    bottom: auto !important;
-    left: auto !important;
 }
 
 .bottom-sheet-handle-bar {
