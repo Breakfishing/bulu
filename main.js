@@ -2232,17 +2232,16 @@ if (window.mapObj) {
 }
 
 window.renderPointDetailBottomSheet = function (docId, name, category, color, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, lat, lng, isFavorite, dbSavedAddress) {
-  // 1. 기존 팝업 및 모달 초기화
+  // 기존 지도 팝업 객체가 열려있다면 충돌 방지를 위해 즉시 초기화 클로즈
   map.closePopup();
-  
-  // 2. 화면 중앙 정렬을 위한 픽셀 좌표 연산
-  // 마커 위치를 화면 하단(정중앙에서 150px 아래)으로 밀어내어 모달이 가리지 않게 함
+
+  // 줌 배율에 영향받지 않는 픽셀 기반 투영 기법 연산: 마커는 화면 하단 영역에 노출되고 모달 팝업 본체는 정중앙에 수렴함
   const currentZoom = map.getZoom();
   const projectedPoint = map.project([parseFloat(lat), lng], currentZoom);
   const targetLatLng = map.unproject(projectedPoint.subtract([0, 150]), currentZoom);
   map.setView(targetLatLng, currentZoom);
 
-  // 3. 인터랙션 잠금
+  // 플로팅 팝업 조작 과정 중 배경 지도가 밀리거나 줌 오작동이 일어나는 현상을 방지하기 위해 맵 제어 기능 잠금
   map.dragging.disable();
   map.touchZoom.disable();
   map.scrollWheelZoom.disable();
@@ -2252,36 +2251,29 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
 
   if (dbSavedAddress && dbSavedAddress.startsWith('소재지 도로명 주소:')) dbSavedAddress = dbSavedAddress.replace('소재지 도로명 주소:', '').trim();
 
-  // 4. 고정형 DOM 모달 생성 (Leaflet 팝업 객체를 쓰지 않고 DOM에 직접 주입하여 중앙 고정)
-  let existingPopup = document.querySelector('.bottom-sheet-modal-native');
-  if (existingPopup) existingPopup.remove();
-
+  // 하단 고정 DOM 레이아웃 프레임을 Leaflet 전용 팝업 인스턴스 내부에 이식하기 위해 컨테이너 노드 샌드박싱 생성
   const popupContainer = document.createElement('div');
   popupContainer.className = 'bottom-sheet-modal-native';
-  popupContainer.style.position = 'fixed';
-  popupContainer.style.top = '50%';
-  popupContainer.style.left = '50%';
-  popupContainer.style.transform = 'translate(-50%, -50%)';
-  popupContainer.style.zIndex = '10000';
+  
+  // 모달 가로 크기 강제 확장
   popupContainer.style.width = '350px';
-  popupContainer.style.height = 'auto';
+  popupContainer.style.minWidth = '350px';
   
   popupContainer.innerHTML = document.getElementById('detailModal').innerHTML;
 
-  // 5. 데이터 렌더링
   popupContainer.querySelector('#lblDetailName').innerText = name;
   const addrField = popupContainer.querySelector('#lblDetailAddressField'); 
   if (addrField) addrField.innerText = dbSavedAddress || "주소 변환 중...";
 
-  // 주소 Geocoding
   if ((!dbSavedAddress || dbSavedAddress.includes("중...") || dbSavedAddress.includes("없음")) && typeof window.kakao !== 'undefined' && window.kakao.maps) {
     window.kakao.maps.load(function () {
       if (window.kakao.maps.services?.Geocoder) {
-        new window.kakao.maps.services.Geocoder().coord2Address(lng, lat, function (result, status) {
+        new window.window.kakao.maps.services.Geocoder().coord2Address(lng, lat, function (result, status) {
           if (status === window.kakao.maps.services.Status.OK && result[0]) {
             let finalAddr = result[0].road_address ? result[0].road_address.address_name : (result[0].address ? result[0].address.address_name : "주소 정보 없음");
-            if (addrField) addrField.innerText = finalAddr;
-            db.collection((category === 'toilet') ? 'public_toilets' : 'fishing_points').doc(docId).update({ [category === 'toilet' ? 'dbSavedAddress' : 'address']: finalAddr });
+            if (finalAddr === "주소 정보 없음" || finalAddr.trim() === "") {
+              searchNearestCoastalLandmark(lat, lng, nearestAddr => { if (addrField) addrField.innerText = nearestAddr; db.collection((category === 'toilet') ? 'public_toilets' : 'fishing_points').doc(docId).update({ [category === 'toilet' ? 'dbSavedAddress' : 'address']: nearestAddr }); }, () => {});
+            } else { if (addrField) addrField.innerText = finalAddr; db.collection((category === 'toilet') ? 'public_toilets' : 'fishing_points').doc(docId).update({ [category === 'toilet' ? 'dbSavedAddress' : 'address']: finalAddr }); }
           }
         });
       }
@@ -2318,9 +2310,8 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
     try { window.buildTimelineUI(lat, lng, null, []); } catch (err) {}
   }
 
-  // 6. 버튼 이벤트 바인딩
   popupContainer.querySelector('#btnDetailPointDelete').onclick = function (e) { e.stopPropagation(); window.openMarkerDeleteModal(docId, (category === 'toilet') ? 'public_toilets' : 'fishing_points', name || '지정 포인트'); };
-  popupContainer.querySelector('#btnDetailPointEditTrigger').onclick = function (e) { e.stopPropagation(); popupContainer.remove(); if (category === 'toilet') window.openToiletEditModal(docId, name, memo, addrField.innerText); else window.openPointEditModal(docId, name, category, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, addrField.innerText, lat, lng); };
+  popupContainer.querySelector('#btnDetailPointEditTrigger').onclick = function (e) { e.stopPropagation(); map.closePopup(); if (category === 'toilet') window.openToiletEditModal(docId, name, memo, addrField.innerText); else window.openPointEditModal(docId, name, category, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, addrField.innerText, lat, lng); };
 
   if (weatherOpenBtn) {
     weatherOpenBtn.onclick = function (e) {
@@ -2329,43 +2320,64 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
       if (weatherModal) {
         weatherModal.classList.add('active');
         weatherModal.style.setProperty('display', 'flex', 'important');
+        weatherModal.style.setProperty('opacity', '1', 'important');
+        weatherModal.style.setProperty('visibility', 'visible', 'important');
       }
-      document.getElementById('modalBackdrop')?.classList.add('active');
+      const backdrop = document.getElementById('modalBackdrop');
+      if (backdrop) {
+        backdrop.classList.add('active');
+        backdrop.style.setProperty('display', 'block', 'important');
+      }
+      try {
+        const titleLabel = document.getElementById('lblWeatherModalTitle');
+        if (titleLabel) titleLabel.innerText = name;
+      } catch (err) {}
+      try {
+        const wIcon = document.getElementById('weatherModalMarkerIcon');
+        if (wIcon) {
+          if (category === 'toilet') {
+            wIcon.innerHTML = `<svg width="14" height="17" viewBox="0 0 36 42"><path d="M18 0C8.06 0 0 8.06 0 18C0 28.54 18 42 18 42C18 42 36 28.54 36 18C36 8.06 27.94 0 18 0Z" fill="#ff9500"/><circle cx="18" cy="16" r="5" fill="#ffffff"/><path d="M14 24H22V27H14V24Z" fill="#ffffff"/></svg>`;
+          } else if (typeof getFishingPointSvg === 'function') {
+            wIcon.innerHTML = getFishingPointSvg(color).replace('width="26" height="39"', 'width="20" height="30"');
+          }
+        }
+      } catch (err) {}
+      try {
+        if (typeof window.loadTimelineWithOptimisticUI === 'function') window.loadTimelineWithOptimisticUI(lat, lng);
+      } catch (err) {}
     };
   }
 
   const naviOpenBtn = popupContainer.querySelector('#btnDetailNaviOpen');
   if (naviOpenBtn) {
+    const naviApp = localStorage.getItem('navi-app'); naviOpenBtn.style.backgroundColor = (naviApp === 'naver') ? '#03C75A' : '#FEE500'; naviOpenBtn.style.color = (naviApp === 'naver') ? '#ffffff' : '#111111';
     naviOpenBtn.onclick = function (e) { e.stopPropagation(); window.open(localStorage.getItem('navi-app') === 'naver' ? `https://map.naver.com/index.nhn?elat=${lat}&elng=${lng}&etext=${encodeURIComponent(name)}&menu=route` : `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`, '_blank'); };
   }
 
-  // 7. 닫기 기능 (배경 클릭 시 제거 및 인터랙션 복구)
-  const backdrop = document.createElement('div');
-  backdrop.style.position = 'fixed';
-  backdrop.style.top = '0';
-  backdrop.style.left = '0';
-  backdrop.style.width = '100vw';
-  backdrop.style.height = '100vh';
-  backdrop.style.zIndex = '9999';
-  backdrop.onclick = () => {
-    popupContainer.remove();
-    backdrop.remove();
-    window.mapObj.dragging.enable();
-    window.mapObj.touchZoom.enable();
-    window.mapObj.scrollWheelZoom.enable();
-    window.mapObj.doubleClickZoom.enable();
-  };
-  
-  document.body.appendChild(backdrop);
-  document.body.appendChild(popupContainer);
+  // 마커 물리 크기(39px) 보정을 위해 offset 지점을 [0, -40]으로 완벽 격리하고, 화면 중심 자동 보정을 위해 autoPan을 true로 강제 고정
+  L.popup({
+    closeButton: false,
+    autoPan: true,
+    maxWidth: 350,
+    minWidth: 350,
+    offset: L.point(0, -40)
+  })
+  .setLatLng([lat, lng])
+  .setContent(popupContainer)
+  .openOn(map);
 };
 
 window.openPointDetailFromList = function (pt) {
-  window.closeModals(); 
-  const mapNavItem = document.querySelector('.nav-item[onclick*="tab-map"]');
+  window.closeModals(); const mapNavItem = document.querySelector('.nav-item[onclick*="tab-map"]') || document.querySelector('.nav-item');
   if (typeof window.switchTab === 'function') window.switchTab('tab-map', mapNavItem);
   
-  window.renderPointDetailBottomSheet(pt.id, pt.name || '포인트', pt.category, pt.color, pt.memo, pt.parkingType || 'none', pt.parkingUnit || '', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, pt.lat, pt.lng, pt.isFavorite || false, pt.address || "주소 정보 없음");
+  if (pt.category === 'toilet') {
+    if (window.tempToiletMarker) map.removeLayer(window.tempToiletMarker);
+    window.tempToiletMarker = L.marker([pt.lat, pt.lng], { icon: L.divIcon({ html: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2"><path d="M7 2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3zM9 19v3M15 19v3"/></svg>`, className: 'custom-marker-wrapper-toilet temp-list-injected-toilet-node', iconSize: [24, 24], iconAnchor: [12, 12] }), zIndexOffset: 2000 }).addTo(map);
+    window.renderPointDetailBottomSheet(pt.id, pt.name || '공중화장실', 'toilet', '#ff9500', pt.memo || '', '', '', 0, false, false, false, pt.lat, pt.lng, false, pt.dbSavedAddress || pt.address || '주소 정보 없음');
+  } else {
+    window.renderPointDetailBottomSheet(pt.id, pt.name, pt.category, pt.color, pt.memo, pt.parkingType || 'none', pt.parkingUnit || '', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, pt.lat, pt.lng, pt.isFavorite || false, pt.address || "주소 정보 없음");
+  }
 };
 
 // =========================================================================
