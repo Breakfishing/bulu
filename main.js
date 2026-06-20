@@ -2236,10 +2236,8 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
   // 기존 지도 팝업 객체가 열려있다면 충돌 방지를 위해 즉시 초기화 클로즈
   map.closePopup();
 
-  // 요구사항 반영: 현재 줌 배율을 유지하면서, 마커 위에 생성되는 플로팅 모달 화면이 정중앙에 배치되도록 위도 오프셋 값을 배율별로 연산하여 중심 이동
-  const currentZoom = map.getZoom();
-  const latOffset = 0.0026 * Math.pow(2, 16 - currentZoom);
-  map.setView([parseFloat(lat) + latOffset, lng], currentZoom);
+  // 좌표 꼬임을 유발하던 하드코딩 위도 오프셋 연산을 원천 제거하고 마커의 순수 좌표값으로 화면 뷰 이동
+  map.setView([parseFloat(lat), lng], map.getZoom());
 
   // 플로팅 팝업 조작 과정 중 배경 지도가 밀리거나 줌 오작동이 일어나는 현상을 방지하기 위해 맵 제어 기능 잠금
   map.dragging.disable();
@@ -2255,7 +2253,7 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
   const popupContainer = document.createElement('div');
   popupContainer.className = 'bottom-sheet-modal-native';
   
-  // 모달 가로 크기 강제 확장 (CSS 적용 우선순위 문제 해결을 위해 인라인 스타일 직접 주입)
+  // 모달 가로 크기 강제 확장
   popupContainer.style.width = '350px';
   popupContainer.style.minWidth = '350px';
   
@@ -2316,8 +2314,6 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
   if (weatherOpenBtn) {
     weatherOpenBtn.onclick = function (e) {
       e.stopPropagation();
-      
-      // 기상 모달 및 배경 가드를 강제 활성화하고 화면 상단에 플렉스로 배치 고정
       const weatherModal = document.getElementById('weatherModal');
       if (weatherModal) {
         weatherModal.classList.add('active');
@@ -2325,20 +2321,15 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
         weatherModal.style.setProperty('opacity', '1', 'important');
         weatherModal.style.setProperty('visibility', 'visible', 'important');
       }
-      
       const backdrop = document.getElementById('modalBackdrop');
       if (backdrop) {
         backdrop.classList.add('active');
         backdrop.style.setProperty('display', 'block', 'important');
       }
-      
       try {
         const titleLabel = document.getElementById('lblWeatherModalTitle');
         if (titleLabel) titleLabel.innerText = name;
-      } catch (err) {
-        console.error("Title binding fail:", err);
-      }
-      
+      } catch (err) {}
       try {
         const wIcon = document.getElementById('weatherModalMarkerIcon');
         if (wIcon) {
@@ -2346,23 +2337,12 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
             wIcon.innerHTML = `<svg width="14" height="17" viewBox="0 0 36 42"><path d="M18 0C8.06 0 0 8.06 0 18C0 28.54 18 42 18 42C18 42 36 28.54 36 18C36 8.06 27.94 0 18 0Z" fill="#ff9500"/><circle cx="18" cy="16" r="5" fill="#ffffff"/><path d="M14 24H22V27H14V24Z" fill="#ffffff"/></svg>`;
           } else if (typeof getFishingPointSvg === 'function') {
             wIcon.innerHTML = getFishingPointSvg(color).replace('width="26" height="39"', 'width="20" height="30"');
-          } else {
-            wIcon.innerHTML = `<svg width="20" height="30" viewBox="0 0 24 24" fill="${color || 'var(--primary-color)'}"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-12-7z"/></svg>`;
           }
         }
-      } catch (err) {
-        console.error("Icon rendering fail:", err);
-      }
-      
+      } catch (err) {}
       try {
-        if (typeof window.loadTimelineWithOptimisticUI === 'function') {
-          window.loadTimelineWithOptimisticUI(lat, lng);
-        } else if (typeof loadTimelineWithOptimisticUI === 'function') {
-          loadTimelineWithOptimisticUI(lat, lng);
-        }
-      } catch (err) {
-        console.error("Timeline engine call fail:", err);
-      }
+        if (typeof window.loadTimelineWithOptimisticUI === 'function') window.loadTimelineWithOptimisticUI(lat, lng);
+      } catch (err) {}
     };
   }
 
@@ -2372,13 +2352,13 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
     naviOpenBtn.onclick = function (e) { e.stopPropagation(); window.open(localStorage.getItem('navi-app') === 'naver' ? `https://map.naver.com/index.nhn?elat=${lat}&elng=${lng}&etext=${encodeURIComponent(name)}&menu=route` : `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`, '_blank'); };
   }
 
-  // 요구사항 반영: 플로팅 모달 가로 넓이를 안전하게 수용하도록 Leaflet 팝업 프레임 가로폭 350px 확장 설정
+  // 마커 물리 크기(39px) 보정을 위해 offset 지점을 [0, -40]으로 완벽 격리하고, 화면 중심 자동 보정을 위해 autoPan을 true로 강제 고정
   L.popup({
     closeButton: false,
-    autoPan: false,
+    autoPan: true,
     maxWidth: 350,
     minWidth: 350,
-    offset: L.point(0, -26)
+    offset: L.point(0, -40)
   })
   .setLatLng([lat, lng])
   .setContent(popupContainer)
