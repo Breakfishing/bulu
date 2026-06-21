@@ -639,6 +639,7 @@ textarea,
 #sizeLimitModal .chip-btn,
 #fishingBanModal .chip-btn {
     flex: 1;
+    padding: 10px 12px;
     border-radius: 8px;
 }
 
