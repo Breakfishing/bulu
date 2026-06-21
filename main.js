@@ -2349,10 +2349,10 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
     naviOpenBtn.onclick = function (e) { e.stopPropagation(); window.open(localStorage.getItem('navi-app') === 'naver' ? `https://map.naver.com/index.nhn?elat=${lat}&elng=${lng}&etext=${encodeURIComponent(name)}&menu=route` : `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`, '_blank'); };
   }
 
-  // 마커 물리 크기(39px) 보정을 위해 offset 지점을 [0, -40]으로 완벽 격리하고, 화면 중심 자동 보정을 위해 autoPan을 true로 강제 고정
+  // autoPan 속성을 false로 고정하여 맵 시선 왜곡과 중심축 흔들림 문제를 원천 교정
   L.popup({
     closeButton: false,
-    autoPan: true,
+    autoPan: false,
     maxWidth: 400,
     minWidth: 400,
     offset: L.point(0, -40)
