@@ -2107,7 +2107,6 @@ window.shiftEditPointParkingUnit = function (btn) { currentEditPointUnitIndex = 
 window.selectEditPointParking = function (type, element) { selectedEditPointParkingType = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editPointParkingDetailRow').classList.toggle('active', type === 'paid'); };
 window.selectEditToiletHours = function (type, element) { selectedToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editToiletHoursDetailRow').classList.toggle('active', type === '지정시간'); };
 
-
 // =========================================================================
 // [SHEET AREA] 실시간 연안 종합 타임라인 바텀시트 정보 렌더링 엔진
 // =========================================================================
@@ -2171,7 +2170,17 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
     weatherOpenBtn.onclick = function (e) {
       e.stopPropagation(); document.getElementById('lblWeatherModalTitle').innerText = name;
       const wIcon = document.getElementById('weatherModalMarkerIcon');
-      if (wIcon) wIcon.innerHTML = (category === 'toilet') ? `<svg width="14" height="17" viewBox="0 0 36 42"><path d="M18 0C8.06 0 0 8.06 0 18C0 28.54 18 42 18 42C18 42 36 28.54 36 18C36 8.06 27.94 0 18 0Z" fill="#ff9500"/><circle cx="18" cy="16" r="5" fill="#ffffff"/><path d="M14 24H22V27H14V24Z" fill="#ffffff"/></svg>` : getFishingPointSvg(color).replace('width="26" height="39"', 'width="20" height="30"');
+      if (wIcon) {
+        // 기상 정보 모달 내의 상단 아이콘도 조절된 물방울 형태로 통일 매핑
+        if (category === 'toilet') {
+          wIcon.innerHTML = `<svg width="20" height="30" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#ff9500"/>
+            <circle cx="12" cy="12" r="4" fill="#ffffff"/>
+          </svg>`;
+        } else {
+          wIcon.innerHTML = getFishingPointSvg(color).replace('width="26" height="39"', 'width="20" height="30"');
+        }
+      }
       document.getElementById('weatherModal')?.classList.add('active'); window.loadTimelineWithOptimisticUI(lat, lng);
     };
   }
@@ -2190,7 +2199,11 @@ window.openPointDetailFromList = function (pt) {
 
   if (pt.category === 'toilet') {
     if (window.tempToiletMarker) map.removeLayer(window.tempToiletMarker);
-    window.tempToiletMarker = L.marker([pt.lat, pt.lng], { icon: L.divIcon({ html: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2"><path d="M7 2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3zM9 19v3M15 19v3"/></svg>`, className: 'custom-marker-wrapper-toilet temp-list-injected-toilet-node', iconSize: [24, 24], iconAnchor: [12, 12] }), zIndexOffset: 1000 }).addTo(map);
+    const toiletHtml = `<svg width="24" height="36" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#ff9500"/>
+      <circle cx="12" cy="12" r="4" fill="#ffffff"/>
+    </svg>`;
+    window.tempToiletMarker = L.marker([pt.lat, pt.lng], { icon: L.divIcon({ html: toiletHtml, className: 'custom-marker-wrapper-toilet temp-list-injected-toilet-node', iconSize: [24, 36], iconAnchor: [12, 36] }), zIndexOffset: 1000 }).addTo(map);
     window.renderPointDetailBottomSheet(pt.id, pt.name || '공중화장실', 'toilet', '#ff9500', pt.memo || '', '', '', 0, false, false, false, pt.lat, pt.lng, false, pt.dbSavedAddress || pt.address || '주소 정보 없음');
   } else {
     window.renderPointDetailBottomSheet(pt.id, pt.name, pt.category, pt.color, pt.memo, pt.parkingType || 'none', pt.parkingUnit || '', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, pt.lat, pt.lng, pt.isFavorite || false, pt.address || "주소 정보 없음");
