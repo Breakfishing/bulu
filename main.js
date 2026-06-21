@@ -1436,7 +1436,7 @@ window.renderInfoContentCards = function (filterKeyword = "") {
             </div>
           </div>
           <div class="info-knot-tags">${formattedTags}</div>
-          <div class="info-knot-source">유튜브 동영상 가이드</div>
+          <div class="info-knot-source">유튜브 동영상</div>
         </div>
       `;
       grid.appendChild(knotCard);
