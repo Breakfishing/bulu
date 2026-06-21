@@ -57,7 +57,7 @@ window.globalSunTimesCache = {};
 window.isFishingPointsLoaded = false;
 window.isPublicToiletsLoaded = false;
 
-// 모달 디스플레이 강제 제어를 위한 글로벌 스타일 가드 (기존 CSS 존중, 모달 필수 속성만 추가)
+// 모달 디스플레이 강제 제어를 위한 글로벌 스타일 가드
 (function() {
   const style = document.createElement('style');
   style.innerHTML = `
@@ -150,8 +150,20 @@ window.closeModals = function () {
     weatherModal.style.setProperty('display', 'none', 'important');
   }
 
+  // 화면 중앙 고정형 상세 정보 모달 인스턴스 제거 및 지도 잠금 해제
+  const liveFixedModal = document.getElementById('live-floating-detail-modal');
+  if (liveFixedModal) {
+    liveFixedModal.remove();
+  }
+
   if (window.mapObj) {
     window.mapObj.closePopup();
+    window.mapObj.dragging.enable();
+    window.mapObj.touchZoom.enable();
+    window.mapObj.scrollWheelZoom.enable();
+    window.mapObj.doubleClickZoom.enable();
+    if (window.mapObj.boxZoom) window.mapObj.boxZoom.enable();
+    if (window.mapObj.keyboard) window.mapObj.keyboard.enable();
   }
 
   if (tempTargetVisual) { map.removeLayer(tempTargetVisual); tempTargetVisual = null; }
@@ -1084,1164 +1096,154 @@ function saveCategoryOrderWithinTabToFirebase(container) {
   batch.commit().catch(err => console.error(err));
 }
 
-window.deleteCategoryWithGuard = function (catName, event) {
-  if (event) event.stopPropagation();
-  if (cachedFishingPoints.some(p => (p.category || '미분류').trim() === catName.trim())) { alert(`삭제 불가: [${catName}] 카테고리 내부에 소속된 포인트 마커가 존재합니다.`); return; }
-  if (confirm(`[${catName}] 카테고리를 삭제하시겠습니까?`)) {
-    let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]'); let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
-    savedCatOrder = savedCatOrder.filter(c => c !== catName); delete savedCatColors[catName];
-    localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
-    alert("카테고리가 삭제되었습니다."); window.renderPointsManagementTab();
-  }
-};
-
-window.openCategoryEditBottomSheet = function (catName, catColor, event) {
-  if (event) event.stopPropagation();
-  document.getElementById('editTargetCategoryOldName').value = catName; document.getElementById('editCategoryNameInput').value = catName;
-  const modalTitle = document.querySelector('#categoryEditModal h3 span'); if (modalTitle) modalTitle.innerText = "카테고리 수정";
-  window.selectCategoryColor(catColor || '#4f46e5'); document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('categoryEditModal').classList.add('active');
-};
-
-window.openCategoryAddBottomSheet = function () {
-  const modalTitle = document.querySelector('#categoryEditModal h3 span'); if (modalTitle) modalTitle.innerText = "카테고리 추가";
-  document.getElementById('editTargetCategoryOldName').value = "NEW_CATEGORY"; document.getElementById('editCategoryNameInput').value = "";
-  window.selectCategoryColor('#4f46e5'); document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('categoryEditModal').classList.add('active');
-};
-
-window.saveCategoryEditData = function () {
-  const modeFlag = document.getElementById('editTargetCategoryOldName').value; 
-  const nextCatName = document.getElementById('editCategoryNameInput').value.trim(); 
-  const nextColor = document.getElementById('editCategoryColorInput').value;
-
-  if (!nextCatName) return alert("카테고리 명칭은 필수입니다.");
-  if (nextCatName.length > 8) return alert("카테고리 이름은 띄어쓰기 포함 8자 이내로 입력해 주세요.");
-
-  let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]'); 
-  let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
-
-  const systemCategories = ['전체', '즐겨찾기', '최근 추가된 화장실', '미분류', '공중화장실 정보'];
-
-  if (modeFlag === "NEW_CATEGORY") {
-    if (savedCatOrder.includes(nextCatName) || systemCategories.includes(nextCatName)) {
-      return alert("이미 존재하는 카테고리 명칭이거나 사용할 수 없는 이름입니다.");
-    }
-    savedCatOrder.push(nextCatName); savedCatColors[nextCatName] = nextColor;
-    localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
-    window.closeModals(); alert(`[${nextCatName}] 카테고리가 추가되었습니다.`); window.renderPointsManagementTab(); return;
-  }
-
-  if (nextCatName !== modeFlag && (savedCatOrder.includes(nextCatName) || systemCategories.includes(nextCatName))) {
-    return alert("이미 존재하는 카테고리 명칭이거나 사용할 수 없는 이름입니다.");
-  }
-
-  const idx = savedCatOrder.indexOf(modeFlag); 
-  if (idx !== -1) savedCatOrder[idx] = nextCatName;
-
-  delete savedCatColors[modeFlag]; savedCatColors[nextCatName] = nextColor;
-  localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
-
-  const batch = db.batch(); 
-  const targets = cachedFishingPoints.filter(p => (p.category || '미분류').trim() === modeFlag.trim());
-  targets.forEach(item => batch.update(db.collection('fishing_points').doc(item.id), { category: nextCatName, color: nextColor }));
+// =========================================================================
+// [TAB AREA 4] 파이어베이스 실시간 동기화 파이프라인 및 레이어 마커 렌더링
+// =========================================================================
+db.collection('fishing_points').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+  cachedFishingPoints = [];
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    cachedFishingPoints.push({
+      id: doc.id,
+      docId: doc.id,
+      name: data.name || '',
+      title: data.name || '',
+      category: data.category || '미분류',
+      memo: data.memo || '',
+      lat: parseFloat(data.lat),
+      lng: parseFloat(data.lng),
+      color: data.color || '#007aff',
+      isFavorite: data.isFavorite || false,
+      favoritedAt: data.favoritedAt || 0,
+      parkingType: data.parkingType || 'none',
+      parkingUnit: data.parkingUnit || '10분',
+      parkingPrice: data.parkingPrice || '0',
+      hasStore: data.hasStore || false,
+      hasCafe: data.hasCafe || false,
+      hasTackle: data.hasTackle || false,
+      address: data.address || ''
+    });
+  });
   
-  batch.commit().then(() => { 
-    if (window.currentActiveCategory === modeFlag) {
-      window.currentActiveCategory = nextCatName;
-      localStorage.setItem('pm-last-category', nextCatName);
-    }
-    window.closeModals(); 
+  window.isFishingPointsLoaded = true;
+  updateVisibleMarkersOnMap();
+  if (document.getElementById('tab-manage')?.classList.contains('active')) {
     window.renderPointsManagementTab();
-  }).catch(err => {
-    console.error(err);
-    alert("카테고리 데이터 동기화 중 오류가 발생했습니다.");
-  });
-};
-
-window.selectCategoryColor = function (color) {
-  if (document.getElementById('editCategoryColorInput')) document.getElementById('editCategoryColorInput').value = color;
-  document.querySelectorAll('.color-palette-btn').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-color') === color));
-  const previewEl = document.getElementById('categoryEditMarkerIcon'); if (previewEl && typeof getFishingPointSvg === 'function') previewEl.innerHTML = getFishingPointSvg(color);
-};
-
-window.selectNewToiletHours = function (type, element) { window.selectedNewToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('newToiletHoursDetailRow').classList.toggle('active', type === '지정시간'); };
-window.selectParking = function (type, element) { selectedParkingType = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('parkingDetailRow').classList.toggle('active', type === 'paid'); };
-window.shiftParkingUnit = function (btn) { currentUnitIndex = (currentUnitIndex + 1) % parkingUnits.length; if (btn) btn.innerText = parkingUnits[currentUnitIndex]; };
-window.shiftEditPointParkingUnit = function (btn) { currentEditPointUnitIndex = (currentEditPointUnitIndex + 1) % editPointParkingUnits.length; if (btn) btn.innerText = editPointParkingUnits[currentEditPointUnitIndex]; };
-window.selectEditPointParking = function (type, element) { selectedEditPointParkingType = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editPointParkingDetailRow').classList.toggle('active', type === 'paid'); };
-window.selectEditToiletHours = function (type, element) { selectedToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editToiletHoursDetailRow').classList.toggle('active', type === '지정시간'); };
-
-// =========================================================================
-// [TAB AREA 4] 게시판 엔진 (공지사항/이벤트 + 정보 게시판 동적 렌더링 포함)
-// =========================================================================
-let cachedNotices = [];
-let cachedEvents = [];
-let currentBoardTab = 'notice';
-
-// 글로벌 모달 레이어 팝업 디스플레이 가드 엔진 및 스타일 우선순위 보정
-(function() {
-  const style = document.createElement('style');
-  style.innerHTML = `
-    #infoEditModal, #fishingBanModal, #sizeLimitModal, #knotGuideModal, #weatherModal {
-      display: none !important;
-      z-index: 999999 !important;
-    }
-    #infoEditModal.active, #fishingBanModal.active, #sizeLimitModal.active, #knotGuideModal.active {
-      display: block !important;
-    }
-    #weatherModal.active {
-      display: flex !important;
-      opacity: 1 !important;
-      visibility: visible !important;
-    }
-  `;
-  document.head.appendChild(style);
-})();
-
-if (window.closeModals) {
-  const originalCloseModals = window.closeModals;
-  window.closeModals = function () {
-    originalCloseModals();
-    ['infoEditModal', 'fishingBanModal', 'sizeLimitModal', 'knotGuideModal', 'weatherModal'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.classList.remove('active');
-        el.style.setProperty('display', 'none', 'important');
-      }
-    });
-    
-    // 모달 폐쇄 시 백드롭 활성 클래스 및 인라인 스타일을 강제로 소멸시켜 잔상 현상 원천 차단
-    const backdrop = document.getElementById('modalBackdrop');
-    if (backdrop) {
-      backdrop.classList.remove('active');
-      backdrop.style.setProperty('display', 'none', 'important');
-    }
-  };
-}
-
-window.showNoticePage = function (initialTab) {
-  window.closeModals();
-  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-  document.getElementById('notice-page')?.classList.add('active');
-  window.switchBoardSubTab((initialTab === 'event') ? 'event' : 'notice');
-};
-
-window.switchBoardSubTab = function (tab) {
-  currentBoardTab = tab;
-  const btnNotice = document.getElementById('btnSubTabNotice'), btnEvent = document.getElementById('btnSubTabEvent');
-  const containerNotice = document.getElementById('notice-list-container'), containerEvent = document.getElementById('event-list-container');
-  const detailContainer = document.getElementById('notice-inline-detail-container');
-
-  if (btnNotice) btnNotice.classList.toggle('active', tab === 'notice');
-  if (btnEvent) btnEvent.classList.toggle('active', tab === 'event');
-  if (containerNotice) containerNotice.classList.toggle('active', tab === 'notice');
-  if (containerEvent) containerEvent.classList.toggle('active', tab === 'event');
-  if (detailContainer) detailContainer.classList.remove('active');
-
-  if (tab === 'notice') { document.getElementById('lblNoticeHeaderTitle').innerText = '공지사항'; window.fetchLiveNotices(); }
-  else { document.getElementById('lblNoticeHeaderTitle').innerText = '이벤트'; window.fetchLiveEvents(); }
-};
-
-window.handleNoticeBackNavigation = function () {
-  const detailContainer = document.getElementById('notice-inline-detail-container');
-  if (detailContainer && detailContainer.classList.contains('active')) {
-    detailContainer.classList.remove('active');
-    if (currentBoardTab === 'notice') document.getElementById('notice-list-container')?.classList.add('active');
-    if (currentBoardTab === 'event') document.getElementById('event-list-container')?.classList.add('active');
-    document.getElementById('lblNoticeHeaderTitle').innerText = (currentBoardTab === 'notice') ? '공지사항' : '이벤트';
-    return;
   }
-  document.getElementById('notice-page')?.classList.remove('active');
-  document.getElementById('tab-more')?.classList.add('active');
-  const navItems = document.querySelectorAll('.nav-item');
-  if (navItems.length >= 4) { navItems.forEach(ni => ni.classList.remove('active')); navItems[3].classList.add('active'); }
-};
-
-window.fetchLiveNotices = function () {
-  const container = document.getElementById('notice-list-container'); if (!container) return;
-  container.innerHTML = '<div class="pm-empty-msg">공지사항을 불러오는 중입니다...</div>';
-
-  db.collection('notices').orderBy('createdAt', 'desc').get().then((snapshot) => {
-    cachedNotices = []; container.innerHTML = ''; if (snapshot.empty) { container.innerHTML = '<div class="pm-empty-msg">등록된 공지사항이 없습니다.</div>'; return; }
-    const totalCount = snapshot.size; let index = 0;
-    snapshot.forEach((doc) => {
-      const data = doc.data(); cachedNotices.push({ id: doc.id, ...data });
-      let dateStr = "일자 미상"; if (data.createdAt) { const d = (typeof data.createdAt.toDate === 'function') ? data.createdAt.toDate() : new Date(data.createdAt); dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
-      const item = document.createElement('div'); item.className = 'notice-item';
-      item.innerHTML = `<div class="notice-item-num">${totalCount - index}</div><div class="notice-item-title">${data.title || '제목 없음'}</div><div class="notice-item-date">${dateStr}</div>`;
-      item.onclick = () => window.openNoticeDetail(doc.id); container.appendChild(item); index++;
-    });
-  }).catch(() => { container.innerHTML = '<div class="pm-empty-msg">데이터 수신에 실패했습니다.</div>'; });
-};
-
-window.fetchLiveEvents = function () {
-  const container = document.getElementById('event-list-container'); if (!container) return;
-  container.innerHTML = '<div class="pm-empty-msg">이벤트를 불러오는 중입니다...</div>';
-
-  db.collection('events').orderBy('createdAt', 'desc').get().then((snapshot) => {
-    cachedEvents = []; container.innerHTML = ''; if (snapshot.empty) { container.innerHTML = '<div class="pm-empty-msg">등록된 이벤트가 없습니다.</div>'; return; }
-    const totalCount = snapshot.size; let index = 0;
-    snapshot.forEach((doc) => {
-      const data = doc.data(); cachedEvents.push({ id: doc.id, ...data });
-      let dateStr = "일자 미상"; if (data.createdAt) { const d = (typeof data.createdAt.toDate === 'function') ? data.createdAt.toDate() : new Date(data.createdAt); dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
-      const item = document.createElement('div'); item.className = 'notice-item';
-      item.innerHTML = `<div class="notice-item-num">${totalCount - index}</div><div class="notice-item-title">${data.title || '제목 없음'}</div><div class="notice-item-date">${dateStr}</div>`;
-      item.onclick = () => window.openNoticeDetail(doc.id); container.appendChild(item); index++;
-    });
-  }).catch(() => { container.innerHTML = '<div class="pm-empty-msg">데이터 수신에 실패했습니다.</div>'; });
-};
-
-window.openNoticeDetail = function (docId) {
-  const targetList = (currentBoardTab === 'notice') ? cachedNotices : cachedEvents;
-  const notice = targetList.find(n => n.id === docId); if (!notice) return;
-
-  document.getElementById('lblInlineNoticeTitle').innerText = notice.title || '제목 없음';
-  if (document.getElementById('lblInlineNoticeDate') && notice.createdAt) {
-    const d = (typeof notice.createdAt.toDate === 'function') ? notice.createdAt.toDate() : new Date(notice.createdAt);
-    document.getElementById('lblInlineNoticeDate').innerText = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
-  }
-  document.getElementById('lblInlineNoticeContent').innerText = notice.content || '';
-  document.getElementById('notice-list-container')?.classList.remove('active');
-  document.getElementById('event-list-container')?.classList.remove('active');
-  document.getElementById('notice-inline-detail-container')?.classList.add('active');
-
-  document.getElementById('btnNoticeInlineEdit').onclick = () => {
-    document.getElementById('noticeWriteMode').value = 'edit'; document.getElementById('noticeWriteTargetId').value = docId;
-    document.getElementById('noticeWriteTitle').value = notice.title || ''; document.getElementById('noticeWriteContent').value = notice.content || '';
-    document.getElementById('lblNoticeWriteModalTitle').innerText = '글 수정';
-    document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('noticeWriteModal')?.classList.add('active');
-  };
-
-  document.getElementById('btnNoticeInlineDelete').onclick = () => {
-    window.openMarkerDeleteModal(docId, (currentBoardTab === 'notice') ? 'notices' : 'events', notice.title || '게시글', () => {
-      document.getElementById('notice-inline-detail-container')?.classList.remove('active');
-      if (currentBoardTab === 'notice') { document.getElementById('notice-list-container')?.classList.add('active'); window.fetchLiveNotices(); }
-      else { document.getElementById('event-list-container')?.classList.add('active'); window.fetchLiveEvents(); }
-    });
-  };
-};
-
-window.openNoticeWriteModal = function () {
-  if (document.getElementById('noticeWriteTitle')) document.getElementById('noticeWriteTitle').value = '';
-  if (document.getElementById('noticeWriteContent')) document.getElementById('noticeWriteContent').value = '';
-  document.getElementById('noticeWriteMode').value = 'add'; document.getElementById('noticeWriteTargetId').value = '';
-  document.getElementById('lblNoticeWriteModalTitle').innerText = '글 등록';
-  document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('noticeWriteModal')?.classList.add('active');
-};
-
-window.saveNoticeData = function () {
-  const title = document.getElementById('noticeWriteTitle')?.value.trim() || '';
-  const content = document.getElementById('noticeWriteContent')?.value.trim() || '';
-  const mode = document.getElementById('noticeWriteMode').value;
-  const targetId = document.getElementById('noticeWriteTargetId').value;
-  const collectionName = (currentBoardTab === 'notice') ? 'notices' : 'events';
-
-  if (!title || !content) return alert('제목과 내용을 모두 입력해 주세요.');
-
-  if (mode === 'edit') {
-    db.collection(collectionName).doc(targetId).update({ title, content }).then(() => {
-      window.closeModals(); alert('성공적으로 수정되었습니다.');
-      document.getElementById('lblInlineNoticeTitle').innerText = title; document.getElementById('lblInlineNoticeContent').innerText = content;
-      if (currentBoardTab === 'notice') window.fetchLiveNotices(); else window.fetchLiveEvents();
-    }).catch(() => alert('수정 중 오류가 발생했습니다.'));
-  } else {
-    db.collection(collectionName).add({ title, content, date: window.getFormattedCurrentTime(), createdAt: firebase.firestore.FieldValue.serverTimestamp() }).then(() => {
-      window.closeModals(); alert('성공적으로 등록되었습니다.');
-      document.getElementById('notice-inline-detail-container')?.classList.remove('active');
-      if (currentBoardTab === 'notice') { document.getElementById('notice-list-container')?.classList.add('active'); window.fetchLiveNotices(); }
-      else { document.getElementById('event-list-container')?.classList.add('active'); window.fetchLiveEvents(); }
-    }).catch(() => alert('저장 중 오류가 발생했습니다.'));
-  }
-};
-
-// --- 정보 게시판(금어기, 금지체장, 물때표, 매듭법) 동적 DB 연동 로직 ---
-let cachedFishingBans = [];
-let cachedSizeLimits = [];
-let cachedKnotGuides = [];
-let currentInfoTab = 'fishing_ban';
-let isInfoListenersInitialized = false;
-window.cachedStaticTideHtml = '';
-
-window.InfoBoardSystem = {
-  extractYoutubeId: function(url) {
-    if (!url) return '';
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : '';
-  },
-  getShortsThumbnail: function(url) {
-    const videoId = this.extractYoutubeId(url);
-    if (!videoId) return '';
-    return `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
-  },
-  parseHashTags: function(tagsString) {
-    if (!tagsString) return '';
-    return tagsString.split(',').map(tag => tag.trim().startsWith('#') ? tag.trim() : `#${tag.trim()}`).join(' ');
-  }
-};
-
-window.showInfoBoardPage = function (subTabId) {
-  window.closeModals();
-  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-  const infoBoardPage = document.getElementById('info-board-page');
-  if (infoBoardPage) infoBoardPage.classList.add('active');
-  
-  window.switchInfoSubTab(subTabId);
-  window.initInfoBoardRealtimeListeners();
-};
-
-window.handleInfoBoardBackNavigation = function () {
-  document.getElementById('info-board-page')?.classList.remove('active');
-  document.getElementById('tab-more')?.classList.add('active');
-  const navItems = document.querySelectorAll('.nav-item');
-  if (navItems.length >= 4) {
-    navItems.forEach(ni => ni.classList.remove('active'));
-    navItems[3].classList.add('active');
-  }
-};
-
-window.switchInfoSubTab = function (subTabId) {
-  currentInfoTab = subTabId;
-  const tabButtons = {
-    'fishing_ban': document.getElementById('btnSubTabFishingBan'),
-    'size_limit': document.getElementById('btnSubTabSizeLimit'),
-    'tide_table': document.getElementById('btnSubTabTideTable'),
-    'knot_guide': document.getElementById('btnSubTabKnotGuide')
-  };
-  const headerTitles = {
-    'fishing_ban': '금어기 정보',
-    'size_limit': '금지체장 기준',
-    'tide_table': '물때표 가이드',
-    'knot_guide': '낚시 매듭법'
-  };
-
-  Object.values(tabButtons).forEach(btn => { if (btn) btn.classList.remove('active'); });
-  if (tabButtons[subTabId]) tabButtons[subTabId].classList.add('active');
-
-  const headerTitleLbl = document.getElementById('lblInfoBoardHeaderTitle');
-  if (headerTitleLbl && headerTitles[subTabId]) headerTitleLbl.innerText = headerTitles[subTabId];
-
-  const searchWrapper = document.getElementById('infoSearchWrapper');
-  const searchInput = document.getElementById('infoSearchInput');
-  if (searchWrapper && searchInput) {
-    if (subTabId === 'fishing_ban' || subTabId === 'size_limit' || subTabId === 'knot_guide') {
-      searchWrapper.style.display = 'block';
-      searchInput.value = '';
-    } else {
-      searchWrapper.style.display = 'none';
-    }
-  }
-
-  const actionBtn = document.getElementById('btnInfoBoardAction');
-  if (actionBtn) {
-    if (subTabId === 'tide_table') {
-      actionBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
-      actionBtn.onclick = () => window.openInfoEditModal();
-    } else {
-      actionBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
-      actionBtn.onclick = () => window.openInfoWriteFormModal(subTabId);
-    }
-  }
-
-  window.renderInfoContentCards();
-};
-
-window.initInfoBoardRealtimeListeners = function () {
-  if (isInfoListenersInitialized) return;
-  isInfoListenersInitialized = true;
-
-  db.collection('fishing_ban').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-    cachedFishingBans = [];
-    snapshot.forEach(doc => cachedFishingBans.push({ id: doc.id, ...doc.data() }));
-    if (currentInfoTab === 'fishing_ban') window.renderInfoContentCards();
-  });
-
-  db.collection('size_limit').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-    cachedSizeLimits = [];
-    snapshot.forEach(doc => cachedSizeLimits.push({ id: doc.id, ...doc.data() }));
-    if (currentInfoTab === 'size_limit') window.renderInfoContentCards();
-  });
-
-  db.collection('knot_guide').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-    cachedKnotGuides = [];
-    snapshot.forEach(doc => cachedKnotGuides.push({ id: doc.id, ...doc.data() }));
-    if (currentInfoTab === 'knot_guide') window.renderInfoContentCards();
-  });
-
-  db.collection('info_static').doc('tide_table').onSnapshot(doc => {
-    window.cachedStaticTideHtml = doc.exists ? doc.data().html || '<div class="pm-empty-msg">내용을 입력해 주세요.</div>' : '<div class="pm-empty-msg">내용을 입력해 주세요.</div>';
-    if (currentInfoTab === 'tide_table') window.renderInfoContentCards();
-  });
-};
-
-window.renderInfoContentCards = function (filterKeyword = "") {
-  const container = document.getElementById('infoBoardContentContainer');
-  if (!container) return;
-  container.innerHTML = "";
-  const kw = filterKeyword.trim().toLowerCase();
-
-  if (currentInfoTab === 'fishing_ban') {
-    const filtered = cachedFishingBans.filter(b => (b.species || "").toLowerCase().includes(kw));
-    if (filtered.length === 0) { container.innerHTML = '<div class="pm-empty-msg">검색된 금어기 정보가 없습니다.</div>'; return; }
-    
-    filtered.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'info-card-item';
-      const imgContent = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.species}">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
-      
-      card.innerHTML = `
-        <div class="info-card-img-box">${imgContent}</div>
-        <div class="info-card-content-box">
-          <div class="info-card-header">
-            <span class="info-card-species">${item.species || '어종 미상'}</span>
-            <div class="pm-item-actions">
-              <button class="pm-action-btn edit" onclick="window.openInfoEditFormModal('fishing_ban', '${item.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-              <button class="pm-action-btn delete" onclick="window.deleteInfoData('fishing_ban', '${item.id}', '${item.species}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-            </div>
-          </div>
-          <div class="info-card-body-flex">
-            <div class="info-card-details">
-              <div class="info-detail-row"><strong>금어기:</strong> ${item.period || '-'}</div>
-              <div class="info-detail-row"><strong>적용지역:</strong> ${item.region || '-'}</div>
-              <div class="info-detail-row"><strong>비고:</strong> ${item.note || '-'}</div>
-            </div>
-          </div>
-        </div>
-      `;
-      container.appendChild(card);
-    });
-  } 
-  else if (currentInfoTab === 'size_limit') {
-    const filtered = cachedSizeLimits.filter(s => (s.species || "").toLowerCase().includes(kw));
-    if (filtered.length === 0) { container.innerHTML = '<div class="pm-empty-msg">검색된 금지체장 기준이 없습니다.</div>'; return; }
-    
-    filtered.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'info-card-item';
-      const badgeClass = item.type === 'sea' ? 'sea' : 'fresh';
-      const badgeText = item.type === 'sea' ? '바다' : '민물';
-      const imgContent = item.imageUrl ? `<img src="${item.imageUrl}" alt="${item.species}">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
-      
-      let sizeRenderStr = "";
-      const min = parseFloat(item.minSize || 0);
-      const max = parseFloat(item.maxSize || 0);
-      if (min > 0 && max > 0) sizeRenderStr = `${min}cm 이상 ~ ${max}cm 이하`;
-      else if (min > 0) sizeRenderStr = `${min}cm 이상`;
-      else if (max > 0) sizeRenderStr = `${max}cm 이하`;
-      else sizeRenderStr = "제한 규격 없음";
-
-      card.innerHTML = `
-        <div class="info-card-img-box">${imgContent}</div>
-        <div class="info-card-content-box">
-          <div class="info-card-header">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span class="info-card-species">${item.species || '어종 미상'}</span>
-              <span class="info-card-badge ${badgeClass}">${badgeText}</span>
-            </div>
-            <div class="pm-item-actions">
-              <button class="pm-action-btn edit" onclick="window.openInfoEditFormModal('size_limit', '${item.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-              <button class="pm-action-btn delete" onclick="window.deleteInfoData('size_limit', '${item.id}', '${item.species}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-            </div>
-          </div>
-          <div class="info-card-body-flex">
-            <div class="info-card-details">
-              <div class="info-detail-row"><strong>금지체장:</strong> ${sizeRenderStr}</div>
-            </div>
-          </div>
-        </div>
-      `;
-      container.appendChild(card);
-    });
-  } 
-  else if (currentInfoTab === 'tide_table') {
-    const staticBox = document.createElement('div');
-    staticBox.className = 'notice-inline-content';
-    staticBox.style.padding = '0';
-    staticBox.innerHTML = window.cachedStaticTideHtml || '<div class="pm-empty-msg">내용이 비어있습니다.</div>';
-    container.appendChild(staticBox);
-  } 
-  else if (currentInfoTab === 'knot_guide') {
-    const filtered = cachedKnotGuides.filter(k => (k.title || "").toLowerCase().includes(kw));
-    if (filtered.length === 0) { container.innerHTML = '<div class="pm-empty-msg">검색된 매듭법 가이드가 없습니다.</div>'; return; }
-    
-    const grid = document.createElement('div');
-    grid.className = 'info-knot-grid';
-    
-    filtered.forEach(item => {
-      const knotCard = document.createElement('div');
-      knotCard.className = 'info-knot-card';
-      
-      let youtubeId = window.InfoBoardSystem.extractYoutubeId(item.videoUrl);
-      const thumbUrl = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50" viewBox="0 0 100 50"></svg>';
-      const formattedTags = window.InfoBoardSystem.parseHashTags(item.recommend);
-
-      knotCard.innerHTML = `
-        <div class="info-knot-thumb-wrapper" onclick="if('${item.videoUrl}') window.open('${item.videoUrl}', '_blank');">
-          <img src="${thumbUrl}" alt="${item.title}" onerror="this.src='https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg'">
-          <div class="info-knot-play-overlay">
-            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          </div>
-        </div>
-        <div class="info-knot-info-area">
-          <div style="display: flex; align-items: center; justify-content: space-between; width:100%;">
-            <span class="info-knot-title">${item.title || '매듭법'}</span>
-            <div style="display:flex; gap:2px; flex-shrink:0;">
-              <button class="pm-action-btn edit" style="width:22px; height:22px; padding:0;" onclick="window.openInfoEditFormModal('knot_guide', '${item.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px; height:11px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-              <button class="pm-action-btn delete" style="width:22px; height:22px; padding:0;" onclick="window.deleteInfoData('knot_guide', '${item.id}', '${item.title}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px; height:11px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-            </div>
-          </div>
-          <div class="info-knot-tags">${formattedTags}</div>
-          <div class="info-knot-source">유튜브 동영상 가이드</div>
-        </div>
-      `;
-      grid.appendChild(knotCard);
-    });
-    container.appendChild(grid);
-  }
-};
-
-window.handleInfoSearch = function (val) {
-  window.renderInfoContentCards(val);
-};
-
-window.toggleBanPeriodType = function (element) {
-  const detailRow = document.getElementById('banDetailedPeriodRow');
-  if (!detailRow) return;
-  
-  const isActive = detailRow.classList.contains('active');
-  if (isActive) {
-    detailRow.classList.remove('active');
-    detailRow.style.setProperty('display', 'none', 'important');
-    if (element) element.classList.remove('active');
-  } else {
-    detailRow.classList.add('active');
-    detailRow.style.setProperty('display', 'block', 'important');
-    if (element) element.classList.add('active');
-  }
-};
-
-window.openInfoWriteFormModal = function (tabType) {
-  window.closeModals();
-  document.getElementById('modalBackdrop')?.classList.add('active');
-  
-  const safeSetElementValue = (id, val) => {
-    const el = document.getElementById(id);
-    if (el) el.value = val;
-  };
-  
-  if (tabType === 'fishing_ban') {
-    safeSetElementValue('banModalMode', 'add');
-    safeSetElementValue('banModalTargetId', '');
-    safeSetElementValue('banSpecies', '');
-    safeSetElementValue('banPeriod', '');
-    safeSetElementValue('banRegion', '');
-    safeSetElementValue('banNote', '');
-    safeSetElementValue('banImageUrl', '');
-    
-    safeSetElementValue('banStartMonth', '01');
-    safeSetElementValue('banStartDate', '01');
-    safeSetElementValue('banEndMonth', '01');
-    safeSetElementValue('banEndDate', '01');
-    
-    const detailRow = document.getElementById('banDetailedPeriodRow');
-    if (detailRow) {
-      detailRow.classList.remove('active');
-      detailRow.style.setProperty('display', 'none', 'important');
-    }
-    
-    const titleLbl = document.getElementById('lblFishingBanModalTitle');
-    if (titleLbl) titleLbl.innerText = '금어기 등록';
-    
-    const modal = document.getElementById('fishingBanModal');
-    if (modal) {
-      modal.style.setProperty('display', 'block', 'important');
-      modal.classList.add('active');
-    }
-  } 
-  else if (tabType === 'size_limit') {
-    safeSetElementValue('limitModalMode', 'add');
-    safeSetElementValue('limitModalTargetId', '');
-    safeSetElementValue('limitSpecies', '');
-    safeSetElementValue('limitMinSize', '');
-    safeSetElementValue('limitMaxSize', '');
-    safeSetElementValue('limitImageUrl', '');
-    window.selectLimitType('sea', document.getElementById('chipLimitSea'));
-    
-    const titleLbl = document.getElementById('lblSizeLimitModalTitle');
-    if (titleLbl) titleLbl.innerText = '금지체장 등록';
-    
-    const modal = document.getElementById('sizeLimitModal');
-    if (modal) {
-      modal.style.setProperty('display', 'block', 'important');
-      modal.classList.add('active');
-    }
-  } 
-  else if (tabType === 'knot_guide') {
-    safeSetElementValue('knotModalMode', 'add');
-    safeSetElementValue('knotModalTargetId', '');
-    safeSetElementValue('knotTitle', '');
-    safeSetElementValue('knotRecommend', '');
-    safeSetElementValue('knotVideoUrl', '');
-    
-    const titleLbl = document.getElementById('lblKnotGuideModalTitle');
-    if (titleLbl) titleLbl.innerText = '매듭법 등록';
-    
-    const modal = document.getElementById('knotGuideModal');
-    if (modal) {
-      modal.style.setProperty('display', 'block', 'important');
-      modal.classList.add('active');
-    }
-  }
-};
-
-window.openInfoEditFormModal = function (tabType, docId) {
-  window.closeModals();
-  document.getElementById('modalBackdrop')?.classList.add('active');
-
-  const safeSetElementValue = (id, val) => {
-    const el = document.getElementById(id);
-    if (el) el.value = val;
-  };
-
-  if (tabType === 'fishing_ban') {
-    const item = cachedFishingBans.find(b => b.id === docId);
-    if (!item) return;
-    safeSetElementValue('banModalMode', 'edit');
-    safeSetElementValue('banModalTargetId', docId);
-    safeSetElementValue('banSpecies', item.species || '');
-    safeSetElementValue('banPeriod', item.period || '');
-    safeSetElementValue('banRegion', item.region || '');
-    safeSetElementValue('banNote', item.note || '');
-    safeSetElementValue('banImageUrl', item.imageUrl || '');
-    
-    const detailRow = document.getElementById('banDetailedPeriodRow');
-    if (detailRow) {
-      if (item.startMonth || item.startDate || item.endMonth || item.endDate) {
-        detailRow.classList.add('active');
-        detailRow.style.setProperty('display', 'block', 'important');
-        safeSetElementValue('banStartMonth', item.startMonth || '01');
-        safeSetElementValue('banStartDate', item.startDate || '01');
-        safeSetElementValue('banEndMonth', item.endMonth || '01');
-        safeSetElementValue('banEndDate', item.endDate || '01');
-      } else {
-        detailRow.classList.remove('active');
-        detailRow.style.setProperty('display', 'none', 'important');
-      }
-    }
-    
-    const titleLbl = document.getElementById('lblFishingBanModalTitle');
-    if (titleLbl) titleLbl.innerText = '금어기 수정';
-    
-    const modal = document.getElementById('fishingBanModal');
-    if (modal) {
-      modal.style.setProperty('display', 'block', 'important');
-      modal.classList.add('active');
-    }
-  } 
-  else if (tabType === 'size_limit') {
-    const item = cachedSizeLimits.find(s => s.id === docId);
-    if (!item) return;
-    safeSetElementValue('limitModalMode', 'edit');
-    safeSetElementValue('limitModalTargetId', docId);
-    safeSetElementValue('limitSpecies', item.species || '');
-    safeSetElementValue('limitMinSize', item.minSize || '');
-    safeSetElementValue('limitMaxSize', item.maxSize || '');
-    safeSetElementValue('limitImageUrl', item.imageUrl || '');
-    window.selectLimitType(item.type || 'sea', item.type === 'fresh' ? document.getElementById('chipLimitFresh') : document.getElementById('chipLimitSea'));
-    
-    const titleLbl = document.getElementById('lblSizeLimitModalTitle');
-    if (titleLbl) titleLbl.innerText = '금지체장 수정';
-    
-    const modal = document.getElementById('sizeLimitModal');
-    if (modal) {
-      modal.style.setProperty('display', 'block', 'important');
-      modal.classList.add('active');
-    }
-  } 
-  else if (tabType === 'knot_guide') {
-    const item = cachedKnotGuides.find(k => k.id === docId);
-    if (!item) return;
-    safeSetElementValue('knotModalMode', 'edit');
-    safeSetElementValue('knotModalTargetId', docId);
-    safeSetElementValue('knotTitle', item.title || '');
-    safeSetElementValue('knotRecommend', item.recommend || '');
-    safeSetElementValue('knotVideoUrl', item.videoUrl || '');
-    
-    const titleLbl = document.getElementById('lblKnotGuideModalTitle');
-    if (titleLbl) titleLbl.innerText = '매듭법 수정';
-    
-    const modal = document.getElementById('knotGuideModal');
-    if (modal) {
-      modal.style.setProperty('display', 'block', 'important');
-      modal.classList.add('active');
-    }
-  }
-};
-
-window.selectLimitType = function (type, btn) {
-  document.getElementById('limitType').value = type;
-  document.querySelectorAll('#limitTypeChips .chip-btn').forEach(b => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-};
-
-window.saveFishingBanData = function () {
-  const species = document.getElementById('banSpecies').value.trim();
-  const period = document.getElementById('banPeriod').value.trim();
-  const region = document.getElementById('banRegion').value.trim();
-  const note = document.getElementById('banNote').value.trim();
-  const imageUrl = document.getElementById('banImageUrl').value.trim();
-  const mode = document.getElementById('banModalMode').value;
-  const targetId = document.getElementById('banModalTargetId').value;
-
-  if (!species) return alert('어종명을 입력해 주세요.');
-
-  const payload = { species, period, region, note, imageUrl, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
-
-  const detailRow = document.getElementById('banDetailedPeriodRow');
-  if (detailRow && detailRow.classList.contains('active')) {
-    payload.startMonth = document.getElementById('banStartMonth')?.value || '01';
-    payload.startDate = document.getElementById('banStartDate')?.value || '01';
-    payload.endMonth = document.getElementById('banEndMonth')?.value || '01';
-    payload.endDate = document.getElementById('banEndDate')?.value || '01';
-  }
-
-  if (mode === 'edit') {
-    db.collection('fishing_ban').doc(targetId).update(payload).then(() => {
-      window.closeModals(); alert('수정되었습니다.');
-    });
-  } else {
-    db.collection('fishing_ban').add(payload).then(() => {
-      window.closeModals(); alert('등록되었습니다.');
-    });
-  }
-};
-
-window.saveSizeLimitData = function () {
-  const species = document.getElementById('limitSpecies').value.trim();
-  const type = document.getElementById('limitType').value;
-  const minSize = document.getElementById('limitMinSize').value.trim();
-  const maxSize = document.getElementById('limitMaxSize').value.trim();
-  const imageUrl = document.getElementById('limitImageUrl').value.trim();
-  const mode = document.getElementById('limitModalMode').value;
-  const targetId = document.getElementById('limitModalTargetId').value;
-
-  if (!species) return alert('어종명을 입력해 주세요.');
-
-  const payload = { species, type, minSize, maxSize, imageUrl, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
-
-  if (mode === 'edit') {
-    db.collection('size_limit').doc(targetId).update({ species, type, minSize, maxSize, imageUrl }).then(() => {
-      window.closeModals(); alert('수정되었습니다.');
-    });
-  } else {
-    db.collection('size_limit').add(payload).then(() => {
-      window.closeModals(); alert('등록되었습니다.');
-    });
-  }
-};
-
-window.saveKnotGuideData = function () {
-  const title = document.getElementById('knotTitle').value.trim();
-  const recommend = document.getElementById('knotRecommend').value.trim();
-  const videoUrl = document.getElementById('knotVideoUrl').value.trim();
-  const mode = document.getElementById('knotModalMode').value;
-  const targetId = document.getElementById('knotModalTargetId').value;
-
-  if (!title) return alert('매듭법 명을 입력해 주세요.');
-
-  const payload = { title, recommend, videoUrl, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
-
-  if (mode === 'edit') {
-    db.collection('knot_guide').doc(targetId).update({ title, recommend, videoUrl }).then(() => {
-      window.closeModals(); alert('수정되었습니다.');
-    });
-  } else {
-    db.collection('knot_guide').add(payload).then(() => {
-      window.closeModals(); alert('등록되었습니다.');
-    });
-  }
-};
-
-window.deleteInfoData = function (collection, docId, labelName) {
-  window.openMarkerDeleteModal(docId, collection, labelName, () => {
-    alert('삭제 완료되었습니다.');
-    window.closeModals();
-    window.renderInfoContentCards();
-  });
-};
-
-window.openInfoEditModal = function () {
-  const editContentTextArea = document.getElementById('infoEditContent');
-  const infoEditTargetTabInput = document.getElementById('infoEditTargetTab');
-
-  if (editContentTextArea && infoEditTargetTabInput) {
-    infoEditTargetTabInput.value = 'tide_table';
-    editContentTextArea.value = window.cachedStaticTideHtml || '';
-
-    document.getElementById('modalBackdrop')?.classList.add('active');
-    const modal = document.getElementById('infoEditModal');
-    if (modal) {
-      modal.style.setProperty('display', 'block', 'important');
-      modal.classList.add('active');
-    }
-  }
-};
-
-window.saveInfoEditData = function () {
-  const editContentTextArea = document.getElementById('infoEditContent');
-  if (editContentTextArea) {
-    const nextHtml = editContentTextArea.value;
-    db.collection('info_static').doc('tide_table').set({ html: nextHtml }).then(() => {
-      window.closeModals();
-      alert('물때표 정보 가이드 갱신이 완료되었습니다.');
-    });
-  }
-};
-
-// =========================================================================
-// [TAB AREA 5] 더보기 탭, 전역 앱 설정 및 관리자 디버깅 패널 가드 시스템
-// =========================================================================
-window.toggleDarkMode = function (checkbox) {
-  const isDark = checkbox.checked; localStorage.setItem('dark-mode', isDark ? 'true' : 'false');
-  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
-  if (clean2DLayer) { clean2DLayer.setUrl(isDark ? CARTO_DARK_URL : CARTO_LIGHT_URL); clean2DLayer.redraw(); }
-};
-
-window.toggleNaviApp = function (checkbox) {
-  const isNaver = checkbox.checked; localStorage.setItem('navi-app', isNaver ? 'naver' : 'kakao');
-  const label = document.getElementById('naviAppLabel'); if (label) label.innerText = isNaver ? '네비게이션: 네이버 지도' : '네비게이션: 카카오 지도';
-};
-
-window.showSettingsPage = function () { window.closeModals(); document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active')); document.getElementById('settings-page')?.classList.add('active'); };
-window.hideSettingsPage = function () { document.getElementById('settings-page')?.classList.remove('active'); document.getElementById('tab-more')?.classList.add('active'); };
-
-window.openAdminModal = function () {
-  window.closeModals(); document.getElementById('modalBackdrop')?.classList.add('active');
-  const adminModal = document.getElementById('mdlAdminPanel');
-  if (adminModal) { adminModal.classList.add('active'); L.DomEvent.disableClickPropagation(adminModal); }
-
-  window.checkAdminCacheStatus(); window.logToAdminTerminal("관리자 제어 시스템 접속 완료");
-  const syncBtn = document.getElementById('btnForceSync');
-  if (syncBtn) {
-    syncBtn.removeAttribute('disabled');
-    syncBtn.style.setProperty('pointer-events', 'auto', 'important'); syncBtn.style.setProperty('cursor', 'pointer', 'important'); syncBtn.style.setProperty('z-index', '999999', 'important');
-    L.DomEvent.disableClickPropagation(syncBtn); syncBtn.onclick = null; L.DomEvent.off(syncBtn, 'click');
-    L.DomEvent.on(syncBtn, 'click', function (htmlEvent) { if (htmlEvent) { L.DomEvent.preventDefault(htmlEvent); L.DomEvent.stopPropagation(htmlEvent); } window.clearAdminCache(); });
-  }
-};
-
-window.checkAdminCacheStatus = function () {
-  let hasWeather = false, hasTide = false, hasSun = false;
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i); if (!key) continue;
-    if (key.startsWith('cc_weather_')) hasWeather = true; if (key.startsWith('cc_tide_')) hasTide = true; if (key.startsWith('cc_sun_')) hasSun = true;
-  }
-  const badge = (id, state, text) => { const el = document.getElementById(id); if (el) { el.className = 'chip-btn ' + (state ? 'cache-loaded' : 'cache-empty'); el.innerText = text + (state ? ' 적재 완료' : ' 비어있음'); } };
-  badge('adminWeatherCacheBadge', hasWeather, '기상'); badge('adminTideCacheBadge', hasTide, '조석'); badge('adminSunCacheBadge', hasSun, '일출물');
-};
-
-window.clearAdminCache = function () {
-  const keysToRemove = []; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key && key.startsWith('cc_')) keysToRemove.push(key); }
-  keysToRemove.forEach(key => localStorage.removeItem(key)); window.checkAdminCacheStatus(); window.logToAdminTerminal("공공데이터 로컬 캐시 메모리 강제 초기화 완료");
-};
-
-window.logToAdminTerminal = function (message) {
-  const terminal = document.getElementById('adminDebugConsole'); if (!terminal) return;
-  const now = new Date(); terminal.innerHTML += `<div>[${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}] ${message}</div>`;
-  terminal.scrollTop = terminal.scrollHeight;
-};
-
-// =========================================================================
-// [BACKEND AREA] 백엔드 데이터베이스 실시간 트래킹 모델 및 오버레이 렌더러
-// =========================================================================
-window.coastalDepthData = [];
-
-window.loadCoastalDepthData = async function() {
-  try {
-    const response = await fetch('coastal_depth_compact.json');
-    if (response.ok) {
-      window.coastalDepthData = await response.json();
-      console.log(`[수심 데이터 로드 완료] 총 ${window.coastalDepthData.length} 격자 확보`);
-    }
-  } catch (err) { console.error("수심 데이터 로드 중 에러 발생:", err); }
-};
-
-window.findNearestDepth = function(lat, lng) {
-  if (!window.coastalDepthData || window.coastalDepthData.length === 0) return null;
-  let minDstSquare = Infinity; let nearestDepth = null;
-  const latToMeters = 111000; const lngToMeters = 91000; const maxSearchRadiusMeters = 150;
-  
-  for (let i = 0; i < window.coastalDepthData.length; i++) {
-    const pt = window.coastalDepthData[i];
-    const dLatMeters = (pt[0] - lat) * latToMeters; const dLngMeters = (pt[1] - lng) * lngToMeters;
-    const dstSquare = dLatMeters * dLatMeters + dLngMeters * dLngMeters;
-    if (dstSquare < minDstSquare) { minDstSquare = dstSquare; nearestDepth = pt[2]; }
-  }
-  if (Math.sqrt(minDstSquare) > maxSearchRadiusMeters) return null;
-  return nearestDepth;
-};
-
-map.on('click', function (e) {
-  const backdrop = document.getElementById('modalBackdrop'); if (backdrop && backdrop.classList.contains('active')) return;
-  const depth = window.findNearestDepth(e.latlng.lat, e.latlng.lng);
-  if (depth !== null) L.popup({ className: 'custom-depth-popup', closeButton: false, offset: [0, -10] }).setLatLng(e.latlng).setContent(`<div style="font-weight: 800; font-size: 14px; text-align: center;">${depth}m</div>`).openOn(map);
-  else map.closePopup();
+  window.populateHomeFavoritesDropdown();
+}, err => {
+  console.error("낚시 포인트 실시간 동기화 실패:", err);
+  window.isFishingPointsLoaded = true;
+  window.checkAndHideSplash();
 });
 
-map.on('contextmenu', function (e) {
-  tempLatLng = e.latlng; if (tempTargetVisual) map.removeLayer(tempTargetVisual);
-  tempTargetVisual = L.circleMarker(e.latlng, { radius: 10, color: 'var(--primary-color)', fillColor: '#fff', fillOpacity: 0.9, weight: 3 }).addTo(map);
-  document.querySelectorAll('.modal, .custom-modal-native, .bottom-sheet-modal-native, .bottom-sheet').forEach(m => m.classList.remove('active'));
-  document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('firstModal')?.classList.add('active');
+db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+  cachedPublicToilets = [];
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    cachedPublicToilets.push({
+      id: doc.id,
+      docId: doc.id,
+      name: data.name || '공중화장실',
+      lat: parseFloat(data.lat),
+      lng: parseFloat(data.lng),
+      address: data.address || '',
+      memo: data.memo || '',
+      category: 'toilet'
+    });
+  });
+
+  window.isPublicToiletsLoaded = true;
+  updateVisibleMarkersOnMap();
+  if (document.getElementById('tab-manage')?.classList.contains('active')) {
+    window.renderPointsManagementTab();
+  }
+  window.checkAndHideSplash();
+}, err => {
+  console.error("화장실 실시간 동기화 실패:", err);
+  window.isPublicToiletsLoaded = true;
+  window.checkAndHideSplash();
 });
 
 function updateVisibleMarkersOnMap() {
   if (!map) return;
-  if (cloudPointsLayer) {
-    cloudPointsLayer.clearLayers();
-    cachedFishingPoints.forEach(item => {
-      if (!item || item.lat === undefined || item.lng === undefined || isNaN(item.lat) || isNaN(item.lng) || item.lat === null || item.lng === null) return;
-      const marker = L.marker([item.lat, item.lng], { icon: L.divIcon({ html: getFishingPointSvg(item.color), className: 'custom-marker-wrapper', iconSize: [26, 39], iconAnchor: [13, 39] }), zIndexOffset: 2000 });
-      
-      // 누락되었던 item.hasCafe 부분을 철저하게 교정 완료
-      marker.on('click', () => { window.closeModals(); window.renderPointDetailBottomSheet(item.id, item.name, item.category, item.color, item.memo, item.parkingType || 'none', item.parkingUnit || '', item.parkingPrice || '0', item.hasStore || false, item.hasCafe || false, item.hasTackle || false, item.lat, item.lng, item.isFavorite || false, item.address || "주소 정보 없음"); });
-      cloudPointsLayer.addLayer(marker);
+  cloudPointsLayer.clearLayers();
+  toiletPointsLayer.clearLayers();
+
+  cachedFishingPoints.forEach(pt => {
+    if (!pt.lat || !pt.lng) return;
+
+    const markerHtml = `
+      <div class="custom-pin-wrapper" id="map-pin-${pt.id}">
+        <div class="custom-pin-body" style="background-color: ${pt.color || '#007aff'};">
+          <div class="custom-pin-circle"></div>
+        </div>
+        <div class="custom-pin-pulse" style="background-color: ${pt.color || '#007aff'};"></div>
+        <div class="custom-pin-label-card">${pt.name}</div>
+      </div>
+    `;
+
+    const customIcon = L.divIcon({
+      html: markerHtml,
+      className: 'custom-leaflet-div-icon',
+      iconSize: [30, 42],
+      iconAnchor: [15, 42]
     });
-  }
-  if (toiletPointsLayer && window.isToiletLayerActive) {
-    toiletPointsLayer.clearLayers();
-    let targetToilets = [...cachedPublicToilets];
-    if (userLatLng) targetToilets.sort((a, b) => userLatLng.distanceTo([a.lat, a.lng]) - userLatLng.distanceTo([b.lat, b.lng]));
-    targetToilets.slice(0, 20).forEach(item => {
-      if (!item || item.lat === undefined || item.lng === undefined || isNaN(item.lat) || isNaN(item.lng) || item.lat === null || item.lng === null) return;
-      const marker = L.marker([item.lat, item.lng], { icon: L.divIcon({ html: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2"><path d="M7 2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3zM9 19v3M15 19v3"/></svg>`, className: 'custom-marker-wrapper-toilet', iconSize: [24, 24], iconAnchor: [12, 12] }), zIndexOffset: 2000 });
-      marker.on('click', () => { let cleanAddr = item.dbSavedAddress || item.address || '주소 정보 없음'; if (cleanAddr.startsWith('소재지 도로명 주소:')) cleanAddr = cleanAddr.replace('소재지 도로명 주소:', '').trim(); window.renderPointDetailBottomSheet(item.id, item.name || '공중화장실', 'toilet', '#ff9500', item.memo || '', '', '', 0, false, false, false, item.lat, item.lng, false, cleanAddr); });
+
+    const marker = L.marker([pt.lat, pt.lng], { icon: customIcon });
+    marker.on('click', (e) => {
+      L.DomEvent.stopPropagation(e);
+      window.spawnFixedCenterModal(pt);
+    });
+    cloudPointsLayer.addLayer(marker);
+  });
+
+  if (window.isToiletLayerActive) {
+    cachedPublicToilets.forEach(t => {
+      if (!t.lat || !t.lng) return;
+
+      const toiletHtml = `
+        <div class="custom-pin-wrapper toilet-mode" id="map-toilet-pin-${t.id}">
+          <div class="custom-pin-body" style="background-color: #ff9500;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 22v-6.5m0 0a1.5 1.5 0 1 0-3 0V22m3-6.5h4m0 0a1.5 1.5 0 1 1 3 0V22m-3-6.5V22M12 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/>
+            </svg>
+          </div>
+          <div class="custom-pin-pulse" style="background-color: #ff9500;"></div>
+          <div class="custom-pin-label-card">화장실</div>
+        </div>
+      `;
+
+      const toiletIcon = L.divIcon({
+        html: toiletHtml,
+        className: 'custom-leaflet-div-icon toilet-icon-adjust',
+        iconSize: [26, 36],
+        iconAnchor: [13, 36]
+      });
+
+      const marker = L.marker([t.lat, t.lng], { icon: toiletIcon });
+      marker.on('click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        window.spawnFixedCenterModal(t);
+      });
       toiletPointsLayer.addLayer(marker);
     });
-  } else if (toiletPointsLayer) { toiletPointsLayer.clearLayers(); }
-}
-map.on('moveend zoomend', updateVisibleMarkersOnMap);
-
-function getFishingPointSvg(color) {
-  return `<svg width="26" height="39" viewBox="0 0 36 54" xmlns="http://www.w3.org/2000/svg" class="fishing-marker-svg-anchor"><path stroke-miterlimit="4" stroke-width="2" stroke="${color}" fill="${color}" d="m17.92332,2.23007c10.56135,0 17.35337,7.23988 17.35337,16.73988c0,6.3 -3.7,12.3 -7,18l-4.7767,7.06625l-10.82147,-14.71349l9.9681,6.32147l5.03742,-9.40184c3.34356,-5.96319 1.81902,-13.27301 -2.79755,-16.35276c-4.61656,-3.07976 -9.56595,-2.69938 -13.69325,0.6227c-4.1273,3.32208 -5.29064,10.78758 -3.27837,15.73735c2.01227,4.94977 1.37193,3.3194 2.89187,6.0878l10.53198,15.06992l-3.26204,5.3626l-11.47546,-16.21472c-3,-4.57669 -6.02454,-7.93865 -5.7454,-17.57975c0.27914,-9.6411 6.50613,-16.7454 17.06748,-16.7454z"/><path stroke="${color}" fill="#ffffff" d="m18.38343,27.7546c-3.94028,0 -7.1319,-3.53481 -7.1319,-7.89877c0,-4.36396 3.19162,-7.89877 7.1319,-7.89877c3.94028,0 7.1319,3.53481 7.1319,7.89877c0,4.36396 -3.19162,7.89877 -7.1319,7.89877z" stroke-width="2"/></svg>`;
+    toiletPointsLayer.addTo(map);
+  } else {
+    map.removeLayer(toiletPointsLayer);
+  }
 }
 
-db.collection('fishing_points').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
-  try {
-    cachedFishingPoints = []; snapshot.forEach(doc => cachedFishingPoints.push({ id: doc.id, ...doc.data() }));
-    updateVisibleMarkersOnMap(); window.renderPointsManagementTab(); window.populateHomeFavoritesDropdown();
-  } catch (err) {
-    console.error("낚시 포인트 데이터 렌더링 중 오류 발생:", err);
-  } finally {
-    window.isFishingPointsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
-  }
-}, () => { window.isFishingPointsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash(); });
-
-db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
-  try {
-    cachedPublicToilets = []; snapshot.forEach(doc => cachedPublicToilets.push({ id: doc.id, ...doc.data() }));
-    updateVisibleMarkersOnMap(); window.renderPointsManagementTab();
-  } catch (err) {
-    console.error("화장실 데이터 렌더링 중 오류 발생:", err);
-  } finally {
-    window.isPublicToiletsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
-  }
-}, () => { window.isPublicToiletsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash(); });
 
 // =========================================================================
-// [MODAL AREA] 포인트/화장실 마커 신규 등록 및 기존 인스턴스 정보 수정 모달 핸들러
+// [TAB AREA 5] 화면 중앙 고정형 상세 모달 엔진 및 맵 뷰포트 피드백 시스템
 // =========================================================================
-const parkingUnits = ['10분', '30분', '일'];
-let currentUnitIndex = 0;
-let selectedParkingType = 'none';
-let selectedEditPointParkingType = 'none';
-const editPointParkingUnits = ['10분', '30분', '일'];
-let currentEditPointUnitIndex = 0;
-let selectedToiletHoursValue = '모름';
+window.spawnFixedCenterModal = function (item) {
+  window.closeModals();
 
-window.openPointModal = function () {
-  document.getElementById('firstModal').classList.remove('active');
-  document.getElementById('modalBackdrop')?.classList.add('active');
-  document.getElementById('pointModal').classList.add('active');
+  if (!map || !item || !item.lat || !item.lng) return;
 
-  const categorySelect = document.getElementById('pointCategory');
-  if (categorySelect) {
-    categorySelect.innerHTML = '';
-    let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]');
-    let activeCategories = [...new Set([...savedCatOrder, ...cachedFishingPoints.map(p => (p.category || '미분류').trim())])].filter(cat => cat !== '공중화장실 정보' && cat !== 'toilet' && cat !== '미분류');
-    activeCategories.push('미분류'); const savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
-
-    activeCategories.forEach(catName => {
-      const matchPoints = cachedFishingPoints.filter(p => (p.category || '미분류') === catName);
-      const groupColor = catName === '미분류' ? '#868e96' : (matchPoints.length > 0 ? matchPoints[0].color : (savedCatColors[catName] || '#007aff'));
-      const option = document.createElement('option'); option.value = catName; option.setAttribute('data-color', groupColor); option.innerText = catName;
-      categorySelect.appendChild(option);
-    });
-    categorySelect.value = '미분류';
-  }
-  window.fetchAddressForModal(tempLatLng.lat, tempLatLng.lng, 'pointAddress');
-};
-
-window.openToiletModal = function () {
-  document.getElementById('firstModal').classList.remove('active');
-  document.getElementById('modalBackdrop')?.classList.add('active');
-  document.getElementById('toiletModal').classList.add('active');
-  window.selectedNewToiletHoursValue = "24시간";
-
-  const chips = document.getElementById('newToiletHoursChips');
-  if (chips) { chips.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active')); document.getElementById('chipNewHours24')?.add('active'); }
-  document.getElementById('newToiletHoursDetailRow').classList.remove('active');
-  window.fetchAddressForModal(tempLatLng.lat, tempLatLng.lng, 'toiletAddress');
-};
-
-window.savePointMarker = function () {
-  const name = document.getElementById('pointName').value.trim(); if (!name) return alert("포인트 이름을 입력하세요.");
-  const categorySelect = document.getElementById('pointCategory'); const category = categorySelect ? (categorySelect.value || '미분류') : '미분류';
-  let color = (categorySelect && categorySelect.options.length > 0) ? categorySelect.options[categorySelect.selectedIndex].getAttribute('data-color') : '#007aff';
-  if (category === '미분류') color = '#868e96';
-
-  db.collection('fishing_points').add({
-    name, category, color, memo: document.getElementById('pointMemo')?.value.trim() || '등록된 메모가 없습니다.',
-    parkingType: selectedParkingType, parkingUnit: parkingUnits[currentUnitIndex], parkingPrice: document.getElementById('parkingPrice').value || '0',
-    hasStore: document.getElementById('btnNewFacStore')?.classList.contains('active') || false,
-    hasCafe: document.getElementById('btnNewFacCafe')?.classList.contains('active') || false,
-    hasTackle: document.getElementById('btnNewFacTackle')?.classList.contains('active') || false,
-    address: cachedActiveAddressStr || "주소 정보 없음", lat: tempLatLng.lat, lng: tempLatLng.lng, isFavorite: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => { window.closeModals(); });
-
-  document.getElementById('pointName').value = ''; document.getElementById('pointMemo').value = ''; document.getElementById('parkingPrice').value = '';
-  document.getElementById('btnNewFacStore')?.classList.remove('active'); document.getElementById('btnNewFacCafe')?.classList.remove('active'); document.getElementById('btnNewFacTackle')?.classList.remove('active');
-  selectedParkingType = 'none'; currentUnitIndex = 0; document.getElementById('btnParkingUnit').innerText = '10분'; document.getElementById('parkingDetailRow').classList.remove('active');
-  cachedActiveAddressStr = "";
-};
-
-window.saveToiletMarker = function () {
-  const name = document.getElementById('toiletName')?.value.trim() || '공중화장실';
-  const memo = document.getElementById('newToiletMemo')?.value.trim() || '양호';
-  let finalHours = window.selectedNewToiletHoursValue;
-  if (window.selectedNewToiletHoursValue === '지정시간') {
-    finalHours = `${document.getElementById('newToiletStartHour').value.trim() || '09'}:${document.getElementById('newToiletStartMin').value.trim() || '00'} ~ ${document.getElementById('newToiletEndHour').value.trim() || '18'}:${document.getElementById('newToiletEndMin').value.trim() || '00'}`;
-  }
-  db.collection('public_toilets').add({ name, memo: `${finalHours}||${memo}`, category: 'toilet', lat: tempLatLng.lat, lng: tempLatLng.lng, createdAt: firebase.firestore.FieldValue.serverTimestamp() }).then(() => { window.closeModals(); });
-  if (document.getElementById('toiletName')) document.getElementById('toiletName').value = ''; if (document.getElementById('newToiletMemo')) document.getElementById('newToiletMemo').value = '';
-};
-
-window.openPointEditModal = function (docId, name, category, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, address, lat, lng) {
-  document.getElementById('editPointDocId').value = docId; document.getElementById('editPointName').value = name; document.getElementById('editPointMemo').value = memo;
-  const pointEditAddrEl = document.getElementById('pointEditAddress'); if (pointEditAddrEl) pointEditAddrEl.innerText = address || "주소 정보 없음";
-
-  if ((!address || address.includes("없음") || address.includes("중...")) && lat && lng) {
-    searchNearestCoastalLandmark(lat, lng, nearestAddr => { if (pointEditAddrEl) pointEditAddrEl.innerText = nearestAddr; db.collection('fishing_points').doc(docId).update({ address: nearestAddr }); }, () => {});
-  }
-
-  const catSelect = document.getElementById('editPointCategory');
-  if (catSelect) {
-    catSelect.innerHTML = '';
-    let activeCategories = [...new Set([JSON.parse(localStorage.getItem('pm-category-order') || '[]'), ...cachedFishingPoints.map(p => (p.category || '미분류').trim())])].filter(c => c !== '공중화장실 정보' && c !== 'toilet' && c !== '미분류');
-    activeCategories.push('미분류'); const savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
-    activeCategories.forEach(catName => { const option = document.createElement('option'); option.value = catName; option.setAttribute('data-color', catName === '미분류' ? '#868e96' : (savedCatColors[catName] || '#007aff')); option.innerText = catName; catSelect.appendChild(option); });
-    catSelect.value = category || '미분류';
-  }
-
-  selectedEditPointParkingType = pType || 'none';
-  const chipsContainer = document.getElementById('editPointParkingChips');
-  if (chipsContainer) {
-    chipsContainer.querySelectorAll('.chip-btn').forEach(btn => btn.classList.remove('active'));
-    if (pType === 'none') document.getElementById('chipEditParkingNone')?.classList.add('active');
-    else if (pType === 'free') document.getElementById('chipEditParkingFree')?.classList.add('active');
-    else chipsContainer.querySelectorAll('.chip-btn')[2]?.classList.add('active');
-  }
-
-  if (pType === 'paid') {
-    document.getElementById('editPointParkingDetailRow').classList.add('active'); document.getElementById('editPointParkingPrice').value = pPrice || '0';
-    const unitBtn = document.getElementById('btnEditPointParkingUnit'); if (unitBtn) { unitBtn.innerText = pUnit || '10분'; currentEditPointUnitIndex = Math.max(0, editPointParkingUnits.indexOf(pUnit || '10분')); }
-  } else { document.getElementById('editPointParkingDetailRow').classList.remove('active'); }
-
-  document.getElementById('btnEditFacStore')?.classList.toggle('active', hasStore);
-  document.getElementById('btnEditFacCafe')?.classList.toggle('active', hasCafe);
-  document.getElementById('btnEditFacTackle')?.classList.toggle('active', hasTackle);
-
-  document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('pointEditModal').classList.add('active');
-};
-
-window.openToiletEditModal = function (docId, name, memo, address) {
-  document.getElementById('editToiletDocId').value = docId; document.getElementById('editToiletName').value = name || '공중화장실';
-  document.getElementById('toiletEditAddress').innerText = address || "주소 정보 없음";
-  const tokens = (memo || '').split('||'); const hoursText = tokens[0] || '모름'; document.getElementById('editToiletMemo').value = tokens[1] || '';
-
-  const chipsContainer = document.getElementById('editToiletHoursChips');
-  if (chipsContainer) {
-    chipsContainer.querySelectorAll('.chip-btn').forEach(btn => btn.classList.remove('active'));
-    if (hoursText === '24시간') document.getElementById('chipEditHours24')?.classList.add('active');
-    else if (hoursText === '모름') document.getElementById('chipEditHoursUnknown')?.classList.add('active');
-    else chipsContainer.querySelectorAll('.chip-btn')[2]?.classList.add('active');
-  }
-
-  if (hoursText !== '24시간' && hoursText !== '모름') {
-    document.getElementById('editToiletHoursDetailRow').classList.add('active'); selectedToiletHoursValue = '지정시간';
-    try {
-      const times = hoursText.split('~').map(t => t.trim());
-      if (times.length === 2) {
-        document.getElementById('editToiletStartHour').value = times[0].split(':')[0]; document.getElementById('editToiletStartMin').value = times[0].split(':')[1];
-        document.getElementById('editToiletEndHour').value = times[1].split(':')[0]; document.getElementById('editToiletEndMin').value = times[1].split(':')[1];
-      }
-    } catch {}
-  } else { document.getElementById('editToiletHoursDetailRow').classList.remove('active'); selectedToiletHoursValue = hoursText; }
-
-  document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('toiletEditModal').classList.add('active');
-};
-
-window.savePointEditData = function () {
-  const docId = document.getElementById('editPointDocId').value; const name = document.getElementById('editPointName').value.trim(); if (!name) return alert("포인트 이름을 입력하세요.");
-  db.collection('fishing_points').doc(docId).update({
-    name, category: document.getElementById('editPointCategory')?.value || '미분류', color: document.getElementById('editPointCategory')?.options[document.getElementById('editPointCategory').selectedIndex]?.getAttribute('data-color') || '#007aff',
-    memo: document.getElementById('editPointMemo').value.trim() || '등록된 메모가 없습니다.', parkingType: selectedEditPointParkingType, parkingUnit: editPointParkingUnits[currentEditPointUnitIndex], parkingPrice: document.getElementById('editPointParkingPrice').value || '0',
-    hasStore: document.getElementById('btnEditFacStore')?.classList.contains('active'), hasCafe: document.getElementById('btnEditFacCafe')?.classList.contains('active'), hasTackle: document.getElementById('btnEditFacTackle')?.classList.contains('active')
-  }).then(() => window.closeModals());
-};
-
-window.saveToiletEditData = function () {
-  const docId = document.getElementById('editToiletDocId').value; let finalHours = selectedToiletHoursValue;
-  if (selectedToiletHoursValue === '지정시간') finalHours = `${document.getElementById('editToiletStartHour').value.trim()}:${document.getElementById('editToiletStartMin').value.trim()} ~ ${document.getElementById('editToiletEndHour').value.trim()}:${document.getElementById('editToiletEndMin').value.trim()}`;
-  db.collection('public_toilets').doc(docId).update({ name: document.getElementById('editToiletName').value.trim() || '공중화장실', memo: `${finalHours}||${document.getElementById('editToiletMemo').value.trim() || '양호'}` }).then(() => window.closeModals());
-};
-
-window.openMarkerDeleteModal = function (docId, collectionName, displayName, onSuccess) {
-  const deleteModal = document.getElementById('deleteConfirmModal'); if (!deleteModal) return;
-  document.getElementById('deleteModalTargetName').innerText = displayName;
-  document.getElementById('btnDoDelete').onclick = function () { db.collection(collectionName).doc(docId).delete().then(() => { window.closeModals(); if (typeof onSuccess === 'function') onSuccess(); }); };
-
-  document.getElementById('detailModalWrapper')?.classList.remove('active'); document.getElementById('detailModal')?.classList.remove('active');
-  document.querySelectorAll('.modal, .custom-modal-native').forEach(m => { if (m !== deleteModal) m.classList.remove('active'); });
-  document.getElementById('modalBackdrop')?.classList.add('active'); deleteModal.classList.add('active');
-};
-
-// =========================================================================
-// [SHEET AREA] 실시간 연안 종합 타임라인 플로팅 팝업 정보 렌더링 엔진
-// =========================================================================
-
-// 팝업이 닫힐 때 지도의 인터랙션 잠금 상태를 원천 해제하는 전역 이벤트 핸들러 바인딩
-if (window.mapObj) {
-  window.mapObj.on('popupclose', function () {
-    window.mapObj.dragging.enable();
-    window.mapObj.touchZoom.enable();
-    window.mapObj.scrollWheelZoom.enable();
-    window.mapObj.doubleClickZoom.enable();
-    if (window.mapObj.boxZoom) window.mapObj.boxZoom.enable();
-    if (window.mapObj.keyboard) window.mapObj.keyboard.enable();
-  });
-}
-
-window.renderPointDetailBottomSheet = function (docId, name, category, color, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, lat, lng, isFavorite, dbSavedAddress) {
-  // 기존 지도 팝업 객체가 열려있다면 충돌 방지를 위해 즉시 초기화 클로즈
-  map.closePopup();
-
-  // 줌 배율에 영향받지 않는 픽셀 기반 투영 기법 연산: 마커는 화면 하단 영역에 노출되고 모달 팝업 본체는 정중앙에 수렴함
-  const currentZoom = map.getZoom();
-  const projectedPoint = map.project([parseFloat(lat), lng], currentZoom);
-  const targetLatLng = map.unproject(projectedPoint.subtract([0, 150]), currentZoom);
-  map.setView(targetLatLng, currentZoom);
-
-  // 플로팅 팝업 조작 과정 중 배경 지도가 밀리거나 줌 오작동이 일어나는 현상을 방지하기 위해 맵 제어 기능 잠금
+  // 지도 드래깅 및 모든 상호작용 잠금
   map.dragging.disable();
   map.touchZoom.disable();
   map.scrollWheelZoom.disable();
@@ -2249,349 +1251,307 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
   if (map.boxZoom) map.boxZoom.disable();
   if (map.keyboard) map.keyboard.disable();
 
-  if (dbSavedAddress && dbSavedAddress.startsWith('소재지 도로명 주소:')) dbSavedAddress = dbSavedAddress.replace('소재지 도로명 주소:', '').trim();
+  // 지도를 먼저 터치 좌표 기준으로 중심 세팅한 뒤, 모달 하단으로 마커 위치 오프셋 피드백 정밀 연산
+  map.setView([item.lat, item.lng], map.getZoom(), { animate: false });
+  const projectedCenter = map.getSize().divideBy(2);
+  const targetMarkerContainerPoint = L.point(projectedCenter.x, projectedCenter.y - 150);
+  const calculatedCenterLatLng = map.containerPointToLatLng(targetMarkerContainerPoint);
+  map.setView(calculatedCenterLatLng, map.getZoom(), { animate: true, duration: 0.35 });
 
-  // 하단 고정 DOM 레이아웃 프레임을 Leaflet 전용 팝업 인스턴스 내부에 이식하기 위해 컨테이너 노드 샌드박싱 생성
-  const popupContainer = document.createElement('div');
-  popupContainer.className = 'bottom-sheet-modal-native';
-  popupContainer.innerHTML = document.getElementById('detailModal').innerHTML;
-
-  popupContainer.querySelector('#lblDetailName').innerText = name;
-  const addrField = popupContainer.querySelector('#lblDetailAddressField'); 
-  if (addrField) addrField.innerText = dbSavedAddress || "주소 변환 중...";
-
-  if ((!dbSavedAddress || dbSavedAddress.includes("중...") || dbSavedAddress.includes("없음")) && typeof window.kakao !== 'undefined' && window.kakao.maps) {
-    window.kakao.maps.load(function () {
-      if (window.kakao.maps.services?.Geocoder) {
-        new window.window.kakao.maps.services.Geocoder().coord2Address(lng, lat, function (result, status) {
-          if (status === window.kakao.maps.services.Status.OK && result[0]) {
-            let finalAddr = result[0].road_address ? result[0].road_address.address_name : (result[0].address ? result[0].address.address_name : "주소 정보 없음");
-            if (finalAddr === "주소 정보 없음" || finalAddr.trim() === "") {
-              searchNearestCoastalLandmark(lat, lng, nearestAddr => { if (addrField) addrField.innerText = nearestAddr; db.collection((category === 'toilet') ? 'public_toilets' : 'fishing_points').doc(docId).update({ [category === 'toilet' ? 'dbSavedAddress' : 'address']: nearestAddr }); }, () => {});
-            } else { if (addrField) addrField.innerText = finalAddr; db.collection((category === 'toilet') ? 'public_toilets' : 'fishing_points').doc(docId).update({ [category === 'toilet' ? 'dbSavedAddress' : 'address']: finalAddr }); }
-          }
-        });
-      }
-    });
+  const isToilet = (item.category === 'toilet');
+  
+  const modalDiv = document.createElement('div');
+  modalDiv.id = 'live-floating-detail-modal';
+  modalDiv.className = 'fixed-viewport-center-detail-card-native active';
+  
+  // 주차 인프라 및 편의점 텍스트 연산
+  let parkingText = "정보 없음";
+  if (item.parkingType === 'free') parkingText = "무료 주차 가능";
+  else if (item.parkingType === 'paid') {
+    parkingText = `유료 주차 (${item.parkingUnit || '10분'}당 ${item.parkingPrice || '0'}원)`;
+  } else if (item.parkingType === 'none') {
+    parkingText = "주차 불가능 / 공간 없음";
   }
 
-  const facContainer = popupContainer.querySelector('#lblDetailFacilitiesContainer'); if (facContainer) facContainer.innerHTML = '';
-  const favBtn = popupContainer.querySelector('#btnDetailModalFavorite'), lblDetailParking = popupContainer.querySelector('#lblDetailParking'), lblDetailFacilities = popupContainer.querySelector('#lblDetailFacilities');
-  const categoryBadge = popupContainer.querySelector('#lblDetailCategory'), weatherOpenBtn = popupContainer.querySelector('#btnDetailWeatherOpen'), lblDetailToiletHours = popupContainer.querySelector('#lblDetailToiletHours');
+  let facilityBadges = '';
+  if (item.hasStore) facilityBadges += `<span class="fd-badge">편의점</span>`;
+  if (item.hasCafe) facilityBadges += `<span class="fd-badge">카페</span>`;
+  if (item.hasTackle) facilityBadges += `<span class="fd-badge">낚시점</span>`;
+  if (!facilityBadges && !isToilet) facilityBadges = `<span class="fd-badge empty">주변 편의시설 없음</span>`;
 
-  if (category === 'toilet') {
-    [favBtn, lblDetailParking, lblDetailFacilities, categoryBadge, weatherOpenBtn].forEach(el => el?.classList.add('detail-toilet-hours-hidden'));
-    lblDetailToiletHours?.classList.remove('detail-toilet-hours-hidden');
-    const tokens = (memo || '').split('||');
-    if (lblDetailToiletHours) { const ts = lblDetailToiletHours.querySelector('.tag-txt'); if (ts) ts.innerText = tokens[0] || '모름'; }
-    popupContainer.querySelector('#lblDetailMemo').innerText = tokens[1] || '기록된 특이사항이 없습니다.';
-  } else {
-    [favBtn, lblDetailParking, lblDetailFacilities, categoryBadge, weatherOpenBtn].forEach(el => el?.classList.remove('detail-toilet-hours-hidden'));
-    lblDetailToiletHours?.classList.add('detail-toilet-hours-hidden');
+  modalDiv.innerHTML = `
+    <div class="fd-card-header">
+      <div class="fd-header-title-block">
+        <span class="fd-category-dot" style="background-color: ${isToilet ? '#ff9500' : (item.color || '#007aff')}"></span>
+        <h3 class="fd-main-title">${item.name || (isToilet ? '공중화장실' : '지정 포인트')}</h3>
+      </div>
+      <button type="button" class="fd-close-x-btn" onclick="window.closeModals();">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="fd-card-body-scroll">
+      <div class="fd-info-row address">
+        <span class="fd-label">위치 주소</span>
+        <span class="fd-value">${item.address || '등록된 도로명/지번 주소가 없습니다.'}</span>
+      </div>
+      
+      ${isToilet ? `
+        <div class="fd-info-row type-toilet">
+          <span class="fd-label">구분</span>
+          <span class="fd-value" style="color:#ff9500; font-weight:600;">상시 개방 공중화장실</span>
+        </div>
+      ` : `
+        <div class="fd-info-row parking">
+          <span class="fd-label">주차 인프라</span>
+          <span class="fd-value">${parkingText}</span>
+        </div>
+        <div class="fd-info-row facilities">
+          <span class="fd-label">편의 시설</span>
+          <div class="fd-badge-container">${facilityBadges}</div>
+        </div>
+      `}
 
-    if (favBtn) {
-      const renderFav = (state) => { favBtn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="${state ? '#ffcc00' : 'none'}" stroke="${state ? '#ffcc00' : '#adb5bd'}" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`; }; renderFav(isFavorite);
-      favBtn.onclick = function (e) { e.stopPropagation(); isFavorite = !isFavorite; renderFav(isFavorite); db.collection('fishing_points').doc(docId).update({ isFavorite, favoritedAt: isFavorite ? Date.now() : firebase.firestore.FieldValue.delete() }); };
-    }
-    if (categoryBadge) { categoryBadge.innerText = category; categoryBadge.style.backgroundColor = color || 'var(--primary-color)'; }
-    popupContainer.querySelector('#lblDetailMemo').innerText = memo || '등록된 메모가 없습니다.';
-    if (lblDetailParking) { const ts = lblDetailParking.querySelector('.tag-txt'); if (ts) ts.innerText = pType === 'none' ? '주차 불가' : pType === 'free' ? '무료 주차' : `${pUnit} ${Number(pPrice).toLocaleString()}원`; }
+      <div class="fd-info-row memo">
+        <span class="fd-label">종합 메모 및 현장 팁</span>
+        <div class="fd-memo-box-inside">${item.memo ? item.memo.replace(/\n/g, '<br>') : '현장 리포트 및 안내 메모가 비어 있습니다.'}</div>
+      </div>
+    </div>
+    <div class="fd-card-footer-actions">
+      ${isToilet ? '' : `
+        <button type="button" class="fd-footer-btn edit-trigger" id="fd-edit-btn-node">정보 수정</button>
+      `}
+      <button type="button" class="fd-footer-btn close-trigger" onclick="window.closeModals();">확인</button>
+    </div>
+  `;
 
-    if (facContainer) {
-      if (hasStore) facContainer.innerHTML += `<div class="detail-tag-item inline-flex"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="tag-txt">편의점</span></div>`;
-      if (hasCafe) facContainer.innerHTML += `<div class="detail-tag-item inline-flex"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg><span class="tag-txt">카페</span></div>`;
-      if (hasTackle) facContainer.innerHTML += `<div class="detail-tag-item inline-flex"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span class="tag-txt">낚시점</span></div>`;
-    }
-    try { window.buildTimelineUI(lat, lng, null, []); } catch (err) {}
-  }
+  document.body.appendChild(modalDiv);
 
-  popupContainer.querySelector('#btnDetailPointDelete').onclick = function (e) { e.stopPropagation(); window.openMarkerDeleteModal(docId, (category === 'toilet') ? 'public_toilets' : 'fishing_points', name || '지정 포인트'); };
-  popupContainer.querySelector('#btnDetailPointEditTrigger').onclick = function (e) { e.stopPropagation(); map.closePopup(); if (category === 'toilet') window.openToiletEditModal(docId, name, memo, addrField.innerText); else window.openPointEditModal(docId, name, category, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, addrField.innerText, lat, lng); };
-
-  if (weatherOpenBtn) {
-    weatherOpenBtn.onclick = function (e) {
-      e.stopPropagation();
-      const weatherModal = document.getElementById('weatherModal');
-      if (weatherModal) {
-        weatherModal.classList.add('active');
-        weatherModal.style.setProperty('display', 'flex', 'important');
-        weatherModal.style.setProperty('opacity', '1', 'important');
-        weatherModal.style.setProperty('visibility', 'visible', 'important');
-      }
-      const backdrop = document.getElementById('modalBackdrop');
-      if (backdrop) {
-        backdrop.classList.add('active');
-        backdrop.style.setProperty('display', 'block', 'important');
-      }
-      try {
-        const titleLabel = document.getElementById('lblWeatherModalTitle');
-        if (titleLabel) titleLabel.innerText = name;
-      } catch (err) {}
-      try {
-        const wIcon = document.getElementById('weatherModalMarkerIcon');
-        if (wIcon) {
-          if (category === 'toilet') {
-            wIcon.innerHTML = `<svg width="14" height="17" viewBox="0 0 36 42"><path d="M18 0C8.06 0 0 8.06 0 18C0 28.54 18 42 18 42C18 42 36 28.54 36 18C36 8.06 27.94 0 18 0Z" fill="#ff9500"/><circle cx="18" cy="16" r="5" fill="#ffffff"/><path d="M14 24H22V27H14V24Z" fill="#ffffff"/></svg>`;
-          } else if (typeof getFishingPointSvg === 'function') {
-            wIcon.innerHTML = getFishingPointSvg(color).replace('width="26" height="39"', 'width="20" height="30"');
-          }
-        }
-      } catch (err) {}
-      try {
-        if (typeof window.loadTimelineWithOptimisticUI === 'function') window.loadTimelineWithOptimisticUI(lat, lng);
-      } catch (err) {}
+  const editBtn = modalDiv.querySelector('#fd-edit-btn-node');
+  if (editBtn) {
+    editBtn.onclick = function() {
+      window.openPointEditModal(
+        item.id, item.name, item.category, item.memo, item.parkingType,
+        item.parkingUnit, item.parkingPrice, item.hasStore, item.hasCafe, item.hasTackle,
+        item.address, item.lat, item.lng
+      );
     };
   }
-
-  const naviOpenBtn = popupContainer.querySelector('#btnDetailNaviOpen');
-  if (naviOpenBtn) {
-    const naviApp = localStorage.getItem('navi-app'); naviOpenBtn.style.backgroundColor = (naviApp === 'naver') ? '#03C75A' : '#FEE500'; naviOpenBtn.style.color = (naviApp === 'naver') ? '#ffffff' : '#111111';
-    naviOpenBtn.onclick = function (e) { e.stopPropagation(); window.open(localStorage.getItem('navi-app') === 'naver' ? `https://map.naver.com/index.nhn?elat=${lat}&elng=${lng}&etext=${encodeURIComponent(name)}&menu=route` : `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`, '_blank'); };
-  }
-
-  // 마커 물리 크기(39px) 보정을 위해 offset 지점을 [0, -40]으로 완벽 격리하고, 화면 중심 자동 보정을 위해 autoPan을 true로 강제 고정
-  L.popup({
-    closeButton: false,
-    autoPan: true,
-    maxWidth: 400,
-    minWidth: 400,
-    offset: L.point(0, -40)
-  })
-  .setLatLng([lat, lng])
-  .setContent(popupContainer)
-  .openOn(map);
 };
 
-window.openPointDetailFromList = function (pt) {
-  window.closeModals(); const mapNavItem = document.querySelector('.nav-item[onclick*="tab-map"]') || document.querySelector('.nav-item');
-  if (typeof window.switchTab === 'function') window.switchTab('tab-map', mapNavItem);
-  
-  if (pt.category === 'toilet') {
-    if (window.tempToiletMarker) map.removeLayer(window.tempToiletMarker);
-    window.tempToiletMarker = L.marker([pt.lat, pt.lng], { icon: L.divIcon({ html: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2"><path d="M7 2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3zM9 19v3M15 19v3"/></svg>`, className: 'custom-marker-wrapper-toilet temp-list-injected-toilet-node', iconSize: [24, 24], iconAnchor: [12, 12] }), zIndexOffset: 2000 }).addTo(map);
-    window.renderPointDetailBottomSheet(pt.id, pt.name || '공중화장실', 'toilet', '#ff9500', pt.memo || '', '', '', 0, false, false, false, pt.lat, pt.lng, false, pt.dbSavedAddress || pt.address || '주소 정보 없음');
-  } else {
-    window.renderPointDetailBottomSheet(pt.id, pt.name, pt.category, pt.color, pt.memo, pt.parkingType || 'none', pt.parkingUnit || '', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, pt.lat, pt.lng, pt.isFavorite || false, pt.address || "주소 정보 없음");
-  }
+window.openPointDetailFromList = function (item) {
+  if (!item) return;
+  window.switchTab('tab-map', document.querySelector('.nav-item[onclick*="tab-map"]'));
+  setTimeout(() => {
+    window.spawnFixedCenterModal(item);
+  }, 150);
 };
+
 
 // =========================================================================
-// [WEATHER CORE] 기상/조석 해양 기하 타임라인 가변 그래픽 스레드 모듈
+// [TAB AREA 6] 검색 엔지니어링, 역지오코딩 인프라 및 신규 등록 모달 바인딩
 // =========================================================================
-window.loadTimelineWithOptimisticUI = function (lat, lng) {
-  const modalBody = document.querySelector('.weather-modal-body'), dateSticky = document.getElementById('lblDetailDate'), bridge = document.getElementById('timelineInnerBridge');
-  if (modalBody && dateSticky && dateSticky.parentNode !== modalBody) modalBody.insertBefore(dateSticky, modalBody.firstChild);
+window.searchLocationKeyword = function () {
+  const query = document.getElementById('search-input')?.value?.trim();
+  if (!query) return;
 
-  if (modalBody && !document.getElementById('miniSplashBodyBlock')) {
-    const splashBlock = document.createElement('div'); splashBlock.id = 'miniSplashBodyBlock';
-    splashBlock.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; min-height: 430px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--text-muted); background: var(--modal-bg, #ffffff); z-index: 100;';
-    splashBlock.innerHTML = `<div class="mini-splash-spinner spinning" style="width: 36px; height: 36px; border: 4px solid var(--border-color); border-top-color: var(--primary-color); border-radius: 50%;"></div><div class="mini-splash-text" style="font-size: 13.5px; font-weight: 700;">실시간 데이터 분석 중...</div>`;
-    modalBody.style.position = 'relative'; modalBody.style.minHeight = '430px'; modalBody.appendChild(splashBlock);
-    if (dateSticky) dateSticky.style.visibility = 'hidden'; if (bridge) bridge.style.visibility = 'hidden';
-  }
-
-  const dateStrings = []; const baseNow = new Date();
-  for (let d = 0; d < 5; d++) { const tDate = new Date(baseNow.getTime() + d * 24 * 60 * 60 * 1000); dateStrings.push(`${tDate.getFullYear()}${String(tDate.getMonth() + 1).padStart(2, '0')}${String(tDate.getDate()).padStart(2, '0')}`); }
-  
-  const safeStations = typeof TIDE_STATIONS !== 'undefined' ? TIDE_STATIONS : [];
-  const safeGetStationFunc = typeof getNearestTideStation === 'function' ? getNearestTideStation : (typeof window.getNearestTideStation === 'function' ? window.getNearestTideStation : () => 'I01');
-  const obsCode = safeGetStationFunc(lat, lng); 
-  const stationObj = safeStations.find(s => s && s.code === obsCode) || safeStations[0] || { lat: lat, lng: lng };
-
-  Promise.all([
-    window.fetchSunriseSunsetForDatesPromise(lat, lng, dateStrings), window.fetchKMAWeatherPromise(lat, lng), window.fetchTideData3DaysPromise(lat, lng),
-    window.fetchRealWaterTempPromise(lat, lng, dateStrings), window.fetchKMAWeatherPromise(stationObj.lat, stationObj.lng !== undefined ? stationObj.lng : (stationObj.mesh !== undefined ? stationObj.mesh : lng))
-  ]).then(([_, liveWeatherMap, realTidesSchedule, realWaterTempMap, seaWeatherMap]) => {
-    document.getElementById('miniSplashBodyBlock')?.remove(); if (dateSticky) dateSticky.style.visibility = 'visible';
-    if (bridge) { bridge.style.visibility = 'visible'; bridge.innerHTML = ''; }
-    window.buildTimelineUI(lat, lng, liveWeatherMap, realTidesSchedule, realWaterTempMap, seaWeatherMap);
-  }).catch(() => {
-    document.getElementById('miniSplashBodyBlock')?.remove(); if (dateSticky) dateSticky.style.visibility = 'visible';
-    if (bridge) { bridge.style.visibility = 'visible'; bridge.innerHTML = '<div class="pm-empty-msg">기상 정보 연동에 실패했습니다.</div>'; }
+  fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}`, {
+    headers: { 'Authorization': 'KakaoAK 1993cc603348123bf061ff3ca171c7b5' }
+  }).then(res => res.json()).then(data => {
+    const docs = data?.documents;
+    if (docs && docs.length > 0) {
+      const first = docs[0];
+      const lat = parseFloat(first.y);
+      const lng = parseFloat(first.x);
+      if (map) {
+        map.setView([lat, lng], 15);
+        L.popup().setLatLng([lat, lng]).setContent(`<div style="padding:4px; font-weight:600;">${first.place_name}</div>`).openOn(map);
+      }
+    } else {
+      alert('검색 결과가 존재하지 않습니다.');
+    }
+  }).catch(err => {
+    console.error("카카오 로컬 키워드 검색 실패:", err);
   });
 };
 
-window.buildTimelineUI = function (lat, lng, weatherMap, realTides, waterTempMap, seaWeatherMap) {
-  const scroller = document.getElementById('timelineScrollWrapper'), bridge = document.getElementById('timelineInnerBridge'); if (!bridge) return;
+window.openPointEditModal = function (id, name, cat, memo, pType, pUnit, pPrice, hStore, hCafe, hTackle, addr, lat, lng) {
+  window.closeModals();
+  const m = document.getElementById('infoEditModal');
+  if (!m) return;
 
-  const fragment = document.createDocumentFragment();
-  window.timelineDatesArray = []; window.allTidesSchedule = [];
+  m.setAttribute('data-target-id', id);
+  m.setAttribute('data-target-lat', lat);
+  m.setAttribute('data-target-lng', lng);
+
+  const nameInput = document.getElementById('edit-point-name');
+  const catInput = document.getElementById('edit-point-category');
+  const memoInput = document.getElementById('edit-point-memo');
+  const addrInput = document.getElementById('edit-point-address');
   
-  const gridRow = document.createElement('div'); gridRow.className = 'timeline-grid-row';
-  const now = new Date(); let svgHighlightsHtml = ''; const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (nameInput) nameInput.value = name || '';
+  if (catInput) catInput.value = cat || '미분류';
+  if (memoInput) memoInput.value = memo || '';
+  if (addrInput) addrInput.value = addr || '';
 
-  const dayBrightColor = '#e3f2fd', dayMainColor = '#b3e5fc', nightColor = '#1a263f', seaTopColor = '#6cb0f6', seaBottomColor = '#2b6cb0';
-  let allSegments = []; let prevType = null; let segmentStartX = 0;
-
-  for (let m = 0; m <= 72 * 60; m += 10) {
-    let isNightTime = false;
-    if (m < 72 * 60) {
-      const testDate = new Date(now.getTime() + (m * 60 * 1000)); const sunTimes = window.getSunTimesForDate(testDate);
-      isNightTime = (testDate.getHours() * 60 + testDate.getMinutes() < (parseInt(sunTimes.sunrise.split(':')[0]) * 60 + parseInt(sunTimes.sunrise.split(':')[1]))) || (testDate.getHours() * 60 + testDate.getMinutes() >= (parseInt(sunTimes.sunset.split(':')[0]) * 60 + parseInt(sunTimes.sunset.split(':')[1])));
-    }
-    let currentType = isNightTime ? 'night' : 'day';
-    if (m === 0) { prevType = currentType; segmentStartX = 0; }
-    else if (currentType !== prevType || m === 72 * 60) { let endX = (m / 60) * 56; allSegments.push({ type: prevType, start: segmentStartX, width: endX - segmentStartX }); prevType = currentType; segmentStartX = endX; }
+  const pTypeSelect = document.getElementById('edit-parking-type');
+  if (pTypeSelect) {
+    pTypeSelect.value = pType || 'none';
+    const row = document.getElementById('edit-paid-parking-row');
+    if (row) row.style.display = pTypeSelect.value === 'paid' ? 'flex' : 'none';
   }
 
-  let svgBackgroundsHtml = '';
-  allSegments.forEach(seg => {
-    if (seg.type === 'day') svgBackgroundsHtml += `<rect x="${seg.start.toFixed(2)}" y="0" width="${seg.width.toFixed(2)}" height="160" fill="url(#dayGradient)" />`;
-    else {
-      svgBackgroundsHtml += `<rect x="${seg.start.toFixed(2)}" y="0" width="${seg.width.toFixed(2)}" height="160" fill="${nightColor}" />`;
-      for (let s = 0; s < Math.floor(seg.width / 15); s++) svgBackgroundsHtml += `<circle cx="${(seg.start + (Math.random() * seg.width)).toFixed(2)}" cy="${(5 + (Math.random() * 35)).toFixed(2)}" r="${(0.6 + Math.random() * 0.4).toFixed(1)}" fill="#ffffff" opacity="${(0.3 + Math.random() * 0.6).toFixed(2)}" />`;
-      if (seg.width > 30) {
-        const moonX = (seg.start + seg.width / 2).toFixed(2); const phase = (((new Date(now.getTime() + (seg.start + seg.width / 2) / 56 * 60 * 60 * 1000).getTime() - new Date(Date.UTC(2000, 0, 6, 18, 14, 0)).getTime()) / (1000 * 60 * 60 * 24)) % 29.530588853 + 29.530588853) % 29.530588853;
-        let mc = (phase < 1.5 || phase > 28.0) ? `<circle cx="14" cy="14" r="11" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-dasharray="2,2"/>` : `<circle cx="14" cy="14" r="11" fill="none" stroke="#ffffff" stroke-opacity="0.15"/><path d="M 14 3 A 11 11 0 0 ${phase < 14.7 ? 1 : 0} 14 25 A 6 11 0 0 ${phase < 14.7 ? 0 : 1} 14 3 Z" fill="#ffd700"/>`;
-        svgBackgroundsHtml += `<g transform="translate(${(moonX - 14)}, 12)">${mc}</g>`;
-      }
-    }
-    if (seg.type === 'day' && seg.width > 30) svgBackgroundsHtml += `<g transform="translate(${((seg.start + seg.width / 2) - 14).toFixed(2)}, 12)"><circle cx="14" cy="14" r="6" fill="#ff9500" opacity="0.85"/><path d="M14 3v3M14 22v3M3 14h3M22 14h3" stroke="#ff9500" stroke-width="2" stroke-linecap="round" opacity="0.85"/></g>`;
-  });
+  const pUnitInput = document.getElementById('edit-parking-unit');
+  const pPriceInput = document.getElementById('edit-parking-price');
+  if (pUnitInput) pUnitInput.value = pUnit || '10분';
+  if (pPriceInput) pPriceInput.value = pPrice || '0';
 
-  for (let i = 0; i < 72; i++) {
-    const futureHour = new Date(now.getTime() + (i * 60 * 60 * 1000)); window.timelineDatesArray.push(futureHour);
-    const kmaKey = `${futureHour.getFullYear()}${String(futureHour.getMonth() + 1).padStart(2, '0')}${String(futureHour.getDate()).padStart(2, '0')}${String(futureHour.getHours()).padStart(2, '0')}00`;
-
-    let tempVal = "20°", rainVal = '0mm', windVal = "2m/s", dirVal = "↓", skyIcon = "맑음", iconColor = isDark ? '#ffb948' : '#ff9500', waveVal = "--m", wtempVal = "--°C", crdirVal = "---", crspVal = "--m/s";
-    
-    if (weatherMap && weatherMap[kmaKey]) {
-      const kma = weatherMap[kmaKey]; if (kma.TMP) tempVal = kma.TMP + "°"; if (kma.PCP) rainVal = kma.PCP === '강수없음' ? '0mm' : kma.PCP; if (kma.WSD) windVal = parseFloat(kma.WSD).toFixed(0) + "m/s";
-      if (kma.WAV) waveVal = parseFloat(kma.WAV).toFixed(1) + "m"; else if (seaWeatherMap && seaWeatherMap[kmaKey] && seaWeatherMap[kmaKey].WAV) waveVal = parseFloat(seaWeatherMap[kmaKey].WAV).toFixed(1) + "m";
-      if (kma.VEC) { const deg = parseFloat(kma.VEC); dirVal = (deg >= 337.5 || deg < 22.5) ? "↓" : (deg < 67.5) ? "↙" : (deg < 112.5) ? "←" : (deg < 157.5) ? "↖" : (deg < 202.5) ? "↑" : (deg < 247.5) ? "↗" : (deg < 292.5) ? "→" : "↘"; }
-      if (kma.PTY && kma.PTY !== "0") { skyIcon = "비"; iconColor = "#2f96ff"; } else if (kma.SKY === "3") { skyIcon = "구름많음"; iconColor = "#a2a2a7"; } else if (kma.SKY === "4") { skyIcon = "흐림"; iconColor = "#747479"; }
-    } else if (seaWeatherMap && seaWeatherMap[kmaKey] && seaWeatherMap[kmaKey].WAV) waveVal = parseFloat(seaWeatherMap[kmaKey].WAV).toFixed(1) + "m";
-    
-    if (waterTempMap && waterTempMap.details && waterTempMap.details[kmaKey]) {
-      const rObj = waterTempMap.details[kmaKey]; wtempVal = rObj.wtemp; crspVal = rObj.crsp;
-      if (rObj.crdir !== null) {
-        const d = rObj.crdir;
-        crdirVal = (d >= 337.5 || d < 22.5) ? "북" : (d < 67.5) ? "북동" : (d < 112.5) ? "동" : (d < 157.5) ? "남동" : (d < 202.5) ? "남" : (d < 247.5) ? "남서" : (d < 292.5) ? "서" : "북서";
-      }
-    } else if (waterTempMap && waterTempMap.details) {
-      const fk = Object.keys(waterTempMap.details).find(k => k.startsWith(kmaKey.substring(0, 8)));
-      if (fk && waterTempMap.details[fk]) {
-        const rObj = waterTempMap.details[fk]; wtempVal = rObj.wtemp; crspVal = rObj.crsp;
-        if (rObj.crdir !== null) {
-          const d = rObj.crdir;
-          crdirVal = (d >= 337.5 || d < 22.5) ? "북" : (d < 67.5) ? "북동" : (d < 112.5) ? "동" : (d < 157.5) ? "남동" : (d < 202.5) ? "남" : (d < 247.5) ? "남서" : (d < 292.5) ? "서" : "북서";
-        }
-      }
-    }
-
-    const col = document.createElement('div'); col.className = 'timeline-hour-column';
-    col.innerHTML = `<div class="tl-cell cell-time">${String(futureHour.getHours()).padStart(2, '0')}</div><div class="tl-cell cell-icon" style="color: ${iconColor};">${skyIcon}</div><div class="tl-cell cell-temp">${tempVal}</div><div class="tl-cell cell-rain">${rainVal}</div><div class="tl-cell cell-wind">${windVal}</div><div class="tl-cell cell-dir">${dirVal}</div><div class="tl-cell cell-wave">${waveVal}</div><div class="tl-cell cell-wtemp">${wtempVal}</div><div class="tl-cell cell-crdir">${crdirVal}</div><div class="tl-cell cell-crsp">${crspVal}</div>`;
-    gridRow.appendChild(col);
-  }
-  fragment.appendChild(gridRow);
-
-  if (realTides && Array.isArray(realTides) && realTides.length > 0) window.allTidesSchedule = realTides.map(t => { if (t.rawDt) t.hoursFromNow = (new Date(t.rawDt.replace(/-/g, '/')).getTime() - now.getTime()) / (1000 * 60 * 60); return t; });
-  else {
-    let k = 0; while (true) {
-      let xH = 112 * (Math.PI / 2 + 2 * k * Math.PI), xL = 112 * (3 * Math.PI / 2 + 2 * k * Math.PI); if (xH > 4032 && xL > 4032) break;
-      if (xH >= 0 && xH <= 4032) { let hH = xH / 56; let dH = new Date(now.getTime() + hH * 60 * 60 * 1000); window.allTidesSchedule.push({ type: '만조', color: '#ff3b30', time: `${String(dH.getHours()).padStart(2, '0')}:${String(dH.getMinutes()).padStart(2, '0')}`, hoursFromNow: hH, level: '270', diff: 220, rawDt: dH.toISOString() }); }
-      if (xL >= 0 && xL <= 4032) { let hL = xL / 56; let dL = new Date(now.getTime() + hL * 60 * 60 * 1000); window.allTidesSchedule.push({ type: '간조', color: '#007aff', time: `${String(dL.getHours()).padStart(2, '0')}:${String(dL.getMinutes()).padStart(2, '0')}`, hoursFromNow: hL, level: '50', diff: -220, rawDt: dL.toISOString() }); }
-      k++;
-    }
-  }
-  window.allTidesSchedule.sort((a, b) => a.hoursFromNow - b.hoursFromNow);
-
-  let curvePoints = window.allTidesSchedule.map(t => ({ x: t.hoursFromNow * 56, y: t.type === '만조' ? 55 : 115 }));
-  if (curvePoints.length > 0) { curvePoints.sort((a, b) => a.x - b.x); curvePoints.unshift({ x: curvePoints[0].x - 336, y: curvePoints[0].y === 55 ? 115 : 55 }); curvePoints.push({ x: curvePoints[curvePoints.length - 1].x + 336, y: curvePoints[curvePoints.length - 1].y === 55 ? 115 : 55 }); }
-  const getDynamicYForX = (x) => { if (curvePoints.length === 0) return 85; for (let idx = 0; idx < curvePoints.length - 1; idx++) { const p0 = curvePoints[idx], p1 = curvePoints[idx + 1]; if (x >= p0.x && x <= p1.x) return p0.y * (1 - (1 - Math.cos((x - p0.x) / (p1.x - p0.x) * Math.PI)) / 2) + p1.y * ((1 - Math.cos((x - p0.x) / (p1.x - p0.x) * Math.PI)) / 2); } return 85; };
-
-  let svgPoints = [], fillPolygonPoints = "0,160";
-  for (let x = 0; x <= 4032; x += 2) { const yVal = getDynamicYForX(x); const pStr = `${x},${yVal.toFixed(2)}`; svgPoints.push(pStr); fillPolygonPoints += ` ${pStr}`; }
-  fillPolygonPoints += " 4032,160";
-
-  window.allTidesSchedule.forEach(t => {
-    const xPos = t.hoursFromNow * 56; if (xPos >= 0 && xPos <= 4032) {
-      const yPos = getDynamicYForX(xPos);
-      svgHighlightsHtml += `<line x1="${xPos.toFixed(2)}" y1="${t.type === '만조' ? 0 : yPos.toFixed(2)}" x2="${xPos.toFixed(2)}" y2="${t.type === '만조' ? yPos.toFixed(2) : 160}" stroke="${t.color}" stroke-width="1" stroke-dasharray="2,2" opacity="0.35" /><circle cx="${xPos.toFixed(2)}" cy="${yPos.toFixed(2)}" r="4.5" fill="#ffffff" stroke="${t.color}" stroke-width="2.5"/><text x="${xPos.toFixed(2)}" y="${(yPos - 14).toFixed(2)}" fill="${t.color}" font-size="12" font-weight="600" text-anchor="middle">${t.level}${t.diff !== 0 ? ` (${t.diff > 0 ? '▲' : '▼'}${Math.abs(t.diff)})` : ''}</text>`;
-    }
-  });
-
-  const waveRow = document.createElement('div'); waveRow.className = 'timeline-wave-row-container';
-  waveRow.innerHTML = `<div class="tide-svg-wrapper"><svg class="tide-svg-canvas" width="4032" height="160"><defs><linearGradient id="deepSeaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${seaTopColor}" /><stop offset="100%" stop-color="${seaBottomColor}" /></linearGradient><radialGradient id="dayGradient" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="${dayBrightColor}" /><stop offset="100%" stop-color="${dayMainColor}" /></linearGradient></defs>${svgBackgroundsHtml}<polygon points="${fillPolygonPoints}" fill="url(#deepSeaGradient)" /><path d="M ${svgPoints.join(' L ')}" fill="none" stroke="transparent" stroke-width="1.2"/>${svgHighlightsHtml}</svg></div>`;
-  fragment.appendChild(waveRow);
-
-  const container = scroller?.closest('.timeline-viewport-container-native');
-  if (container) {
-    let labelCol = container.querySelector('.timeline-label-column'); if (!labelCol) { labelCol = document.createElement('div'); labelCol.className = 'timeline-label-column'; container.appendChild(labelCol); }
-    labelCol.innerHTML = `<div class="tl-cell">시간</div><div class="tl-cell">날씨</div><div class="tl-cell">기온</div><div class="tl-cell">강수</div><div class="tl-cell">풍속</div><div class="tl-cell">풍향</div><div class="tl-cell">파고</div><div class="tl-cell">수온</div><div class="tl-cell">유향</div><div class="tl-cell">유속</div><div class="tides-floating-text-area"></div>`;
-  }
+  const chkStore = document.getElementById('edit-facility-store');
+  const chkCafe = document.getElementById('edit-facility-cafe');
+  const chkTackle = document.getElementById('edit-facility-tackle');
   
-  bridge.innerHTML = '';
-  bridge.appendChild(fragment);
+  if (chkStore) chkStore.checked = !!hStore;
+  if (chkCafe) chkCafe.checked = !!hCafe;
+  if (chkTackle) chkTackle.checked = !!hTackle;
 
-  if (scroller) scroller.scrollLeft = 0;
-  window.syncTimelineDateHeader(scroller);
+  m.classList.add('active');
 };
 
-window.syncTimelineDateHeader = function (scrollElement) {
-  if (!scrollElement || !window.timelineDatesArray || window.timelineDatesArray.length === 0) return;
-  const container = scrollElement.closest('.timeline-viewport-container-native'); if (!container) return;
-  const syncLine = container.querySelector('.timeline-sync-line'), syncBubble = container.querySelector('.timeline-sync-bubble');
-
-  let ratio = (scrollElement.scrollWidth - scrollElement.clientWidth) > 0 ? (scrollElement.scrollLeft / (scrollElement.scrollWidth - scrollElement.clientWidth)) : 0;
-  let viewWidth = container.clientWidth - 75; if (viewWidth <= 0) viewWidth = scrollElement.clientWidth;
-  let currentLineX = 75 + (ratio * viewWidth);
-
-  if (syncLine) syncLine.style.left = `${Math.min(currentLineX, container.clientWidth - 2)}px`;
-  if (syncBubble) syncBubble.style.left = `${Math.min(Math.max(currentLineX, 75 + 28), container.clientWidth - 38)}px`;
-
-  const hoursFromNow = (scrollElement.scrollLeft + (currentLineX - 75)) / 56;
-  const activeDate = new Date(new Date().getTime() + hoursFromNow * 60 * 60 * 1000);
-  const dateSticky = document.getElementById('lblDetailDate');
-
-  if (dateSticky) {
-    let lunarStr = '', lunarDay = activeDate.getDate();
-    try { const lr = new Intl.DateTimeFormat('ko-KR-u-ca-chinese').format(activeDate); const la = lr.split('.').map(s => s.trim()).filter(Boolean); if (la.length >= 3) { lunarStr = ` (음 ${la[1]}/${la[2]})`; lunarDay = parseInt(la[2], 10); } } catch (e) {}
-    const tideNames8 = ["조금", "1물", "2물", "3물", "4물", "5물", "6물", "7물", "8물", "9물", "10물", "11물", "12물", "13물", "14물"];
-    const phase = (((activeDate.getTime() - new Date(Date.UTC(2000, 0, 6, 18, 14, 0)).getTime()) / (1000 * 60 * 60 * 24)) % 29.530588853 + 29.530588853) % 29.530588853;
-    let moonSvgHtml = `<svg class="lunar-phase-svg-node" viewBox="0 0 28 28"><circle cx="14" cy="14" r="11" fill="var(--text-muted)"/><path d="M 14 3 A 11 11 0 0 ${phase < 14.7 ? 1 : 0} 14 25 A 5 11 0 0 ${phase < 14.7 ? 0 : 1} 14 3 Z" fill="#ffd700"/></svg>`;
-    const sunTimes = window.getSunTimesForDate(activeDate);
-
-    dateSticky.innerHTML = `
-      <div class="sun-moon-left-wrapper">${moonSvgHtml}<span class="sun-moon-tide-label">${tideNames8[(lunarDay + 7) % 15]}</span><span class="sun-moon-date-label">${activeDate.getMonth() + 1}월 ${activeDate.getDate()}일<span class="sun-moon-lunar-subtext">${lunarStr}</span></span></div>
-      <div class="sun-times-right-wrapper">
-        <span class="sun-time-item-flex sunrise-item"><svg class="sun-node-icon sunrise" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M5.22 7.22l2.83 2.83M18.78 7.22l-2.83 2.83M2 22h20M12 10a4 4 0 0 0-4 4h8a4 4 0 0 0-4-4z"/></svg><span class="sun-time-bold">일출</span>${sunTimes.sunrise}</span>
-        <span class="sun-time-item-flex sunset-item"><svg class="sun-node-icon sunset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 22h20M16 16a4 4 0 0 0-8 0M12 2v4M5.22 7.22l2.83 2.83M18.78 7.22l-2.83 2.83"/></svg><span class="sun-time-bold">일몰</span>${sunTimes.sunset}</span>
-      </div>
-    `;
-  }
-  if (scrollElement && syncBubble) syncBubble.innerHTML = `${String(activeDate.getHours()).padStart(2, '0')}:${String(activeDate.getMinutes()).padStart(2, '0')}`;
-  const textTideArea = container.querySelector('.tides-floating-text-area');
-  if (textTideArea && window.allTidesSchedule && window.allTidesSchedule.length > 0) {
-    let activeTides = window.allTidesSchedule.filter(t => t.hoursFromNow >= hoursFromNow - 1);
-    activeTides = activeTides.length < 4 ? window.allTidesSchedule.slice(-4) : activeTides.slice(0, 4);
-    textTideArea.innerHTML = activeTides.map(t => `<div class="tide-floating-card-item" style="border-left: 4px solid ${t.color} !important;"><div class="tide-floating-card-symbol" style="color: ${t.color} !important;">${t.type === '만조' ? '▲' : '▼'}${t.type}</div><div class="tide-floating-card-time">${t.time}</div></div>`).join('');
-  }
+window.toggleEditParkingRow = function (selectEl) {
+  if (!selectEl) return;
+  const row = document.getElementById('edit-paid-parking-row');
+  if (row) row.style.display = selectEl.value === 'paid' ? 'flex' : 'none';
 };
 
-window.fetchAddressForModal = function (lat, lng, elementId) {
-  const el = document.getElementById(elementId); if (el) el.innerText = "주소 변환 중...";
-  if (typeof kakao !== 'undefined' && kakao.maps) {
-    kakao.maps.load(() => {
-      new kakao.maps.services.Geocoder().coord2Address(lng, lat, (result, status) => {
-        if (status === kakao.maps.services.Status.OK && result[0]) {
-          const finalAddr = result[0].road_address?.address_name || result[0].address?.address_name || "주소 정보 없음";
-          if (finalAddr === "주소 정보 없음") searchNearestCoastalLandmark(lat, lng, n => { if (el) el.innerText = n; }, () => { if (el) el.innerText = "주소 정보 없음"; });
-          else { if (el) el.innerText = finalAddr; if (elementId === 'pointAddress') cachedActiveAddressStr = finalAddr; }
-        } else { searchNearestCoastalLandmark(lat, lng, n => { if (el) el.innerText = n; }, () => { if (el) el.innerText = "주소 정보 없음"; }); }
-      });
+window.savePointEditChanges = function () {
+  const m = document.getElementById('infoEditModal');
+  if (!m) return;
+  const id = m.getAttribute('data-target-id');
+  if (!id) return;
+
+  const name = document.getElementById('edit-point-name')?.value?.trim();
+  const category = document.getElementById('edit-point-category')?.value?.trim() || '미분류';
+  const memo = document.getElementById('edit-point-memo')?.value || '';
+  const address = document.getElementById('edit-point-address')?.value?.trim() || '';
+  const parkingType = document.getElementById('edit-parking-type')?.value || 'none';
+  const parkingUnit = document.getElementById('edit-parking-unit')?.value || '10분';
+  const parkingPrice = document.getElementById('edit-parking-price')?.value || '0';
+
+  const hasStore = document.getElementById('edit-facility-store')?.checked || false;
+  const hasCafe = document.getElementById('edit-facility-cafe')?.checked || false;
+  const hasTackle = document.getElementById('edit-facility-tackle')?.checked || false;
+
+  if (!name) { alert('포인트 명칭을 입력해 주세요.'); return; }
+
+  const catColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
+  const targetColor = catColors[category] || '#007aff';
+
+  db.collection('fishing_points').doc(id).update({
+    name, category, memo, address, parkingType, parkingUnit, parkingPrice,
+    hasStore, hasCafe, hasTackle, color: targetColor
+  }).then(() => {
+    window.closeModals();
+  }).catch(err => {
+    console.error("포인트 데이터 수정 실패:", err);
+  });
+};
+
+window.openMarkerDeleteModal = function (id, collectionName, name) {
+  if (confirm(`[${name}] 항목을 정말로 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.`)) {
+    db.collection(collectionName).doc(id).delete().then(() => {
+      window.closeModals();
+    }).catch(err => {
+      console.error("데이터 삭제 처리 실패:", err);
     });
   }
 };
 
-function searchNearestCoastalLandmark(lat, lng, successCallback, errorCallback) {
-  if (typeof kakao === 'undefined' || !kakao.maps?.services?.Places) { if (errorCallback) errorCallback(); return; }
-  const ps = new kakao.maps.services.Places(); const keywords = ['방파제', '해수욕장', '항구', '선착장', '해안', '갯바위']; let idx = 0;
-  const tryNext = () => {
-    if (idx >= keywords.length) { if (errorCallback) errorCallback(); return; }
-    ps.keywordSearch(keywords[idx], (data, status) => {
-      if (status === kakao.maps.services.Status.OK && data?.[0]) { successCallback(`${data[0].place_name} 인근 ${(parseFloat(data[0].distance)/1000).toFixed(1)}km`); }
-      else { idx++; tryNext(); }
-    }, { location: new kakao.maps.LatLng(lat, lng), radius: 20000, sort: kakao.maps.services.SortBy.DISTANCE });
-  }; tryNext();
-}
+map.on('contextmenu', function (e) {
+  window.closeModals();
+  tempLatLng = e.latlng;
+
+  if (tempTargetVisual) { map.removeLayer(tempTargetVisual); }
+  tempTargetVisual = L.circleMarker(e.latlng, { radius: 9, color: '#e11d48', fillColor: '#f43f5e', fillOpacity: 0.8, weight: 3, className: 'temp-placement-marker-node' }).addTo(map);
+
+  fetch(`https://dapi.kakao.com/v2/local/geo/coord2address.json?x=${e.latlng.lng}&y=${e.latlng.lat}`, {
+    headers: { 'Authorization': 'KakaoAK 1993cc603348123bf061ff3ca171c7b5' }
+  }).then(res => res.json()).then(json => {
+    const node = json?.documents?.[0];
+    let resolvedAddress = "부산광역시 해안 중심대";
+    if (node) {
+      resolvedAddress = node.road_address?.address_name || node.address?.address_name || resolvedAddress;
+    }
+    cachedActiveAddressStr = resolvedAddress;
+
+    const creatorHtml = `
+      <div class="custom-native-sheet-creator-inside">
+        <h4 style="margin:0 0 10px 0; font-size:14px; font-weight:700;">새로운 포인트 생성</h4>
+        <div style="font-size:11px; color:var(--text-muted); margin-bottom:12px; word-break:break-all;">주소: ${resolvedAddress}</div>
+        <div style="display:flex; gap:6px; margin-bottom:8px;">
+          <button type="button" class="sheet-sub-btn" onclick="window.triggerDirectMarkerRegistration('fishing_points');" style="flex:1; background:var(--primary-color); color:#ffffff; border:none; padding:9px; border-radius:6px; font-size:12px; font-weight:600;">낚시 포인트 추가</button>
+          <button type="button" class="sheet-sub-btn" onclick="window.triggerDirectMarkerRegistration('public_toilets');" style="flex:1; background:#ff9500; color:#ffffff; border:none; padding:9px; border-radius:6px; font-size:12px; font-weight:600;">공중화장실 추가</button>
+        </div>
+        <button type="button" class="sheet-sub-btn cancel" onclick="window.closeModals();" style="width:100%; background:var(--border-color); color:var(--text-main); border:none; padding:7px; border-radius:6px; font-size:11px;">취소</button>
+      </div>
+    `;
+
+    const dynamicSheet = document.createElement('div');
+    dynamicSheet.id = 'dynamic-creation-bottom-sheet';
+    dynamicSheet.className = 'bottom-sheet-modal-native active';
+    dynamicSheet.style.position = 'fixed';
+    dynamicSheet.style.bottom = '0';
+    dynamicSheet.style.left = '0';
+    dynamicSheet.style.width = '100%';
+    dynamicSheet.style.background = 'var(--bg-card)';
+    dynamicSheet.style.borderTopLeftRadius = '16px';
+    dynamicSheet.style.borderTopRightRadius = '16px';
+    dynamicSheet.style.padding = '16px';
+    dynamicSheet.style.boxShadow = '0 -4px 20px rgba(0,0,0,0.15)';
+    dynamicSheet.style.zIndex = '100000';
+    dynamicSheet.innerHTML = creatorHtml;
+    document.body.appendChild(dynamicSheet);
+  }).catch(() => {
+    cachedActiveAddressStr = "부산광역시 해안 구역";
+  });
+});
+
+window.triggerDirectMarkerRegistration = function (collectionName) {
+  if (!tempLatLng) return;
+  const resolvedAddr = cachedActiveAddressStr || "부산광역시 해안선 구역";
+
+  if (collectionName === 'public_toilets') {
+    db.collection('public_toilets').add({
+      name: "공중화장실",
+      lat: tempLatLng.lat,
+      lng: tempLatLng.lng,
+      address: resolvedAddr,
+      memo: "사용자 제보 공중화장실 인프라 정보",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      window.closeModals();
+    });
+  } else {
+    const pName = prompt("새로운 낚시 포인트 이름을 입력해 주세요:", "새로운 포인트");
+    if (pName === null) return;
+    const finalName = pName.trim() || "무명 포인트";
+
+    db.collection('fishing_points').add({
+      name: finalName,
+      lat: tempLatLng.lat,
+      lng: tempLatLng.lng,
+      category: "미분류",
+      memo: "새롭게 탐색 및 등록된 필드 포인트",
+      address: resolvedAddr,
+      parkingType: "none",
+      parkingUnit: "10분",
+      parkingPrice: "0",
+      hasStore: false,
+      hasCafe: false,
+      hasTackle: false,
+      color: "#007aff",
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(() => {
+      window.closeModals();
+    });
+  }
+};
+
