@@ -588,10 +588,7 @@ textarea,
     color: var(--text-muted);
     text-align: left;
 }
-.modal-form-group button {
-    width: 30% !important;
-    
-}
+
 .form-input,
 .form-select,
 .form-textarea,
@@ -642,7 +639,6 @@ textarea,
 #sizeLimitModal .chip-btn,
 #fishingBanModal .chip-btn {
     flex: 1;
-    padding: 8px 0;
     border-radius: 8px;
 }
 
