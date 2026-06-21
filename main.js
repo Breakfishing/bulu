@@ -1319,6 +1319,29 @@ window.initInfoBoardRealtimeListeners = function () {
   });
 };
 
+window.toggleBanPeriodType = function(type, element) {
+  const periodTypeInput = document.getElementById('banPeriodType');
+  if (periodTypeInput) periodTypeInput.value = type;
+
+  document.querySelectorAll('#fishingBanModal .chip-btn').forEach(b => {
+    if (b.id === 'btnBanPeriodTypeMonth' || b.id === 'btnBanPeriodTypeDetail') {
+      b.classList.remove('active');
+    }
+  });
+  if (element) element.classList.add('active');
+
+  const monthRow = document.getElementById('banMonthRow');
+  const detailRow = document.getElementById('banDetailPeriodRow');
+
+  if (type === 'month') {
+    if (monthRow) monthRow.style.display = 'block';
+    if (detailRow) detailRow.style.display = 'none';
+  } else {
+    if (monthRow) monthRow.style.display = 'none';
+    if (detailRow) detailRow.style.display = 'flex';
+  }
+};
+
 window.renderInfoContentCards = function (filterKeyword = "") {
   const container = document.getElementById('infoBoardContentContainer');
   if (!container) return;
@@ -1418,7 +1441,8 @@ window.renderInfoContentCards = function (filterKeyword = "") {
       
       let youtubeId = window.InfoBoardSystem.extractYoutubeId(item.videoUrl);
       const thumbUrl = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50" viewBox="0 0 100 50"></svg>';
-      const formattedTags = window.InfoBoardSystem.parseHashTags(item.recommend);
+      const formattedTags = window.InfoBoardSystem.parseHashTags(item.tags || item.recommend || '');
+      const sourceText = item.source ? `${item.source} · 유튜브` : '유튜브 동영상';
 
       knotCard.innerHTML = `
         <div class="info-knot-thumb-wrapper" onclick="if('${item.videoUrl}') window.open('${item.videoUrl}', '_blank');">
@@ -1436,7 +1460,7 @@ window.renderInfoContentCards = function (filterKeyword = "") {
             </div>
           </div>
           <div class="info-knot-tags">${formattedTags}</div>
-          <div class="info-knot-source">유튜브 동영상</div>
+          <div class="info-knot-source">${sourceText}</div>
         </div>
       `;
       grid.appendChild(knotCard);
@@ -1457,10 +1481,15 @@ window.openInfoWriteFormModal = function (tabType) {
     document.getElementById('banModalMode').value = 'add';
     document.getElementById('banModalTargetId').value = '';
     document.getElementById('banSpecies').value = '';
-    document.getElementById('banPeriod').value = '';
+    if (document.getElementById('banMonthInput')) document.getElementById('banMonthInput').value = '';
+    if (document.getElementById('banStartMonth')) document.getElementById('banStartMonth').value = '';
+    if (document.getElementById('banStartDay')) document.getElementById('banStartDay').value = '';
+    if (document.getElementById('banEndMonth')) document.getElementById('banEndMonth').value = '';
+    if (document.getElementById('banEndDay')) document.getElementById('banEndDay').value = '';
     document.getElementById('banRegion').value = '';
     document.getElementById('banNote').value = '';
     document.getElementById('banImageUrl').value = '';
+    window.toggleBanPeriodType('month', document.getElementById('btnBanPeriodTypeMonth'));
     document.getElementById('lblFishingBanModalTitle').innerText = '금어기 등록';
     document.getElementById('fishingBanModal')?.classList.add('active');
   } 
@@ -1479,7 +1508,8 @@ window.openInfoWriteFormModal = function (tabType) {
     document.getElementById('knotModalMode').value = 'add';
     document.getElementById('knotModalTargetId').value = '';
     document.getElementById('knotTitle').value = '';
-    document.getElementById('knotRecommend').value = '';
+    if (document.getElementById('knotTags')) document.getElementById('knotTags').value = '';
+    if (document.getElementById('knotSource')) document.getElementById('knotSource').value = '';
     document.getElementById('knotVideoUrl').value = '';
     document.getElementById('lblKnotGuideModalTitle').innerText = '매듭법 등록';
     document.getElementById('knotGuideModal')?.classList.add('active');
@@ -1496,10 +1526,18 @@ window.openInfoEditFormModal = function (tabType, docId) {
     document.getElementById('banModalMode').value = 'edit';
     document.getElementById('banModalTargetId').value = docId;
     document.getElementById('banSpecies').value = item.species || '';
-    document.getElementById('banPeriod').value = item.period || '';
+    if (document.getElementById('banMonthInput')) document.getElementById('banMonthInput').value = item.monthInput || '';
+    if (document.getElementById('banStartMonth')) document.getElementById('banStartMonth').value = item.startMonth || '';
+    if (document.getElementById('banStartDay')) document.getElementById('banStartDay').value = item.startDay || '';
+    if (document.getElementById('banEndMonth')) document.getElementById('banEndMonth').value = item.endMonth || '';
+    if (document.getElementById('banEndDay')) document.getElementById('banEndDay').value = item.endDay || '';
     document.getElementById('banRegion').value = item.region || '';
     document.getElementById('banNote').value = item.note || '';
     document.getElementById('banImageUrl').value = item.imageUrl || '';
+    
+    const pType = item.periodType || 'month';
+    window.toggleBanPeriodType(pType, pType === 'detail' ? document.getElementById('btnBanPeriodTypeDetail') : document.getElementById('btnBanPeriodTypeMonth'));
+    
     document.getElementById('lblFishingBanModalTitle').innerText = '금어기 수정';
     document.getElementById('fishingBanModal')?.classList.add('active');
   } 
@@ -1522,7 +1560,8 @@ window.openInfoEditFormModal = function (tabType, docId) {
     document.getElementById('knotModalMode').value = 'edit';
     document.getElementById('knotModalTargetId').value = docId;
     document.getElementById('knotTitle').value = item.title || '';
-    document.getElementById('knotRecommend').value = item.recommend || '';
+    if (document.getElementById('knotTags')) document.getElementById('knotTags').value = item.tags || item.recommend || '';
+    if (document.getElementById('knotSource')) document.getElementById('knotSource').value = item.source || '';
     document.getElementById('knotVideoUrl').value = item.videoUrl || '';
     document.getElementById('lblKnotGuideModalTitle').innerText = '매듭법 수정';
     document.getElementById('knotGuideModal')?.classList.add('active');
@@ -1537,7 +1576,12 @@ window.selectLimitType = function (type, btn) {
 
 window.saveFishingBanData = function () {
   const species = document.getElementById('banSpecies').value.trim();
-  const period = document.getElementById('banPeriod').value.trim();
+  const periodType = document.getElementById('banPeriodType')?.value || 'month';
+  const monthInput = document.getElementById('banMonthInput')?.value.trim() || '';
+  const startMonth = document.getElementById('banStartMonth')?.value.trim() || '';
+  const startDay = document.getElementById('banStartDay')?.value.trim() || '';
+  const endMonth = document.getElementById('banEndMonth')?.value.trim() || '';
+  const endDay = document.getElementById('banEndDay')?.value.trim() || '';
   const region = document.getElementById('banRegion').value.trim();
   const note = document.getElementById('banNote').value.trim();
   const imageUrl = document.getElementById('banImageUrl').value.trim();
@@ -1546,10 +1590,22 @@ window.saveFishingBanData = function () {
 
   if (!species) return alert('어종명을 입력해 주세요.');
 
-  const payload = { species, period, region, note, imageUrl, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+  let period = '';
+  if (periodType === 'month') {
+    period = monthInput ? `${monthInput}월` : '';
+  } else {
+    period = (startMonth && startDay && endMonth && endDay) ? `${startMonth}월 ${startDay}일 ~ ${endMonth}월 ${endDay}일` : '';
+  }
+
+  const payload = { 
+    species, period, periodType, monthInput, startMonth, startDay, endMonth, endDay, region, note, imageUrl, 
+    createdAt: firebase.firestore.FieldValue.serverTimestamp() 
+  };
 
   if (mode === 'edit') {
-    db.collection('fishing_ban').doc(targetId).update({ species, period, region, note, imageUrl }).then(() => {
+    db.collection('fishing_ban').doc(targetId).update({ 
+      species, period, periodType, monthInput, startMonth, startDay, endMonth, endDay, region, note, imageUrl 
+    }).then(() => {
       window.closeModals(); alert('수정되었습니다.');
     });
   } else {
@@ -1585,17 +1641,18 @@ window.saveSizeLimitData = function () {
 
 window.saveKnotGuideData = function () {
   const title = document.getElementById('knotTitle').value.trim();
-  const recommend = document.getElementById('knotRecommend').value.trim();
+  const tags = document.getElementById('knotTags')?.value.trim() || '';
+  const source = document.getElementById('knotSource')?.value.trim() || '';
   const videoUrl = document.getElementById('knotVideoUrl').value.trim();
   const mode = document.getElementById('knotModalMode').value;
   const targetId = document.getElementById('knotModalTargetId').value;
 
   if (!title) return alert('매듭법 명을 입력해 주세요.');
 
-  const payload = { title, recommend, videoUrl, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+  const payload = { title, tags, recommend: tags, source, videoUrl, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
 
   if (mode === 'edit') {
-    db.collection('knot_guide').doc(targetId).update({ title, recommend, videoUrl }).then(() => {
+    db.collection('knot_guide').doc(targetId).update({ title, tags, recommend: tags, source, videoUrl }).then(() => {
       window.closeModals(); alert('수정되었습니다.');
     });
   } else {
