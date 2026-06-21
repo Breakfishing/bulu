@@ -1,5 +1,5 @@
 /* =========================================================================
-    GROUP 1: 글로벌 디자인 토큰 및 가변 테마 체계
+   GROUP 1: 글로벌 디자인 토큰 및 가변 테마 체계
    ========================================================================= */
 :root {
     --nav-height: 70px;
@@ -39,7 +39,7 @@
 }
 
 /* =========================================================================
-    GROUP 2: 레이아웃 핵심 코어 엔진 스택 및 타이포그래피
+   GROUP 2: 레이아웃 핵심 코어 엔진 스택 및 타이포그래피
    ========================================================================= */
 body,
 html {
@@ -107,7 +107,7 @@ textarea,
 }
 
 /* =========================================================================
-    GROUP 3: 스플래시 로딩 스크린 (다크모드 우회 순수 화이트 고정 규격)
+   GROUP 3: 스플래시 로딩 스크린 (다크모드 우회 순수 화이트 고정 규격)
    ========================================================================= */
 #splash-screen {
     position: fixed !important;
@@ -174,11 +174,9 @@ textarea,
         transform: scale(0.6);
         opacity: 0.8;
     }
-
     30% {
         opacity: 0.4;
     }
-
     100% {
         transform: scale(2.2);
         opacity: 0;
@@ -186,19 +184,17 @@ textarea,
 }
 
 @keyframes splashLogoFloat {
-
     0%,
     100% {
         transform: translateY(0);
     }
-
     50% {
         transform: translateY(-8px);
     }
 }
 
 /* =========================================================================
-    GROUP 4: 지도 레이어 및 오버레이 플로팅 패널
+   GROUP 4: 지도 레이어 및 오버레이 플로팅 패널
    ========================================================================= */
 .tab-content {
     display: none;
@@ -261,7 +257,6 @@ textarea,
     0% {
         transform: rotate(0deg);
     }
-
     100% {
         transform: rotate(360deg);
     }
@@ -394,7 +389,6 @@ textarea,
         transform: scale(0.45);
         opacity: 1;
     }
-
     100% {
         transform: scale(1.0);
         opacity: 0;
@@ -435,13 +429,11 @@ textarea,
         stroke-opacity: 0.2;
         stroke-width: 1px;
     }
-
     50% {
         fill-opacity: 0.18;
         stroke-opacity: 0.6;
         stroke-width: 1.5px;
     }
-
     100% {
         fill-opacity: 0.04;
         stroke-opacity: 0.2;
@@ -479,7 +471,7 @@ textarea,
 }
 
 /* =========================================================================
-    GROUP 5: 하단 내비게이션 탭바 및 공통 메뉴 그리드 허브
+   GROUP 5: 하단 내비게이션 탭바 및 공통 메뉴 그리드 허브
    ========================================================================= */
 #bottom-nav {
     height: var(--nav-height);
@@ -489,7 +481,7 @@ textarea,
     justify-content: space-around;
     align-items: center;
     padding-bottom: env(safe-area-inset-bottom);
-    z-index: 2000 !important;
+    z-index: 9999 !important;
     position: relative;
 }
 
@@ -571,7 +563,7 @@ textarea,
 }
 
 /* =========================================================================
-    GROUP 6: 입력 양식 및 하위 팝업 모달 프레임 구조
+   GROUP 6: 입력 양식 및 하위 팝업 모달 프레임 구조
    ========================================================================= */
 .form-group,
 .modal-form-group {
@@ -871,45 +863,16 @@ textarea,
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
-.color-palette-btn[data-color="#4f46e5"] {
-    background-color: #4f46e5;
-}
-
-.color-palette-btn[data-color="#3f51b5"] {
-    background-color: #3f51b5;
-}
-
-.color-palette-btn[data-color="#00a896"] {
-    background-color: #00a896;
-}
-
-.color-palette-btn[data-color="#28a745"] {
-    background-color: #28a745;
-}
-
-.color-palette-btn[data-color="#b45309"] {
-    background-color: #b45309;
-}
-
-.color-palette-btn[data-color="#a16207"] {
-    background-color: #a16207;
-}
-
-.color-palette-btn[data-color="#db2777"] {
-    background-color: #db2777;
-}
-
-.color-palette-btn[data-color="#ff4d4d"] {
-    background-color: #ff4d4d;
-}
-
-.color-palette-btn[data-color="#7c3aed"] {
-    background-color: #7c3aed;
-}
-
-.color-palette-btn[data-color="#607d8b"] {
-    background-color: #607d8b;
-}
+.color-palette-btn[data-color="#4f46e5"] { background-color: #4f46e5; }
+.color-palette-btn[data-color="#3f51b5"] { background-color: #3f51b5; }
+.color-palette-btn[data-color="#00a896"] { background-color: #00a896; }
+.color-palette-btn[data-color="#28a745"] { background-color: #28a745; }
+.color-palette-btn[data-color="#b45309"] { background-color: #b45309; }
+.color-palette-btn[data-color="#a16207"] { background-color: #a16207; }
+.color-palette-btn[data-color="#db2777"] { background-color: #db2777; }
+.color-palette-btn[data-color="#ff4d4d"] { background-color: #ff4d4d; }
+.color-palette-btn[data-color="#7c3aed"] { background-color: #7c3aed; }
+.color-palette-btn[data-color="#607d8b"] { background-color: #607d8b; }
 
 [data-theme='dark'] .color-palette-btn {
     border-color: rgba(255, 255, 255, 0.12);
@@ -1030,7 +993,7 @@ textarea,
 }
 
 /* =========================================================================
-    GROUP 7: 바텀시트 상세 정보 및 실시간 해양 기상 타임라인 패널
+   GROUP 7: 바텀시트 상세 정보 및 실시간 해양 기상 타임라인 패널
    ========================================================================= */
 .detail-popup-wrapper,
 .modal-backdrop-for-sheet {
@@ -1049,8 +1012,6 @@ textarea,
     display: block;
 }
 
-
-/* Leaflet 고유의 말꼬리 핀과 배경 하드코딩 박스를 완벽히 투명화 */
 .leaflet-popup-content-wrapper {
     padding: 0 !important;
     background: transparent !important;
@@ -1066,7 +1027,6 @@ textarea,
     display: none !important;
 }
 
-/* 너의 커스텀 모달 프레임이 Leaflet 팝업 인스턴스 내부에 자연스럽게 안착되도록 연동 */
 .bottom-sheet-modal-native {
     width: 400px !important;
     min-width: 400px !important;
@@ -1694,7 +1654,7 @@ textarea,
 }
 
 /* =========================================================================
-    GROUP 8: 포인트 관리 대시보드 프리미엄 시스템 (상단 탭 바 개편 반영)
+   GROUP 8: 포인트 관리 대시보드 프리미엄 시스템 (상단 탭 바 개편 반영)
    ========================================================================= */
 .points-management-wrapper {
     width: 100%;
@@ -2074,7 +2034,7 @@ textarea,
 }
 
 /* =========================================================================
-    GROUP 9: 공지사항 및 이벤트 전용 직각화 게시판 규격 시스템
+   GROUP 9: 공지사항 및 이벤트 전용 직각화 게시판 규격 시스템
    ========================================================================= */
 .board-sub-tab-container {
     display: flex;
@@ -2224,7 +2184,6 @@ textarea,
     width: 100%;
 }
 
-
 .notice-header-write-btn {
     position: absolute;
     right: 16px;
@@ -2268,7 +2227,7 @@ textarea,
 }
 
 /* =========================================================================
-    GROUP 10: 바텀시트, 애니메이션 스택 및 예외 레이어 가드 최종 선언
+   GROUP 10: 바텀시트, 애니메이션 스택 및 예외 레이어 가드 최종 선언
    ========================================================================= */
 #detailModalWrapper,
 #detailModal {
@@ -2279,16 +2238,10 @@ textarea,
     z-index: 1005 !important;
 }
 
-#bottom-nav {
-    z-index: 9999 !important;
-    position: relative;
-}
-
 .modal.active,
 .custom-modal-native.active {
     animation: patchSlideUpCenter 0.32s cubic-bezier(0.1, 0.76, 0.55, 0.94) forwards;
 }
-
 
 .modal-backdrop.active {
     display: block !important;
@@ -2297,12 +2250,11 @@ textarea,
 
 @keyframes patchSlideUpCenter {
     0% {
-        transform: translateY(100vh);
+        transform: translate(-50%, 40vh);
         opacity: 0;
     }
-
     100% {
-        transform: translateY(0);
+        transform: translate(-50%, -50%);
         opacity: 1;
     }
 }
@@ -2311,7 +2263,6 @@ textarea,
     0% {
         transform: translateY(100%);
     }
-
     100% {
         transform: translateY(0);
     }
@@ -2321,7 +2272,6 @@ textarea,
     0% {
         opacity: 0;
     }
-
     100% {
         opacity: 1;
     }
@@ -2404,7 +2354,7 @@ textarea,
 }
 
 /* =========================================================================
-    GROUP 11: 홈 화면 프리미엄 웨더 대시보드 컴포넌트 시스템
+   GROUP 11: 홈 화면 프리미엄 웨더 대시보드 컴포넌트 시스템
    ========================================================================= */
 .hc-main-card {
     width: 100%;
@@ -2487,17 +2437,9 @@ textarea,
     flex-shrink: 0;
 }
 
-.hc-txt-white {
-    fill: #ffffff !important;
-}
-
-.hc-txt-muted {
-    fill: #cbd5e1 !important;
-}
-
-.hc-txt-shadow {
-    filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.45));
-}
+.hc-txt-white { fill: #ffffff !important; }
+.hc-txt-muted { fill: #cbd5e1 !important; }
+.hc-txt-shadow { filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.45)); }
 
 .hc-premium-card svg .hc-bg-day,
 .hc-premium-card svg .hc-bg-sunset,
@@ -2530,7 +2472,6 @@ textarea,
     flex-wrap: wrap;
 }
 
-/* A. 주간 상태 (day) */
 .hc-main-card.day .hc-bg-day,
 .hc-main-card.day .hc-sun-node,
 .hc-main-card.day .hc-cloud-day,
@@ -2541,7 +2482,6 @@ textarea,
     display: block !important;
 }
 
-/* B. 노을 및 일출/일몰 상태 (sunset) */
 .hc-main-card.sunset .hc-bg-sunset,
 .hc-main-card.sunset .hc-sun-node,
 .hc-main-card.sunset .hc-sea-sunset,
@@ -2565,7 +2505,6 @@ textarea,
     r: 40 !important;
 }
 
-/* C. 비 상태 (rain) */
 .hc-main-card.rain .hc-bg-day,
 .hc-main-card.rain .hc-rain-layer,
 .hc-main-card.rain .hc-sea-base,
@@ -2574,7 +2513,6 @@ textarea,
     display: block !important;
 }
 
-/* M. 야간 상태 (night) */
 .hc-main-card.night .hc-bg-night,
 .hc-main-card.night .hc-moon-node,
 .hc-main-card.night .hc-sea-night,
@@ -2594,7 +2532,6 @@ textarea,
     fill: #ef4444 !important;
 }
 
-/* E. 겨울 강설 상태 (snow) */
 .hc-main-card.snow .hc-bg-snow,
 .hc-main-card.snow .hc-snow-layer,
 .hc-main-card.snow .hc-sea-snow,
@@ -2603,7 +2540,6 @@ textarea,
     display: block !important;
 }
 
-/* F. 예외 보호 기본값 상태 (fallback) */
 .hc-main-card .hc-bg-fallback,
 .hc-main-card .hc-sea-fallback,
 .hc-main-card .hc-island-fallback,
@@ -2642,23 +2578,10 @@ textarea,
 }
 
 @keyframes hcRainMove {
-    0% {
-        transform: translateY(-40px);
-        opacity: 0;
-    }
-
-    30% {
-        opacity: 0.6;
-    }
-
-    90% {
-        opacity: 0.6;
-    }
-
-    100% {
-        transform: translateY(240px);
-        opacity: 0;
-    }
+    0% { transform: translateY(-40px); opacity: 0; }
+    30% { opacity: 0.6; }
+    90% { opacity: 0.6; }
+    100% { transform: translateY(240px); opacity: 0; }
 }
 
 .hc-snow-flake {
@@ -2668,25 +2591,10 @@ textarea,
 }
 
 @keyframes hcSnowMove {
-    0% {
-        transform: translateY(-20px) translateX(0);
-        opacity: 0;
-    }
-
-    40% {
-        transform: translateY(100px) translateX(8px);
-        opacity: 0.8;
-    }
-
-    80% {
-        transform: translateY(200px) translateX(-4px);
-        opacity: 0.8;
-    }
-
-    100% {
-        transform: translateY(260px) translateX(2px);
-        opacity: 0;
-    }
+    0% { transform: translateY(-20px) translateX(0); opacity: 0; }
+    40% { transform: translateY(100px) translateX(8px); opacity: 0.8; }
+    80% { transform: translateY(200px) translateX(-4px); opacity: 0.8; }
+    100% { transform: translateY(260px) translateX(2px); opacity: 0; }
 }
 
 .hc-yunsul-node ellipse {
@@ -2695,36 +2603,17 @@ textarea,
     animation: hcYunsulGlow 3s ease-in-out infinite alternate;
 }
 
-.hc-yunsul-node ellipse:nth-child(2) {
-    animation-delay: 0.8s;
-    animation-duration: 3.8s;
-}
-
-.hc-yunsul-node ellipse:nth-child(3) {
-    animation-delay: 1.5s;
-    animation-duration: 4.5s;
-}
+.hc-yunsul-node ellipse:nth-child(2) { animation-delay: 0.8s; animation-duration: 3.8s; }
+.hc-yunsul-node ellipse:nth-child(3) { animation-delay: 1.5s; animation-duration: 4.5s; }
 
 @keyframes hcYunsulGlow {
-    0% {
-        transform: scaleX(0.85);
-        opacity: 0.25;
-    }
-
-    100% {
-        transform: scaleX(1.1);
-        opacity: 0.75;
-    }
+    0% { transform: scaleX(0.85); opacity: 0.25; }
+    100% { transform: scaleX(1.1); opacity: 0.75; }
 }
 
 @keyframes hcRefreshRotateAnimation {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .hc-refresh-active g {
@@ -2736,39 +2625,37 @@ textarea,
 /* =========================================================================
    수심 팝업 스타일 (Custom Depth Popup)
    ========================================================================= */
-
 .custom-depth-popup .leaflet-popup-content-wrapper {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0;
-  overflow: hidden;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 0;
+    overflow: hidden;
 }
 
 .custom-depth-popup .leaflet-popup-content {
-  margin: 0;
-  padding: 8px 12px;
-  line-height: 1.4;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 8px 12px;
+    line-height: 1.4;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .custom-depth-popup .leaflet-popup-tip {
-  background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.95);
 }
 
-/* 다크모드 대응 */
 [data-theme='dark'] .custom-depth-popup .leaflet-popup-content-wrapper {
-  background: rgba(30, 30, 30, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(30, 30, 30, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 [data-theme='dark'] .custom-depth-popup .leaflet-popup-tip {
-  background: rgba(30, 30, 30, 0.95);
+    background: rgba(30, 30, 30, 0.95);
 }
 
 [data-theme='dark'] .custom-depth-popup span {
-  color: #4da3ff !important;
+    color: #4da3ff !important;
 }
 
 .leaflet-tooltip {
@@ -2783,16 +2670,11 @@ textarea,
 }
 
 /* =========================================================================
-    GROUP 12: 새로고침 버튼 실시간 회전 애니메이션 및 기상 수정 레이어 셋
+   GROUP 12: 새로고침 버튼 실시간 회전 애니메이션 및 기상 수정 레이어 셋
    ========================================================================= */
-
 @keyframes hcSpinLinearInfinite {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .hc-spin-anim {
@@ -2818,7 +2700,7 @@ textarea,
 }
 
 /* =========================================================================
-    신규 추가: 정보 게시판 동적 리스트 및 프리미엄 카드 템플릿 시스템
+   정보 게시판 동적 리스트 및 프리미엄 카드 템플릿 시스템
    ========================================================================= */
 .info-search-wrapper {
     padding: 12px 16px;
@@ -2827,7 +2709,6 @@ textarea,
     display: none;
 }
 
-/* 검색 기능 통합 활성화 대응 */
 .info-search-wrapper.active {
     display: block !important;
 }
@@ -2844,7 +2725,6 @@ textarea,
     box-sizing: border-box;
 }
 
-/* 금어기, 금지체장 레이아웃 변형 (좌측 이미지, 우측 정보 횡단 정렬) */
 .info-card-item {
     background: var(--bg-panel);
     border: 1px solid var(--border-color);
@@ -2852,13 +2732,12 @@ textarea,
     padding: 16px;
     margin-bottom: 12px;
     display: flex;
-    flex-direction: row; /* 가로 배열 정의 */
+    flex-direction: row;
     gap: 16px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     align-items: center;
 }
 
-/* 우측 텍스트 정보 박스 컨테이너 */
 .info-card-content-box {
     flex: 1;
     display: flex;
@@ -2888,13 +2767,8 @@ textarea,
     color: #ffffff;
 }
 
-.info-card-badge.sea {
-    background-color: #007aff;
-}
-
-.info-card-badge.fresh {
-    background-color: #28a745;
-}
+.info-card-badge.sea { background-color: #007aff; }
+.info-card-badge.fresh { background-color: #28a745; }
 
 .info-card-body-flex {
     display: flex;
@@ -2924,7 +2798,6 @@ textarea,
     width: 65px;
 }
 
-/* 좌측 배치 어종 이미지 박스 규격 */
 .info-card-img-box {
     width: 84px;
     height: 84px;
@@ -2951,7 +2824,6 @@ textarea,
     opacity: 0.4;
 }
 
-/* 매듭법 그리드 */
 .info-knot-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -2970,10 +2842,9 @@ textarea,
     flex-direction: column;
 }
 
-/* 유튜브 쇼츠 종횡비 고정 세로 썸네일 규격(9:16) 설계 */
 .info-knot-thumb-wrapper {
     width: 100%;
-    aspect-ratio: 9 / 16; /* 16:9에서 9:16 쇼츠 비율로 교체 */
+    aspect-ratio: 9 / 16;
     background-color: #000000;
     position: relative;
     overflow: hidden;
@@ -3001,7 +2872,7 @@ textarea,
     width: 36px;
     height: 36px;
     fill: #ffffff;
-    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+    filter: drop-shadow(0px 2px 6px rgba(0,0,0,0.4));
 }
 
 .info-knot-info-area {
@@ -3022,7 +2893,6 @@ textarea,
     text-overflow: ellipsis;
 }
 
-/* 매듭법 해시태그 텍스트 렌더링 규격 */
 .info-knot-tags {
     font-size: 12px;
     font-weight: 600;
@@ -3033,7 +2903,6 @@ textarea,
     text-overflow: ellipsis;
 }
 
-/* 카드 하단 출처 채널명 마킹 소형 폰트 설계 */
 .info-knot-source {
     font-size: 11px;
     color: var(--text-muted);
@@ -3044,4 +2913,268 @@ textarea,
 #infoEditModal,
 #infoEditModal textarea {
     font-family: inherit;
+}
+
+/* =========================================================================
+   신규 추가: 화면 정중앙 고정형 프리미엄 상세 정보 모달 카드 시스템
+   ========================================================================= */
+.fixed-viewport-center-detail-card-native {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 360px !important;
+    max-width: 92vw !important;
+    background: var(--bg-panel) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28) !important;
+    border: 1px solid var(--border-color) !important;
+    z-index: 100005 !important;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.fixed-viewport-center-detail-card-native.active {
+    display: flex !important;
+    animation: patchSlideUpCenter 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94) forwards;
+}
+
+.fd-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-panel);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.fd-header-title-block {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.fd-category-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.fd-main-title {
+    margin: 0;
+    font-size: 16.5px;
+    font-weight: 700;
+    color: var(--text-main);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fd-close-x-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.fd-close-x-btn:hover {
+    background: var(--grid-item-bg);
+    color: var(--text-main);
+}
+
+.fd-card-body-scroll {
+    padding: 20px;
+    overflow-y: auto;
+    max-height: 48vh;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.fd-card-body-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.fd-info-row {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: flex-start;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.fd-label {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.fd-value {
+    font-size: 14px;
+    color: var(--text-main);
+    text-align: left;
+    line-height: 1.45;
+}
+
+.fd-badge-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+}
+
+.fd-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--grid-item-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+}
+
+.fd-badge.empty {
+    color: var(--text-muted);
+    font-weight: 500;
+    border: 1px dashed var(--border-color);
+}
+
+.fd-memo-box-inside {
+    width: 100%;
+    background: var(--grid-item-bg);
+    border-left: 4px solid var(--text-muted);
+    padding: 10px 12px;
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    color: var(--text-main);
+    line-height: 1.55;
+    text-align: left;
+    word-break: break-all;
+    box-sizing: border-box;
+}
+
+.fd-card-footer-actions {
+    display: flex;
+    gap: 8px;
+    padding: 14px 20px 20px;
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-panel);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.fd-footer-btn {
+    flex: 1;
+    padding: 11px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    border: none;
+    transition: opacity 0.2s;
+}
+
+.fd-footer-btn:active {
+    opacity: 0.8;
+}
+
+.fd-footer-btn.edit-trigger {
+    background: var(--grid-item-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+}
+
+.fd-footer-btn.close-trigger {
+    background: var(--primary-color);
+    color: #ffffff;
+}
+
+/* 커스텀 마커 기본 노드 구조 보정 */
+.custom-leaflet-div-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
+.custom-pin-wrapper {
+    position: relative;
+    width: 30px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.custom-pin-body {
+    position: absolute;
+    bottom: 0;
+    width: 24px;
+    height: 24px;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+    z-index: 5;
+}
+
+.custom-pin-circle {
+    width: 10px;
+    height: 10px;
+    background: #ffffff;
+    border-radius: 50%;
+    transform: rotate(45deg);
+}
+
+.custom-pin-pulse {
+    position: absolute;
+    bottom: -4px;
+    left: 5px;
+    width: 14px;
+    height: 6px;
+    border-radius: 50%;
+    opacity: 0.4;
+    transform: scale(0.6);
+    animation: patchFadeIn 1.5s infinite ease-out;
+    z-index: 1;
+}
+
+.custom-pin-label-card {
+    position: absolute;
+    top: -22px;
+    background: rgba(30, 30, 30, 0.85);
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    pointer-events: none;
+}
+
+.toilet-mode .custom-pin-body {
+    border-radius: 50%;
+    transform: none;
+}
+.toilet-mode .custom-pin-body svg {
+    transform: none;
 }
