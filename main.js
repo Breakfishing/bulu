@@ -57,7 +57,7 @@ window.globalSunTimesCache = {};
 window.isFishingPointsLoaded = false;
 window.isPublicToiletsLoaded = false;
 
-// 모달 디스플레이 강제 제어를 위한 글로벌 스타일 가드 (기존 CSS 존중, 모달 필수 속성만 추가)
+// 모달 디스플레이 강제 제어를 위한 글로벌 스타일 가드 (flex 레이아웃 컨텍스트 정렬 보정)
 (function() {
   const style = document.createElement('style');
   style.innerHTML = `
@@ -66,10 +66,8 @@ window.isPublicToiletsLoaded = false;
       z-index: 999999 !important;
     }
     #infoEditModal.active, #fishingBanModal.active, #sizeLimitModal.active, #knotGuideModal.active, #weatherModal.active {
-      display: block !important;
-    }
-    #weatherModal.active {
       display: flex !important;
+      flex-direction: column !important;
     }
   `;
   document.head.appendChild(style);
@@ -181,7 +179,6 @@ window.switchTab = function (tabId, navItem) {
     window.renderPointsManagementTab();
   }
 };
-
 
 // =========================================================================
 // [RESTORED AREA] 누락되었던 코어 API 통신 및 기하 유틸리티 함수 복구 영역
@@ -1177,7 +1174,7 @@ let cachedNotices = [];
 let cachedEvents = [];
 let currentBoardTab = 'notice';
 
-// 글로벌 모달 레이어 팝업 디스플레이 가드 엔진 및 스타일 우선순위 보정
+// 글로벌 모달 레이어 팝업 디스플레이 가드 엔진 및 스타일 우선순위 보정 (flex 레이아웃 붕괴 원천 차단)
 (function() {
   const style = document.createElement('style');
   style.innerHTML = `
@@ -1185,13 +1182,9 @@ let currentBoardTab = 'notice';
       display: none !important;
       z-index: 999999 !important;
     }
-    #infoEditModal.active, #fishingBanModal.active, #sizeLimitModal.active, #knotGuideModal.active {
-      display: block !important;
-    }
-    #weatherModal.active {
+    #infoEditModal.active, #fishingBanModal.active, #sizeLimitModal.active, #knotGuideModal.active, #weatherModal.active {
       display: flex !important;
-      opacity: 1 !important;
-      visibility: visible !important;
+      flex-direction: column !important;
     }
   `;
   document.head.appendChild(style);
@@ -1653,7 +1646,7 @@ window.openInfoWriteFormModal = function (tabType) {
     
     const modal = document.getElementById('fishingBanModal');
     if (modal) {
-      modal.style.setProperty('display', 'block', 'important');
+      modal.style.setProperty('display', 'flex', 'important');
       modal.classList.add('active');
     }
   } 
@@ -1671,7 +1664,7 @@ window.openInfoWriteFormModal = function (tabType) {
     
     const modal = document.getElementById('sizeLimitModal');
     if (modal) {
-      modal.style.setProperty('display', 'block', 'important');
+      modal.style.setProperty('display', 'flex', 'important');
       modal.classList.add('active');
     }
   } 
@@ -1687,7 +1680,7 @@ window.openInfoWriteFormModal = function (tabType) {
     
     const modal = document.getElementById('knotGuideModal');
     if (modal) {
-      modal.style.setProperty('display', 'block', 'important');
+      modal.style.setProperty('display', 'flex', 'important');
       modal.classList.add('active');
     }
   }
@@ -1733,7 +1726,7 @@ window.openInfoEditFormModal = function (tabType, docId) {
     
     const modal = document.getElementById('fishingBanModal');
     if (modal) {
-      modal.style.setProperty('display', 'block', 'important');
+      modal.style.setProperty('display', 'flex', 'important');
       modal.classList.add('active');
     }
   } 
@@ -1753,7 +1746,7 @@ window.openInfoEditFormModal = function (tabType, docId) {
     
     const modal = document.getElementById('sizeLimitModal');
     if (modal) {
-      modal.style.setProperty('display', 'block', 'important');
+      modal.style.setProperty('display', 'flex', 'important');
       modal.classList.add('active');
     }
   } 
@@ -1771,7 +1764,7 @@ window.openInfoEditFormModal = function (tabType, docId) {
     
     const modal = document.getElementById('knotGuideModal');
     if (modal) {
-      modal.style.setProperty('display', 'block', 'important');
+      modal.style.setProperty('display', 'flex', 'important');
       modal.classList.add('active');
     }
   }
@@ -1880,7 +1873,7 @@ window.openInfoEditModal = function () {
     document.getElementById('modalBackdrop')?.classList.add('active');
     const modal = document.getElementById('infoEditModal');
     if (modal) {
-      modal.style.setProperty('display', 'block', 'important');
+      modal.style.setProperty('display', 'flex', 'important');
       modal.classList.add('active');
     }
   }
@@ -2349,10 +2342,10 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
     naviOpenBtn.onclick = function (e) { e.stopPropagation(); window.open(localStorage.getItem('navi-app') === 'naver' ? `https://map.naver.com/index.nhn?elat=${lat}&elng=${lng}&etext=${encodeURIComponent(name)}&menu=route` : `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`, '_blank'); };
   }
 
-  // autoPan 속성을 false로 고정하여 맵 시선 왜곡과 중심축 흔들림 문제를 원천 교정
+  // autoPan 속성을 true로 변경하여 팝업이 화면 구석에 생성될 때 지도가 정상적으로 시야를 추적하도록 수정
   L.popup({
     closeButton: false,
-    autoPan: false,
+    autoPan: true,
     maxWidth: 400,
     minWidth: 400,
     offset: L.point(0, -40)
