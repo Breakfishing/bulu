@@ -759,8 +759,9 @@ textarea,
 }
 
 .modal,
-.custom-modal-native {
-    display: none;
+.custom-modal-native,
+.bottom-sheet-modal-native {
+    display: none !important;
     position: fixed;
     bottom: var(--nav-height) !important;
     left: 0;
@@ -795,6 +796,7 @@ textarea,
 }
 
 .modal-backdrop {
+    display: none !important;
     position: fixed;
     top: 0;
     left: 0;
@@ -802,11 +804,10 @@ textarea,
     height: calc(100vh - var(--nav-height)) !important;
     background-color: rgba(0, 0, 0, 0.45);
     z-index: 1000 !important;
-    display: none;
 }
 
 .modal-backdrop.active {
-    display: block;
+    display: block !important;
 }
 
 .switch {
@@ -1042,6 +1043,7 @@ textarea,
    ========================================================================= */
 .detail-popup-wrapper,
 .modal-backdrop-for-sheet {
+    display: none !important;
     position: fixed;
     top: 0;
     left: 0;
@@ -1049,12 +1051,11 @@ textarea,
     height: 100vh;
     background-color: rgba(0, 0, 0, 0.45);
     z-index: 1000 !important;
-    display: none;
 }
 
 .detail-popup-wrapper.active,
 .modal-backdrop-for-sheet.active {
-    display: block;
+    display: block !important;
 }
 
 .bottom-sheet,
@@ -1413,6 +1414,7 @@ textarea,
 
 .modal.weather-modal,
 .weather-modal-overlay {
+    display: none !important;
     width: 100% !important;
     max-width: 100% !important;
     height: auto !important;
