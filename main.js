@@ -57,17 +57,34 @@ window.globalSunTimesCache = {};
 window.isFishingPointsLoaded = false;
 window.isPublicToiletsLoaded = false;
 
-// 모달 디스플레이 강제 제어를 위한 글로벌 스타일 가드 (flex 레이아웃 컨텍스트 정렬 보정)
+// 플로팅 상세 정보 프레임 및 레이어 계층 보정을 위한 글로벌 컴포넌트 스타일 동적 주입
 (function() {
   const style = document.createElement('style');
   style.innerHTML = `
-    #infoEditModal, #fishingBanModal, #sizeLimitModal, #knotGuideModal, #weatherModal {
-      display: none !important;
-      z-index: 999999 !important;
+    .leaflet-popup-content-wrapper {
+      padding: 0 !important;
+      overflow: hidden !important;
+      border-radius: 16px !important;
+      background: var(--bg-panel, #ffffff) !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
     }
-    #infoEditModal.active, #fishingBanModal.active, #sizeLimitModal.active, #knotGuideModal.active, #weatherModal.active {
-      display: flex !important;
-      flex-direction: column !important;
+    .leaflet-popup-content {
+      margin: 0 !important;
+      width: 310px !important;
+    }
+    .leaflet-popup-content .bottom-sheet-modal-native {
+      position: static !important;
+      transform: none !important;
+      box-shadow: none !important;
+      padding: 12px 16px 16px 16px !important;
+      background: transparent !important;
+      display: block !important;
+    }
+    .leaflet-popup-tip {
+      background: var(--bg-panel, #ffffff) !important;
+    }
+    .leaflet-popup-close-button {
+      display: none !important;
     }
   `;
   document.head.appendChild(style);
@@ -141,12 +158,7 @@ window.closeModals = function () {
   document.getElementById('knotGuideModal')?.classList.remove('active');
   document.getElementById('detailModalWrapper')?.classList.remove('active');
   document.getElementById('modalBackdrop')?.classList.remove('active');
-  
-  const weatherModal = document.getElementById('weatherModal');
-  if (weatherModal) {
-    weatherModal.classList.remove('active');
-    weatherModal.style.setProperty('display', 'none', 'important');
-  }
+  document.getElementById('weatherModal')?.classList.remove('active');
 
   if (window.mapObj) {
     window.mapObj.closePopup();
@@ -163,7 +175,7 @@ window.switchTab = function (tabId, navItem) {
   window.closeModals();
   document.getElementById('settings-page')?.classList.remove('active');
   document.getElementById('notice-page')?.classList.remove('active');
-  document.getElementById('info-board-page')?.classList.remove('active');
+  document.getElementById('info-board-page')?.classList.add('active');
 
   document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(ni => ni.classList.remove('active'));
@@ -179,6 +191,7 @@ window.switchTab = function (tabId, navItem) {
     window.renderPointsManagementTab();
   }
 };
+
 
 // =========================================================================
 // [RESTORED AREA] 누락되었던 코어 API 통신 및 기하 유틸리티 함수 복구 영역
@@ -1081,92 +1094,6 @@ function saveCategoryOrderWithinTabToFirebase(container) {
   batch.commit().catch(err => console.error(err));
 }
 
-window.deleteCategoryWithGuard = function (catName, event) {
-  if (event) event.stopPropagation();
-  if (cachedFishingPoints.some(p => (p.category || '미분류').trim() === catName.trim())) { alert(`삭제 불가: [${catName}] 카테고리 내부에 소속된 포인트 마커가 존재합니다.`); return; }
-  if (confirm(`[${catName}] 카테고리를 삭제하시겠습니까?`)) {
-    let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]'); let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
-    savedCatOrder = savedCatOrder.filter(c => c !== catName); delete savedCatColors[catName];
-    localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
-    alert("카테고리가 삭제되었습니다."); window.renderPointsManagementTab();
-  }
-};
-
-window.openCategoryEditBottomSheet = function (catName, catColor, event) {
-  if (event) event.stopPropagation();
-  document.getElementById('editTargetCategoryOldName').value = catName; document.getElementById('editCategoryNameInput').value = catName;
-  const modalTitle = document.querySelector('#categoryEditModal h3 span'); if (modalTitle) modalTitle.innerText = "카테고리 수정";
-  window.selectCategoryColor(catColor || '#4f46e5'); document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('categoryEditModal').classList.add('active');
-};
-
-window.openCategoryAddBottomSheet = function () {
-  const modalTitle = document.querySelector('#categoryEditModal h3 span'); if (modalTitle) modalTitle.innerText = "카테고리 추가";
-  document.getElementById('editTargetCategoryOldName').value = "NEW_CATEGORY"; document.getElementById('editCategoryNameInput').value = "";
-  window.selectCategoryColor('#4f46e5'); document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('categoryEditModal').classList.add('active');
-};
-
-window.saveCategoryEditData = function () {
-  const modeFlag = document.getElementById('editTargetCategoryOldName').value; 
-  const nextCatName = document.getElementById('editCategoryNameInput').value.trim(); 
-  const nextColor = document.getElementById('editCategoryColorInput').value;
-
-  if (!nextCatName) return alert("카테고리 명칭은 필수입니다.");
-  if (nextCatName.length > 8) return alert("카테고리 이름은 띄어쓰기 포함 8자 이내로 입력해 주세요.");
-
-  let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]'); 
-  let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
-
-  const systemCategories = ['전체', '즐겨찾기', '최근 추가된 화장실', '미분류', '공중화장실 정보'];
-
-  if (modeFlag === "NEW_CATEGORY") {
-    if (savedCatOrder.includes(nextCatName) || systemCategories.includes(nextCatName)) {
-      return alert("이미 존재하는 카테고리 명칭이거나 사용할 수 없는 이름입니다.");
-    }
-    savedCatOrder.push(nextCatName); savedCatColors[nextCatName] = nextColor;
-    localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
-    window.closeModals(); alert(`[${nextCatName}] 카테고리가 추가되었습니다.`); window.renderPointsManagementTab(); return;
-  }
-
-  if (nextCatName !== modeFlag && (savedCatOrder.includes(nextCatName) || systemCategories.includes(nextCatName))) {
-    return alert("이미 존재하는 카테고리 명칭이거나 사용할 수 없는 이름입니다.");
-  }
-
-  const idx = savedCatOrder.indexOf(modeFlag); 
-  if (idx !== -1) savedCatOrder[idx] = nextCatName;
-
-  delete savedCatColors[modeFlag]; savedCatColors[nextCatName] = nextColor;
-  localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
-
-  const batch = db.batch(); 
-  const targets = cachedFishingPoints.filter(p => (p.category || '미분류').trim() === modeFlag.trim());
-  targets.forEach(item => batch.update(db.collection('fishing_points').doc(item.id), { category: nextCatName, color: nextColor }));
-  
-  batch.commit().then(() => { 
-    if (window.currentActiveCategory === modeFlag) {
-      window.currentActiveCategory = nextCatName;
-      localStorage.setItem('pm-last-category', nextCatName);
-    }
-    window.closeModals(); 
-    window.renderPointsManagementTab();
-  }).catch(err => {
-    console.error(err);
-    alert("카테고리 데이터 동기화 중 오류가 발생했습니다.");
-  });
-};
-
-window.selectCategoryColor = function (color) {
-  if (document.getElementById('editCategoryColorInput')) document.getElementById('editCategoryColorInput').value = color;
-  document.querySelectorAll('.color-palette-btn').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-color') === color));
-  const previewEl = document.getElementById('categoryEditMarkerIcon'); if (previewEl && typeof getFishingPointSvg === 'function') previewEl.innerHTML = getFishingPointSvg(color);
-};
-
-window.selectNewToiletHours = function (type, element) { window.selectedNewToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('newToiletHoursDetailRow').classList.toggle('active', type === '지정시간'); };
-window.selectParking = function (type, element) { selectedParkingType = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('parkingDetailRow').classList.toggle('active', type === 'paid'); };
-window.shiftParkingUnit = function (btn) { currentUnitIndex = (currentUnitIndex + 1) % parkingUnits.length; if (btn) btn.innerText = parkingUnits[currentUnitIndex]; };
-window.shiftEditPointParkingUnit = function (btn) { currentEditPointUnitIndex = (currentEditPointUnitIndex + 1) % editPointParkingUnits.length; if (btn) btn.innerText = editPointParkingUnits[currentEditPointUnitIndex]; };
-window.selectEditPointParking = function (type, element) { selectedEditPointParkingType = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editPointParkingDetailRow').classList.toggle('active', type === 'paid'); };
-window.selectEditToiletHours = function (type, element) { selectedToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editToiletHoursDetailRow').classList.toggle('active', type === '지정시간'); };
-
 // =========================================================================
 // [TAB AREA 4] 게시판 엔진 (공지사항/이벤트 + 정보 게시판 동적 렌더링 포함)
 // =========================================================================
@@ -1174,7 +1101,6 @@ let cachedNotices = [];
 let cachedEvents = [];
 let currentBoardTab = 'notice';
 
-// 글로벌 모달 레이어 팝업 디스플레이 가드 엔진 및 스타일 우선순위 보정 (flex 레이아웃 붕괴 원천 차단)
 (function() {
   const style = document.createElement('style');
   style.innerHTML = `
@@ -1183,8 +1109,7 @@ let currentBoardTab = 'notice';
       z-index: 999999 !important;
     }
     #infoEditModal.active, #fishingBanModal.active, #sizeLimitModal.active, #knotGuideModal.active, #weatherModal.active {
-      display: flex !important;
-      flex-direction: column !important;
+      display: block !important;
     }
   `;
   document.head.appendChild(style);
@@ -1201,13 +1126,6 @@ if (window.closeModals) {
         el.style.setProperty('display', 'none', 'important');
       }
     });
-    
-    // 모달 폐쇄 시 백드롭 활성 클래스 및 인라인 스타일을 강제로 소멸시켜 잔상 현상 원천 차단
-    const backdrop = document.getElementById('modalBackdrop');
-    if (backdrop) {
-      backdrop.classList.remove('active');
-      backdrop.style.setProperty('display', 'none', 'important');
-    }
   };
 }
 
@@ -1646,7 +1564,7 @@ window.openInfoWriteFormModal = function (tabType) {
     
     const modal = document.getElementById('fishingBanModal');
     if (modal) {
-      modal.style.setProperty('display', 'flex', 'important');
+      modal.style.setProperty('display', 'block', 'important');
       modal.classList.add('active');
     }
   } 
@@ -1664,7 +1582,7 @@ window.openInfoWriteFormModal = function (tabType) {
     
     const modal = document.getElementById('sizeLimitModal');
     if (modal) {
-      modal.style.setProperty('display', 'flex', 'important');
+      modal.style.setProperty('display', 'block', 'important');
       modal.classList.add('active');
     }
   } 
@@ -1680,7 +1598,7 @@ window.openInfoWriteFormModal = function (tabType) {
     
     const modal = document.getElementById('knotGuideModal');
     if (modal) {
-      modal.style.setProperty('display', 'flex', 'important');
+      modal.style.setProperty('display', 'block', 'important');
       modal.classList.add('active');
     }
   }
@@ -1726,7 +1644,7 @@ window.openInfoEditFormModal = function (tabType, docId) {
     
     const modal = document.getElementById('fishingBanModal');
     if (modal) {
-      modal.style.setProperty('display', 'flex', 'important');
+      modal.style.setProperty('display', 'block', 'important');
       modal.classList.add('active');
     }
   } 
@@ -1746,7 +1664,7 @@ window.openInfoEditFormModal = function (tabType, docId) {
     
     const modal = document.getElementById('sizeLimitModal');
     if (modal) {
-      modal.style.setProperty('display', 'flex', 'important');
+      modal.style.setProperty('display', 'block', 'important');
       modal.classList.add('active');
     }
   } 
@@ -1764,7 +1682,7 @@ window.openInfoEditFormModal = function (tabType, docId) {
     
     const modal = document.getElementById('knotGuideModal');
     if (modal) {
-      modal.style.setProperty('display', 'flex', 'important');
+      modal.style.setProperty('display', 'block', 'important');
       modal.classList.add('active');
     }
   }
@@ -1873,7 +1791,7 @@ window.openInfoEditModal = function () {
     document.getElementById('modalBackdrop')?.classList.add('active');
     const modal = document.getElementById('infoEditModal');
     if (modal) {
-      modal.style.setProperty('display', 'flex', 'important');
+      modal.style.setProperty('display', 'block', 'important');
       modal.classList.add('active');
     }
   }
@@ -1993,9 +1911,8 @@ function updateVisibleMarkersOnMap() {
     cloudPointsLayer.clearLayers();
     cachedFishingPoints.forEach(item => {
       if (!item || item.lat === undefined || item.lng === undefined || isNaN(item.lat) || isNaN(item.lng) || item.lat === null || item.lng === null) return;
+      // zIndexOffset과 자체 렌더링 레이어 최상위 배치를 통해 modalBackdrop 레이어의 영향도를 원천 차단
       const marker = L.marker([item.lat, item.lng], { icon: L.divIcon({ html: getFishingPointSvg(item.color), className: 'custom-marker-wrapper', iconSize: [26, 39], iconAnchor: [13, 39] }), zIndexOffset: 2000 });
-      
-      // 누락되었던 item.hasCafe 부분을 철저하게 교정 완료
       marker.on('click', () => { window.closeModals(); window.renderPointDetailBottomSheet(item.id, item.name, item.category, item.color, item.memo, item.parkingType || 'none', item.parkingUnit || '', item.parkingPrice || '0', item.hasStore || false, item.hasCafe || false, item.hasTackle || false, item.lat, item.lng, item.isFavorite || false, item.address || "주소 정보 없음"); });
       cloudPointsLayer.addLayer(marker);
     });
@@ -2208,43 +2125,107 @@ window.openMarkerDeleteModal = function (docId, collectionName, displayName, onS
   document.getElementById('modalBackdrop')?.classList.add('active'); deleteModal.classList.add('active');
 };
 
+window.openCategoryEditBottomSheet = function (catName, catColor, event) {
+  if (event) event.stopPropagation();
+  document.getElementById('editTargetCategoryOldName').value = catName; document.getElementById('editCategoryNameInput').value = catName;
+  const modalTitle = document.querySelector('#categoryEditModal h3 span'); if (modalTitle) modalTitle.innerText = "카테고리 수정";
+  window.selectCategoryColor(catColor || '#4f46e5'); document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('categoryEditModal').classList.add('active');
+};
+
+window.openCategoryAddBottomSheet = function () {
+  const modalTitle = document.querySelector('#categoryEditModal h3 span'); if (modalTitle) modalTitle.innerText = "카테고리 추가";
+  document.getElementById('editTargetCategoryOldName').value = "NEW_CATEGORY"; document.getElementById('editCategoryNameInput').value = "";
+  window.selectCategoryColor('#4f46e5'); document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('categoryEditModal').classList.add('active');
+};
+
+window.saveCategoryEditData = function () {
+  const modeFlag = document.getElementById('editTargetCategoryOldName').value; 
+  const nextCatName = document.getElementById('editCategoryNameInput').value.trim(); 
+  const nextColor = document.getElementById('editCategoryColorInput').value;
+
+  if (!nextCatName) return alert("카테고리 명칭은 필수입니다.");
+  if (nextCatName.length > 8) return alert("카테고리 이름은 띄어쓰기 포함 8자 이내로 입력해 주세요.");
+
+  let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]'); 
+  let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
+
+  const systemCategories = ['전체', '즐겨찾기', '최근 추가된 화장실', '미분류', '공중화장실 정보'];
+
+  if (modeFlag === "NEW_CATEGORY") {
+    if (savedCatOrder.includes(nextCatName) || systemCategories.includes(nextCatName)) {
+      return alert("이미 존재하는 카테고리 명칭이거나 사용할 수 없는 이름입니다.");
+    }
+    savedCatOrder.push(nextCatName); savedCatColors[nextCatName] = nextColor;
+    localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
+    window.closeModals(); alert(`[${nextCatName}] 카테고리가 추가되었습니다.`); window.renderPointsManagementTab(); return;
+  }
+
+  if (nextCatName !== modeFlag && (savedCatOrder.includes(nextCatName) || systemCategories.includes(nextCatName))) {
+    return alert("이미 존재하는 카테고리 명칭이거나 사용할 수 없는 이름입니다.");
+  }
+
+  const idx = savedCatOrder.indexOf(modeFlag); 
+  if (idx !== -1) savedCatOrder[idx] = nextCatName;
+
+  delete savedCatColors[modeFlag]; savedCatColors[nextCatName] = nextColor;
+  localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
+
+  const batch = db.batch(); 
+  const targets = cachedFishingPoints.filter(p => (p.category || '미분류').trim() === modeFlag.trim());
+  targets.forEach(item => batch.update(db.collection('fishing_points').doc(item.id), { category: nextCatName, color: nextColor }));
+  
+  batch.commit().then(() => { 
+    if (window.currentActiveCategory === modeFlag) {
+      window.currentActiveCategory = nextCatName;
+      localStorage.setItem('pm-last-category', nextCatName);
+    }
+    window.closeModals(); 
+    window.renderPointsManagementTab();
+  }).catch(err => {
+    console.error(err);
+    alert("카테고리 데이터 동기화 중 오류가 발생했습니다.");
+  });
+};
+
+window.deleteCategoryWithGuard = function (catName, event) {
+  if (event) event.stopPropagation();
+  if (cachedFishingPoints.some(p => (p.category || '미분류').trim() === catName.trim())) { alert(`삭제 불가: [${catName}] 카테고리 내부에 소속된 포인트 마커가 존재합니다.`); return; }
+  if (confirm(`[${catName}] 카테고리를 삭제하시겠습니까?`)) {
+    let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]'); let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
+    savedCatOrder = savedCatOrder.filter(c => c !== catName); delete savedCatColors[catName];
+    localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
+    alert("카테고리가 삭제되었습니다."); window.renderPointsManagementTab();
+  }
+};
+
+window.selectCategoryColor = function (color) {
+  if (document.getElementById('editCategoryColorInput')) document.getElementById('editCategoryColorInput').value = color;
+  document.querySelectorAll('.color-palette-btn').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-color') === color));
+  const previewEl = document.getElementById('categoryEditMarkerIcon'); if (previewEl && typeof getFishingPointSvg === 'function') previewEl.innerHTML = getFishingPointSvg(color);
+};
+
+window.selectNewToiletHours = function (type, element) { window.selectedNewToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('newToiletHoursDetailRow').classList.toggle('active', type === '지정시간'); };
+window.selectParking = function (type, element) { selectedParkingType = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('parkingDetailRow').classList.toggle('active', type === 'paid'); };
+window.shiftParkingUnit = function (btn) { currentUnitIndex = (currentUnitIndex + 1) % parkingUnits.length; if (btn) btn.innerText = parkingUnits[currentUnitIndex]; };
+window.shiftEditPointParkingUnit = function (btn) { currentEditPointUnitIndex = (currentEditPointUnitIndex + 1) % editPointParkingUnits.length; if (btn) btn.innerText = editPointParkingUnits[currentEditPointUnitIndex]; };
+window.selectEditPointParking = function (type, element) { selectedEditPointParkingType = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editPointParkingDetailRow').classList.toggle('active', type === 'paid'); };
+window.selectEditToiletHours = function (type, element) { selectedToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editToiletHoursDetailRow').classList.toggle('active', type === '지정시간'); };
+
+
 // =========================================================================
 // [SHEET AREA] 실시간 연안 종합 타임라인 플로팅 팝업 정보 렌더링 엔진
 // =========================================================================
-
-// 팝업이 닫힐 때 지도의 인터랙션 잠금 상태를 원천 해제하는 전역 이벤트 핸들러 바인딩
-if (window.mapObj) {
-  window.mapObj.on('popupclose', function () {
-    window.mapObj.dragging.enable();
-    window.mapObj.touchZoom.enable();
-    window.mapObj.scrollWheelZoom.enable();
-    window.mapObj.doubleClickZoom.enable();
-    if (window.mapObj.boxZoom) window.mapObj.boxZoom.enable();
-    if (window.mapObj.keyboard) window.mapObj.keyboard.enable();
-  });
-}
-
 window.renderPointDetailBottomSheet = function (docId, name, category, color, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, lat, lng, isFavorite, dbSavedAddress) {
-  // 기존 지도 팝업 객체가 열려있다면 충돌 방지를 위해 즉시 초기화 클로즈
+  // 기존 지도 팝업 객체가 열려있다면 충돌 방지를 위해 즉시 클로즈
   map.closePopup();
 
-  // 줌 배율에 영향받지 않는 픽셀 기반 투영 기법 연산: 마커는 화면 하단 영역에 노출되고 모달 팝업 본체는 정중앙에 수렴함
-  const currentZoom = map.getZoom();
-  const projectedPoint = map.project([parseFloat(lat), lng], currentZoom);
-  const targetLatLng = map.unproject(projectedPoint.subtract([0, 150]), currentZoom);
-  map.setView(targetLatLng, currentZoom);
-
-  // 플로팅 팝업 조작 과정 중 배경 지도가 밀리거나 줌 오작동이 일어나는 현상을 방지하기 위해 맵 제어 기능 잠금
-  map.dragging.disable();
-  map.touchZoom.disable();
-  map.scrollWheelZoom.disable();
-  map.doubleClickZoom.disable();
-  if (map.boxZoom) map.boxZoom.disable();
-  if (map.keyboard) map.keyboard.disable();
+  // 요구사항 반영: 마커와 플로팅 화면(상단 배치)이 모두 중앙에 가독성 높게 들어오도록 위도(lat) 오프셋 값 정밀 보정 연산 후 부드러운 초점 이동
+  const targetLatOffset = parseFloat(lat) + 0.0028;
+  map.setView([targetLatOffset, lng], 16);
 
   if (dbSavedAddress && dbSavedAddress.startsWith('소재지 도로명 주소:')) dbSavedAddress = dbSavedAddress.replace('소재지 도로명 주소:', '').trim();
 
-  // 하단 고정 DOM 레이아웃 프레임을 Leaflet 전용 팝업 인스턴스 내부에 이식하기 위해 컨테이너 노드 샌드박싱 생성
+  // 기존 정적 마크업을 동적 노드로 복제하여 복합 이벤트 리스너의 독립 샌드박스 컴포넌트 확보
   const popupContainer = document.createElement('div');
   popupContainer.className = 'bottom-sheet-modal-native';
   popupContainer.innerHTML = document.getElementById('detailModal').innerHTML;
@@ -2303,36 +2284,10 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
 
   if (weatherOpenBtn) {
     weatherOpenBtn.onclick = function (e) {
-      e.stopPropagation();
-      const weatherModal = document.getElementById('weatherModal');
-      if (weatherModal) {
-        weatherModal.classList.add('active');
-        weatherModal.style.setProperty('display', 'flex', 'important');
-        weatherModal.style.setProperty('opacity', '1', 'important');
-        weatherModal.style.setProperty('visibility', 'visible', 'important');
-      }
-      const backdrop = document.getElementById('modalBackdrop');
-      if (backdrop) {
-        backdrop.classList.add('active');
-        backdrop.style.setProperty('display', 'block', 'important');
-      }
-      try {
-        const titleLabel = document.getElementById('lblWeatherModalTitle');
-        if (titleLabel) titleLabel.innerText = name;
-      } catch (err) {}
-      try {
-        const wIcon = document.getElementById('weatherModalMarkerIcon');
-        if (wIcon) {
-          if (category === 'toilet') {
-            wIcon.innerHTML = `<svg width="14" height="17" viewBox="0 0 36 42"><path d="M18 0C8.06 0 0 8.06 0 18C0 28.54 18 42 18 42C18 42 36 28.54 36 18C36 8.06 27.94 0 18 0Z" fill="#ff9500"/><circle cx="18" cy="16" r="5" fill="#ffffff"/><path d="M14 24H22V27H14V24Z" fill="#ffffff"/></svg>`;
-          } else if (typeof getFishingPointSvg === 'function') {
-            wIcon.innerHTML = getFishingPointSvg(color).replace('width="26" height="39"', 'width="20" height="30"');
-          }
-        }
-      } catch (err) {}
-      try {
-        if (typeof window.loadTimelineWithOptimisticUI === 'function') window.loadTimelineWithOptimisticUI(lat, lng);
-      } catch (err) {}
+      e.stopPropagation(); document.getElementById('lblWeatherModalTitle').innerText = name;
+      const wIcon = document.getElementById('weatherModalMarkerIcon');
+      if (wIcon) wIcon.innerHTML = (category === 'toilet') ? `<svg width="14" height="17" viewBox="0 0 36 42"><path d="M18 0C8.06 0 0 8.06 0 18C0 28.54 18 42 18 42C18 42 36 28.54 36 18C36 8.06 27.94 0 18 0Z" fill="#ff9500"/><circle cx="18" cy="16" r="5" fill="#ffffff"/><path d="M14 24H22V27H14V24Z" fill="#ffffff"/></svg>` : getFishingPointSvg(color).replace('width="26" height="39"', 'width="20" height="30"');
+      document.getElementById('weatherModal')?.classList.add('active'); window.loadTimelineWithOptimisticUI(lat, lng);
     };
   }
 
@@ -2342,13 +2297,13 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
     naviOpenBtn.onclick = function (e) { e.stopPropagation(); window.open(localStorage.getItem('navi-app') === 'naver' ? `https://map.naver.com/index.nhn?elat=${lat}&elng=${lng}&etext=${encodeURIComponent(name)}&menu=route` : `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`, '_blank'); };
   }
 
-  // autoPan 속성을 true로 변경하여 팝업이 화면 구석에 생성될 때 지도가 정상적으로 시야를 추적하도록 수정
+  // Leaflet 내장 팝업 엔진 컴포넌트를 호출하여 마커 직상단에 고정 디스플레이 구현 (자동 스크롤 및 포커싱 방어)
   L.popup({
     closeButton: false,
-    autoPan: true,
-    maxWidth: 400,
-    minWidth: 400,
-    offset: L.point(0, -40)
+    autoPan: false,
+    maxWidth: 310,
+    minWidth: 310,
+    offset: L.point(0, -26)
   })
   .setLatLng([lat, lng])
   .setContent(popupContainer)
