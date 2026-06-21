@@ -588,7 +588,10 @@ textarea,
     color: var(--text-muted);
     text-align: left;
 }
-
+.modal-form-group button {
+    width: 30% !important;
+    
+}
 .form-input,
 .form-select,
 .form-textarea,
