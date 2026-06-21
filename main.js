@@ -1808,7 +1808,14 @@ function updateVisibleMarkersOnMap() {
     if (userLatLng) targetToilets.sort((a, b) => userLatLng.distanceTo([a.lat, a.lng]) - userLatLng.distanceTo([b.lat, b.lng]));
     targetToilets.slice(0, 20).forEach(item => {
       if (!item || item.lat === undefined || item.lng === undefined || isNaN(item.lat) || isNaN(item.lng) || item.lat === null || item.lng === null) return;
-      const marker = L.marker([item.lat, item.lng], { icon: L.divIcon({ html: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff9500" stroke-width="2"><path d="M7 2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM5 12h14v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4v-3zM9 19v3M15 19v3"/></svg>`, className: 'custom-marker-wrapper-toilet', iconSize: [24, 24], iconAnchor: [12, 12] }) });
+      
+      // 화장실 마커도 pm-color-dot과 통일성 있는 물방울 형태로 변경 (크기 24x36 자동 조절)
+      const toiletHtml = `<svg width="24" height="36" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#ff9500"/>
+        <circle cx="12" cy="12" r="4" fill="#ffffff"/>
+      </svg>`;
+      
+      const marker = L.marker([item.lat, item.lng], { icon: L.divIcon({ html: toiletHtml, className: 'custom-marker-wrapper-toilet', iconSize: [24, 36], iconAnchor: [12, 36] }) });
       marker.on('click', () => { let cleanAddr = item.dbSavedAddress || item.address || '주소 정보 없음'; if (cleanAddr.startsWith('소재지 도로명 주소:')) cleanAddr = cleanAddr.replace('소재지 도로명 주소:', '').trim(); window.renderPointDetailBottomSheet(item.id, item.name || '공중화장실', 'toilet', '#ff9500', item.memo || '', '', '', 0, false, false, false, item.lat, item.lng, false, cleanAddr); });
       toiletPointsLayer.addLayer(marker);
     });
@@ -1817,7 +1824,11 @@ function updateVisibleMarkersOnMap() {
 map.on('moveend zoomend', updateVisibleMarkersOnMap);
 
 function getFishingPointSvg(color) {
-  return `<svg width="26" height="39" viewBox="0 0 36 54" xmlns="http://www.w3.org/2000/svg" class="fishing-marker-svg-anchor"><path stroke-miterlimit="4" stroke-width="2" stroke="${color}" fill="${color}" d="m17.92332,2.23007c10.56135,0 17.35337,7.23988 17.35337,16.73988c0,6.3 -3.7,12.3 -7,18l-4.7767,7.06625l-10.82147,-14.71349l9.9681,6.32147l5.03742,-9.40184c3.34356,-5.96319 1.81902,-13.27301 -2.79755,-16.35276c-4.61656,-3.07976 -9.56595,-2.69938 -13.69325,0.6227c-4.1273,3.32208 -5.29064,10.78758 -3.27837,15.73735c2.01227,4.94977 1.37193,3.3194 2.89187,6.0878l10.53198,15.06992l-3.26204,5.3626l-11.47546,-16.21472c-3,-4.57669 -6.02454,-7.93865 -5.7454,-17.57975c0.27914,-9.6411 6.50613,-16.7454 17.06748,-16.7454z"/><path stroke="${color}" fill="#ffffff" d="m18.38343,27.7546c-3.94028,0 -7.1319,-3.53481 -7.1319,-7.89877c0,-4.36396 3.19162,-7.89877 7.1319,-7.89877c3.94028,0 7.1319,3.53481 7.1319,7.89877c0,4.36396 -3.19162,7.89877 -7.1319,7.89877z" stroke-width="2"/></svg>`;
+  // 낚시 포인트 전용 깔끔한 물방울(핀) 디자인 및 pm-color-dot 통일화 구조
+  return `<svg width="26" height="39" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg" class="fishing-marker-svg-anchor">
+    <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="${color}"/>
+    <circle cx="12" cy="12" r="4" fill="#ffffff"/>
+  </svg>`;
 }
 
 db.collection('fishing_points').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
