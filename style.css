@@ -593,7 +593,6 @@ textarea,
 .form-select,
 .form-textarea,
 .modal-form-group input[type="text"],
-.modal-form-group input[type="number"],
 .modal-form-group select,
 .modal-form-group textarea {
     width: 100%;
@@ -606,7 +605,9 @@ textarea,
     font-size: 14px;
     outline: none;
 }
-
+.modal-form-group input[type="number"] {
+    width: 50%;
+}
 .form-textarea,
 .modal-form-group textarea {
     resize: none;
