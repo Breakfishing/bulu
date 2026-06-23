@@ -611,6 +611,9 @@ textarea,
     outline: none;
 }
 
+#editPointCategory, #editPointParkingPrice, #limitMinSize, #limitMaxSize {
+    text-align: center;
+}
 
 
 .form-textarea,
