@@ -3015,7 +3015,7 @@ textarea,
     align-items: center;
 }
 
-#limitMaxSize, #limitMinSize {
+#limitMaxSize, #limitMinSize, .ban-month-input-fix {
     width: 10%;
 }
 
