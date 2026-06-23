@@ -3017,7 +3017,7 @@ textarea,
 }
 
 #limitMaxSize, #limitMinSize {
-    width: 30%;
+    width: 10%;
 }
 
 /* 우측 텍스트 정보 박스 컨테이너 */
