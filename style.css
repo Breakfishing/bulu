@@ -449,11 +449,6 @@ textarea,
     }
 }
 
-.radar-accuracy-circle {
-    animation: radar-glow 2s infinite ease-in-out;
-    transition: r 0.5s ease-out;
-}
-
 .my-location-marker-container {
     overflow: visible !important;
 }
@@ -1708,6 +1703,10 @@ textarea,
     box-sizing: border-box;
 }
 
+.points-management-wrapper .pm-container h3 {
+    margin-top: 10px;
+}
+
 .pm-header {
     height: 54px;
     display: flex;
@@ -1780,6 +1779,10 @@ textarea,
     padding: 20px;
     display: flex;
     flex-direction: column;
+}
+
+.points-management-wrapper .pm-container h3 {
+
 }
 
 .pm-section {
