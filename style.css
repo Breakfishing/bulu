@@ -1816,7 +1816,6 @@ textarea,
 .pm-list-group {
     background: var(--bg-panel);
     border-radius: 12px;
-    height: 300px;
     border: 1px solid var(--border-color);
     overflow: hidden;
 }
