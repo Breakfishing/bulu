@@ -865,12 +865,30 @@ window.openCategoryManageModal = function () {
 
   listContainer.innerHTML = '';
   
-  let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]').filter(cat => !['전체', '즐겨찾기', '공중화장실 정보', '최근 추가된 화장실', 'toilet', '미분류'].includes(cat));
-  let currentCats = [...new Set(cachedFishingPoints.map(p => String(p.category || '미분류').trim()))].filter(cat => !['전체', '즐겨찾기', '공중화장실 정보', '최근 추가된 화장실', 'toilet', '미분류'].includes(cat));
+  // 1. 로컬 스토리지에 저장된 카테고리 순서 배열 추출 및 유효성 검사
+  let savedCatOrder = [];
+  try {
+    const rawOrder = localStorage.getItem('pm-category-order');
+    if (rawOrder) {
+      savedCatOrder = JSON.parse(rawOrder).filter(cat => cat && typeof cat === 'string' && cat.trim() !== '' && !['전체', '즐겨찾기', '공중화장실 정보', '최근 추가된 화장실', 'toilet', '미분류'].includes(cat.trim()));
+    }
+  } catch (e) {
+    savedCatOrder = [];
+  }
 
+  // 2. 현재 적재된 포인트 데이터 내의 커스텀 카테고리 추출
+  let currentCats = [...new Set(cachedFishingPoints.map(p => p.category ? String(p.category).trim() : ''))]
+    .filter(cat => cat !== '' && !['전체', '즐겨찾기', '공중화장실 정보', '최근 추가된 화장실', 'toilet', '미분류'].includes(cat));
+
+  // 3. 로컬 스토리지 정렬 데이터와 실제 카테고리 데이터 통합
   let finalCatOrder = [...savedCatOrder];
-  currentCats.forEach(cat => { if (!finalCatOrder.includes(cat)) finalCatOrder.push(cat); });
+  currentCats.forEach(cat => { 
+    if (!finalCatOrder.includes(cat)) finalCatOrder.push(cat); 
+  });
   
+  // 최종 데이터 정제 가드 (잘못된 문자열 정화)
+  finalCatOrder = [...new Set(finalCatOrder)].filter(cat => cat && typeof cat === 'string' && cat.trim() !== '' && cat !== 'undefined' && cat !== 'null');
+
   let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
 
   if (finalCatOrder.length === 0) {
@@ -880,14 +898,15 @@ window.openCategoryManageModal = function () {
 
   finalCatOrder.forEach(catName => {
     const row = document.createElement('div');
-    row.className = 'pm-item'; // 기존 포인트 리스트 스타일 명세서 상속을 위한 클래스 일치화
+    row.className = 'pm-item'; // CSS 명세서의 규격 디자인을 온전히 상속받도록 명시적 일치화
     row.setAttribute('data-name', catName);
     
     const matchPoints = cachedFishingPoints.filter(p => String(p.category || '미분류').trim() === catName.trim());
     const color = matchPoints.length > 0 ? (matchPoints[0].color || '#007aff') : (savedCatColors[catName] || '#007aff');
 
+    // 충돌을 일으키던 인라인 스타일을 완전 제거하고 CSS 클래스 구조만을 정형화하여 매핑
     row.innerHTML = `
-      <div class="pm-item-left" style="width: calc(100% - 100px); display: flex; align-items: center;">
+      <div class="pm-item-left">
         <div class="pm-drag-handle pm-category-drag-handle" style="touch-action: none;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--text-main)" stroke="var(--text-main)" stroke-width="2.5">
             <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -895,9 +914,9 @@ window.openCategoryManageModal = function () {
             <line x1="3" y1="18" x2="21" y2="18"></line>
           </svg>
         </div>
-        <div class="pm-color-dot" style="background-color: ${color}; margin-right: 8px; flex-shrink: 0;"></div>
-        <div class="pm-item-info" style="padding-left: 4px; min-width: 0; flex: 1;">
-          <span class="pm-item-name" style="outline:none; font-weight:600; color: var(--text-main);">${catName}</span>
+        <div class="pm-color-dot" style="background-color: ${color};"></div>
+        <div class="pm-item-info">
+          <span class="pm-item-name">${catName}</span>
         </div>
       </div>
       <div class="pm-item-actions">
