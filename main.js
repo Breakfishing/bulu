@@ -794,7 +794,8 @@ map.on('locationfound', function (e) {
   if (window.currentAccuracyCircle) {
     window.currentAccuracyCircle.setLatLng(e.latlng).setRadius(displayRadius);
   } else {
-    window.currentAccuracyCircle = L.circle(e.latlng, { radius: displayRadius, color: '#007aff', weight: 1, fillColor: '#007aff', className: 'radar-accuracy-circle' }).addTo(map);
+    // interactive: false 옵션을 추가하여 다른 마커 요소들과의 포인터 간섭을 완전히 차단합니다.
+    window.currentAccuracyCircle = L.circle(e.latlng, { radius: displayRadius, color: '#007aff', weight: 1, fillColor: '#007aff', className: 'radar-accuracy-circle', interactive: false }).addTo(map);
   }
 
   if (!userMarker) userMarker = L.marker(e.latlng, { icon: myLocationIcon }).addTo(map);
