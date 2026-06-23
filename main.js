@@ -854,7 +854,6 @@ window.toggleToiletLayer = function (element) {
   updateVisibleMarkersOnMap();
 };
 
-
 // =========================================================================
 // [TAB AREA 3] 포인트 관리 대시보드 시스템, 드래그 소팅 및 카테고리 롱프레스 모듈
 // =========================================================================
@@ -892,18 +891,25 @@ window.bindCategoryLongPressEngine = function() {
 
   const cancelPress = (e) => {
     if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
-    if (isLongPressActionTriggered) { e.preventDefault(); e.stopPropagation(); }
+    if (isLongPressActionTriggered) { 
+      if (e.cancelable) e.preventDefault(); 
+      e.stopPropagation(); 
+    }
   };
 
   container.addEventListener('mousedown', startPress);
   container.addEventListener('touchstart', startPress, { passive: true });
   container.addEventListener('mouseup', cancelPress);
   container.addEventListener('mouseleave', cancelPress);
-  container.addEventListener('touchend', cancelPress);
-  container.addEventListener('touchmove', cancelPress, { passive: true });
+  container.addEventListener('touchend', cancelPress, { passive: false });
+  container.addEventListener('touchmove', cancelPress, { passive: false });
 
   container.addEventListener('click', (e) => {
-    if (isLongPressActionTriggered) { e.preventDefault(); e.stopPropagation(); isLongPressActionTriggered = false; }
+    if (isLongPressActionTriggered) { 
+      if (e.cancelable) e.preventDefault(); 
+      e.stopPropagation(); 
+      isLongPressActionTriggered = false; 
+    }
   }, true);
 };
 
