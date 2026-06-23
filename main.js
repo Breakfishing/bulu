@@ -1754,12 +1754,15 @@ window.toggleNaviApp = function (checkbox) {
       if (nextApp === 'naver') {
         switchBtn.style.background = '#03C75A';
         switchBtn.style.borderColor = '#03C75A';
+        switchBtn.style.borderRadius = '26px';
       } else if (nextApp === 'kakao') {
         switchBtn.style.background = '#FEE500';
         switchBtn.style.borderColor = '#FEE500';
+        switchBtn.style.borderRadius = '26px';
       } else if (nextApp === 'tmap') {
         switchBtn.style.background = 'linear-gradient(135deg, #007BC7, #6F359E)';
         switchBtn.style.borderColor = 'transparent';
+        switchBtn.style.borderRadius = '26px';
       }
     }
   }
