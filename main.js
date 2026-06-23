@@ -859,12 +859,12 @@ window.openCategoryManageModal = function () {
   if (backdrop) backdrop.classList.add('active');
   if (modal) modal.classList.add('active');
 
-  const listContainer = document.getElementById('pm-manage-category-list');
+  // 엘리먼트 ID 불일치 방지를 위한 매핑 폴백 가드 구성
+  const listContainer = document.getElementById('pm-manage-category-list') || document.getElementById('pm-list-group');
   if (!listContainer) return;
 
   listContainer.innerHTML = '';
   
-  // 로컬 스토리지 순서값과 실제 데이터상의 카테고리를 실시간 병합하여 누락 원천 차단
   let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]').filter(cat => !['전체', '즐겨찾기', '공중화장실 정보', '최근 추가된 화장실', 'toilet', '미분류'].includes(cat));
   let currentCats = [...new Set(cachedFishingPoints.map(p => String(p.category || '미분류').trim()))].filter(cat => !['전체', '즐겨찾기', '공중화장실 정보', '최근 추가된 화장실', 'toilet', '미분류'].includes(cat));
 
@@ -880,23 +880,25 @@ window.openCategoryManageModal = function () {
 
   finalCatOrder.forEach(catName => {
     const row = document.createElement('div');
-    row.className = 'pm-category-manage-item';
+    row.className = 'pm-item'; // 기존 포인트 리스트 스타일 명세서 상속을 위한 클래스 일치화
     row.setAttribute('data-name', catName);
     
     const matchPoints = cachedFishingPoints.filter(p => String(p.category || '미분류').trim() === catName.trim());
     const color = matchPoints.length > 0 ? (matchPoints[0].color || '#007aff') : (savedCatColors[catName] || '#007aff');
 
     row.innerHTML = `
-      <div class="pm-item-left">
-        <div class="pm-category-drag-handle" style="touch-action: none;">
+      <div class="pm-item-left" style="width: calc(100% - 100px); display: flex; align-items: center;">
+        <div class="pm-drag-handle pm-category-drag-handle" style="touch-action: none;">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--text-main)" stroke="var(--text-main)" stroke-width="2.5">
             <line x1="3" y1="12" x2="21" y2="12"></line>
             <line x1="3" y1="6" x2="21" y2="6"></line>
             <line x1="3" y1="18" x2="21" y2="18"></line>
           </svg>
         </div>
-        <div class="pm-color-dot" style="background-color: ${color}; margin-right: 8px;"></div>
-        <span class="pm-category-manage-name">${catName}</span>
+        <div class="pm-color-dot" style="background-color: ${color}; margin-right: 8px; flex-shrink: 0;"></div>
+        <div class="pm-item-info" style="padding-left: 4px; min-width: 0; flex: 1;">
+          <span class="pm-item-name" style="outline:none; font-weight:600; color: var(--text-main);">${catName}</span>
+        </div>
       </div>
       <div class="pm-item-actions">
         <button class="pm-action-btn edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
@@ -934,16 +936,16 @@ window.bindCategoryDragAndDropEvents = function (container) {
   container.addEventListener('pointerdown', (e) => {
     const handle = e.target.closest('.pm-category-drag-handle');
     if (!handle) return;
-    const item = handle.closest('.pm-category-manage-item');
+    const item = handle.closest('.pm-item');
     if (!item) return;
     e.preventDefault();
     item.classList.add('dragging');
     handle.setPointerCapture(e.pointerId);
 
     const onPointerMove = (evt) => {
-      const draggingItem = container.querySelector('.pm-category-manage-item.dragging');
+      const draggingItem = container.querySelector('.pm-item.dragging');
       if (!draggingItem) return;
-      const nextSibling = [...container.querySelectorAll('.pm-category-manage-item:not(.dragging)')].find(sib => evt.clientY < sib.getBoundingClientRect().top + sib.getBoundingClientRect().height / 2);
+      const nextSibling = [...container.querySelectorAll('.pm-item:not(.dragging)')].find(sib => evt.clientY < sib.getBoundingClientRect().top + sib.getBoundingClientRect().height / 2);
       if (nextSibling) container.insertBefore(draggingItem, nextSibling);
       else container.appendChild(draggingItem);
     };
@@ -955,7 +957,7 @@ window.bindCategoryDragAndDropEvents = function (container) {
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerUp);
 
-      const newOrder = [...container.querySelectorAll('.pm-category-manage-item')].map(el => el.getAttribute('data-name'));
+      const newOrder = [...container.querySelectorAll('.pm-item')].map(el => el.getAttribute('data-name'));
       localStorage.setItem('pm-category-order', JSON.stringify(newOrder));
 
       if (typeof window.renderPointsManagementTab === 'function') {
