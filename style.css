@@ -2103,7 +2103,7 @@ textarea,
 }
 
 /* =========================================================================
-   GROUP 9: 공지사항 및 이벤트 전용 직각화 게시판 규격 시스템
+    GROUP 9: 공지사항 및 이벤트 전용 직각화 게시판 규격 시스템
    ========================================================================= */
 .board-sub-tab-container {
     display: flex;
@@ -2366,7 +2366,7 @@ textarea,
     user-select: none;
 }
 
-/* 이벤트 기간 입력 폼 그룹 스타일 유니파이드 처리 */
+/* 이벤트 및 금어기 기간 입력 폼 그룹 스타일 유니파이드 처리 */
 .modal-form-group.ban-detail-row-fix.event {
     display: flex;
     flex-direction: column;
@@ -2383,38 +2383,57 @@ textarea,
     text-align: left;
 }
 
-.modal-form-group.ban-detail-row-fix.event .ban-detail-input-wrapper {
+/* 이벤트 및 금어기 공통 기간 입력 구조적 정렬 필드 스택 */
+.event-duration-flex-field {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     width: 100%;
     box-sizing: border-box;
 }
 
-/* date 타입 인풋 필드를 모달 메인 인풋 필드 디자인 스택과 완전 통합 */
-.modal-form-group.ban-detail-row-fix.event .ban-detail-input-wrapper input[type="date"] {
+.event-duration-flex-field span {
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+/* 모달 내부 개별/기간 입력 요소 공통 메인 디자인 스택 규격 통합 */
+.modal-input-main {
     flex: 1;
     height: 40px;
-    padding: 0 12px;
+    padding: 0 10px;
     border: 1px solid var(--border-color);
-    background: var(--bg-panel);
+    background: var(--bg-main);
     color: var(--text-main);
-    font-size: 13.5px;
+    font-size: 14px;
     font-family: inherit;
-    border-radius: 6px;
+    border-radius: 8px;
     outline: none;
     box-sizing: border-box;
+    text-align: center;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.modal-form-group.ban-detail-row-fix.event .ban-detail-input-wrapper input[type="date"]:focus {
-    border-color: var(--primary-color);
+/* Date 타입 피커 브라우저 고유 정렬 텍스트 패딩 조율 */
+input[type="date"].modal-input-main {
+    text-align: left;
+    padding: 0 12px;
 }
 
-.modal-form-group.ban-detail-row-fix.event .event-range-splitter {
-    color: var(--text-muted);
+.modal-input-main:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    background: var(--bg-panel);
+}
+
+.event-range-splitter {
+    color: var(--text-muted) !important;
     font-size: 14px;
     font-weight: 600;
+    margin: 0 4px;
     flex-shrink: 0;
     user-select: none;
 }
