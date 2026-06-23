@@ -2873,6 +2873,10 @@ textarea,
     align-items: center;
 }
 
+.limitMaxSize {
+    width: 30%;
+}
+
 /* 우측 텍스트 정보 박스 컨테이너 */
 .info-card-content-box {
     flex: 1;
