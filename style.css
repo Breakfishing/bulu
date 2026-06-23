@@ -2092,6 +2092,17 @@ textarea,
     background: var(--bg-main) !important;
 }
 
+/* 신규 모달 내 하단 배치 영역 스타일 정의 */
+.category-manage-add-row {
+    margin-top: 15px;
+    width: 100%;
+    display: flex;
+}
+
+.category-manage-add-row .btn-main {
+    flex: 1;
+}
+
 /* =========================================================================
     GROUP 9: 공지사항 및 이벤트 전용 직각화 게시판 규격 시스템
    ========================================================================= */
@@ -2243,7 +2254,9 @@ textarea,
     width: 100%;
 }
 
-.notice-header-write-btn {
+/* 신규 포인트 카테고리 관리 헤더 클래스 스택 병합 처리 */
+.notice-header-write-btn,
+.manage-header-write-btn {
     position: absolute;
     right: 16px;
     top: 50%;
@@ -2260,7 +2273,8 @@ textarea,
     transition: background-color 0.2s;
 }
 
-.notice-header-write-btn:active {
+.notice-header-write-btn:active,
+.manage-header-write-btn:active {
     background-color: var(--grid-item-bg);
 }
 
@@ -2351,7 +2365,8 @@ textarea,
 #noticeWriteModal,
 #fishingBanModal,
 #sizeLimitModal,
-#knotGuideModal {
+#knotGuideModal,
+#categoryManageModal {
     display: none !important;
     flex-direction: column !important;
     align-items: stretch !important;
@@ -2362,7 +2377,8 @@ textarea,
 #noticeWriteModal.active,
 #fishingBanModal.active,
 #sizeLimitModal.active,
-#knotGuideModal.active {
+#knotGuideModal.active,
+#categoryManageModal.active {
     display: flex !important;
 }
 
@@ -2822,18 +2838,18 @@ textarea,
     animation: hcSpinLinearInfinite 0.85s linear infinite !important;
 }
 
-.hc-main-card.cloudy .hc-cloud-day {
+.hc-premium-card .hc-main-card.cloudy .hc-cloud-day {
     display: block !important;
     opacity: 0.85 !important;
 }
 
-.hc-main-card.cloudy .hc-sun-node circle,
-.hc-main-card.cloudy .hc-moon-node path {
+.hc-premium-card .hc-main-card.cloudy .hc-sun-node circle,
+.hc-premium-card .hc-main-card.cloudy .hc-moon-node path {
     opacity: 0.35 !important;
     filter: blur(1px) drop-shadow(0 0 0 transparent) !important;
 }
 
-.hc-main-card.cloudy .hc-yunsul-node ellipse {
+.hc-premium-card .hc-main-card.cloudy .hc-yunsul-node ellipse {
     opacity: 0.12 !important;
     animation: none !important;
 }
