@@ -1724,7 +1724,7 @@ window.toggleNaviApp = function (checkbox) {
     // 배경색이 시각적으로 자연스럽게 감싸도록 최소한의 인라인 스타일 보정 부여
     label.style.transition = 'all 0.25s ease';
     label.style.display = 'inline-block';
-    label.style.padding = '6px 14px';
+    label.style.padding = '6px 9px';
     label.style.borderRadius = '30px';
     label.style.fontWeight = '600';
 
