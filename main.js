@@ -750,7 +750,6 @@ window.mapObj = map;
 let cloudPointsLayer = L.layerGroup().addTo(map);
 let toiletPointsLayer = L.layerGroup().addTo(map);
 window.isToiletLayerActive = false;
-window.currentAccuracyCircle = null;
 
 const myLocationIcon = L.divIcon({
   html: `
@@ -789,15 +788,8 @@ window.toggleMapLayer = function () {
 
 map.on('locationfound', function (e) {
   userLatLng = e.latlng;
-  const displayRadius = Math.min(e.accuracy, 150);
 
-  if (window.currentAccuracyCircle) {
-    window.currentAccuracyCircle.setLatLng(e.latlng).setRadius(displayRadius);
-  } else {
-    // interactive: false 옵션을 추가하여 다른 마커 요소들과의 포인터 간섭을 완전히 차단합니다.
-    window.currentAccuracyCircle = L.circle(e.latlng, { radius: displayRadius, color: '#007aff', weight: 1, fillColor: '#007aff', className: 'radar-accuracy-circle', interactive: false }).addTo(map);
-  }
-
+  // 중복되는 L.circle(정확도 반경 서클) 랜더링 엔진 로직을 완전히 제거했습니다.
   if (!userMarker) userMarker = L.marker(e.latlng, { icon: myLocationIcon }).addTo(map);
   else userMarker.setLatLng(e.latlng);
 
