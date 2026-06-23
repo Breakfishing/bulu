@@ -859,12 +859,13 @@ window.openCategoryManageModal = function () {
   if (backdrop) backdrop.classList.add('active');
   if (modal) modal.classList.add('active');
 
-  // 명세서 규격에 맞춰 ID 단어 순서 교정(pm-category-manage-list) 및 클래스 선택자 폴백 가드 수립
+  // 엘리먼트 ID 불일치 방지를 위한 매핑 폴백 가드 구성
   const listContainer = document.getElementById('pm-category-manage-list') || document.querySelector('#categoryManageModal .pm-list-group');
   if (!listContainer) return;
 
   listContainer.innerHTML = '';
   
+  // 1. 로컬 스토리지에 저장된 카테고리 순서 배열 추출 및 유효성 검사
   let savedCatOrder = [];
   try {
     const rawOrder = localStorage.getItem('pm-category-order');
@@ -875,9 +876,11 @@ window.openCategoryManageModal = function () {
     savedCatOrder = [];
   }
 
+  // 2. 현재 적재된 포인트 데이터 내의 커스텀 카테고리 추출
   let currentCats = [...new Set(cachedFishingPoints.map(p => p.category ? String(p.category).trim() : ''))]
     .filter(cat => cat !== '' && !['전체', '즐겨찾기', '공중화장실 정보', '최근 추가된 화장실', 'toilet', '미분류'].includes(cat));
 
+  // 3. 로컬 스토리지 정렬 데이터와 실제 카테고리 데이터 통합
   let finalCatOrder = [...savedCatOrder];
   currentCats.forEach(cat => { 
     if (!finalCatOrder.includes(cat)) finalCatOrder.push(cat); 
@@ -889,59 +892,110 @@ window.openCategoryManageModal = function () {
 
   if (finalCatOrder.length === 0) {
     listContainer.innerHTML = '<div class="pm-empty-msg">등록된 커스텀 카테고리가 없습니다.</div>';
-    return;
+  } else {
+    finalCatOrder.forEach(catName => {
+      const row = document.createElement('div');
+      row.className = 'pm-item'; 
+      row.setAttribute('data-name', catName);
+      
+      const matchPoints = cachedFishingPoints.filter(p => String(p.category || '미분류').trim() === catName.trim());
+      const color = matchPoints.length > 0 ? (matchPoints[0].color || '#007aff') : (savedCatColors[catName] || '#007aff');
+
+      row.innerHTML = `
+        <div class="pm-item-left">
+          <div class="pm-drag-handle pm-category-drag-handle" style="touch-action: none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--text-main)" stroke="var(--text-main)" stroke-width="2.5">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+          </div>
+          <div class="pm-color-dot" style="background-color: ${color}; flex-shrink: 0;"></div>
+          <div class="pm-item-info" style="flex: 1; min-width: 0;">
+            <span class="pm-item-name">${catName}</span>
+          </div>
+        </div>
+        <div class="pm-item-actions">
+          <button class="pm-action-btn edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+          <button class="pm-action-btn delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+        </div>
+      `;
+
+      const eBtn = row.querySelector('.edit');
+      if (eBtn) {
+        eBtn.onclick = (e) => {
+          e.stopPropagation();
+          window.openCategoryEditBottomSheet(catName, color, e);
+          
+          // 수정 완료되거나 취소될 때 관리 모달이 완전히 닫히는 현상을 방지하는 트리거 훅 연동
+          setTimeout(() => {
+            const editModal = document.getElementById('categoryEditModal') || document.querySelector('.bottom-sheet-modal-native.active') || document.querySelector('.bottom-sheet.active');
+            if (editModal) {
+              const saveBtns = editModal.querySelectorAll('.modal-btn.save, .btn-main');
+              const cancelBtns = editModal.querySelectorAll('.modal-btn.cancel, .btn-sub');
+              
+              saveBtns.forEach(btn => {
+                if (!btn.dataset.hooked) {
+                  btn.addEventListener('click', () => {
+                    setTimeout(() => { window.openCategoryManageModal(); }, 150);
+                  }, { once: true });
+                  btn.dataset.hooked = 'true';
+                }
+              });
+              
+              cancelBtns.forEach(btn => {
+                if (!btn.dataset.hooked) {
+                  btn.addEventListener('click', () => {
+                    setTimeout(() => { window.openCategoryManageModal(); }, 150);
+                  }, { once: true });
+                  btn.dataset.hooked = 'true';
+                }
+              });
+            }
+          }, 250);
+        };
+      }
+
+      const dBtn = row.querySelector('.delete');
+      if (dBtn) {
+        dBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (typeof window.deleteCategoryWithGuard === 'function') {
+            window.deleteCategoryWithGuard(catName, e);
+            setTimeout(() => { window.openCategoryManageModal(); }, 100);
+          }
+        };
+      }
+
+      listContainer.appendChild(row);
+    });
   }
 
-  finalCatOrder.forEach(catName => {
-    const row = document.createElement('div');
-    row.className = 'pm-item'; 
-    row.setAttribute('data-name', catName);
-    
-    const matchPoints = cachedFishingPoints.filter(p => String(p.category || '미분류').trim() === catName.trim());
-    const color = matchPoints.length > 0 ? (matchPoints[0].color || '#007aff') : (savedCatColors[catName] || '#007aff');
-
-    // 부모 flex 요소 하위에서 text-overflow가 작동할 때 너비가 붕괴되는 현상을 막기 위해 flex: 1 인라인 주입
-    row.innerHTML = `
-      <div class="pm-item-left">
-        <div class="pm-drag-handle pm-category-drag-handle" style="touch-action: none;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--text-main)" stroke="var(--text-main)" stroke-width="2.5">
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </div>
-        <div class="pm-color-dot" style="background-color: ${color}; flex-shrink: 0;"></div>
-        <div class="pm-item-info" style="flex: 1; min-width: 0;">
-          <span class="pm-item-name">${catName}</span>
-        </div>
-      </div>
-      <div class="pm-item-actions">
-        <button class="pm-action-btn edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
-        <button class="pm-action-btn delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
-      </div>
-    `;
-
-    const eBtn = row.querySelector('.edit');
-    if (eBtn) {
-      eBtn.onclick = (e) => {
-        e.stopPropagation();
-        window.openCategoryEditBottomSheet(catName, color, e);
-      };
-    }
-
-    const dBtn = row.querySelector('.delete');
-    if (dBtn) {
-      dBtn.onclick = (e) => {
-        e.stopPropagation();
-        if (typeof window.deleteCategoryWithGuard === 'function') {
-          window.deleteCategoryWithGuard(catName, e);
-          setTimeout(() => { window.openCategoryManageModal(); }, 100);
+  // 카테고리 최대 생성 개수 가드 및 추가 버튼 상태 동적 제어 (최대 10개)
+  const addBtnRow = modal.querySelector('.category-manage-add-row') || document.querySelector('.category-manage-add-row');
+  if (addBtnRow) {
+    const addBtn = addBtnRow.querySelector('.btn-main');
+    if (addBtn) {
+      if (finalCatOrder.length >= 10) {
+        addBtn.disabled = true;
+        addBtn.style.opacity = '0.4';
+        addBtn.style.pointerEvents = 'none';
+        
+        if (!addBtn.dataset.limitHooked) {
+          addBtn.addEventListener('click', function (evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+            return false;
+          }, true);
+          addBtn.dataset.limitHooked = 'true';
         }
-      };
+      } else {
+        addBtn.disabled = false;
+        addBtn.style.opacity = '1';
+        addBtn.style.pointerEvents = 'auto';
+      }
     }
-
-    listContainer.appendChild(row);
-  });
+  }
 
   window.bindCategoryDragAndDropEvents(listContainer);
 };
