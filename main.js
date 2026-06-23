@@ -863,19 +863,28 @@ window.openCategoryManageModal = function () {
   if (!listContainer) return;
 
   listContainer.innerHTML = '';
-  let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]');
+  
+  // 로컬 스토리지 순서값과 실제 데이터상의 카테고리를 실시간 병합하여 누락 원천 차단
+  let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]').filter(cat => !['전체', '즐겨찾기', '공중화장실 정보', '최근 추가된 화장실', 'toilet', '미분류'].includes(cat));
+  let currentCats = [...new Set(cachedFishingPoints.map(p => String(p.category || '미분류').trim()))].filter(cat => !['전체', '즐겨찾기', '공중화장실 정보', '최근 추가된 화장실', 'toilet', '미분류'].includes(cat));
+
+  let finalCatOrder = [...savedCatOrder];
+  currentCats.forEach(cat => { if (!finalCatOrder.includes(cat)) finalCatOrder.push(cat); });
+  
   let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
 
-  if (savedCatOrder.length === 0) {
+  if (finalCatOrder.length === 0) {
     listContainer.innerHTML = '<div class="pm-empty-msg">등록된 커스텀 카테고리가 없습니다.</div>';
     return;
   }
 
-  savedCatOrder.forEach(catName => {
+  finalCatOrder.forEach(catName => {
     const row = document.createElement('div');
     row.className = 'pm-category-manage-item';
     row.setAttribute('data-name', catName);
-    const color = savedCatColors[catName] || '#007aff';
+    
+    const matchPoints = cachedFishingPoints.filter(p => String(p.category || '미분류').trim() === catName.trim());
+    const color = matchPoints.length > 0 ? (matchPoints[0].color || '#007aff') : (savedCatColors[catName] || '#007aff');
 
     row.innerHTML = `
       <div class="pm-item-left">
