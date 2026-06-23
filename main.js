@@ -1945,12 +1945,20 @@ window.openPointEditModal = function (docId, name, category, memo, pType, pUnit,
     searchNearestCoastalLandmark(lat, lng, nearestAddr => { if (pointEditAddrEl) pointEditAddrEl.innerText = nearestAddr; db.collection('fishing_points').doc(docId).update({ address: nearestAddr }); }, () => {});
   }
 
+  // 드롭다운 카테고리 옵션 생성 부분을 포인트 추가 모달 공식으로 통일 및 오류 수정
   const catSelect = document.getElementById('editPointCategory');
   if (catSelect) {
     catSelect.innerHTML = '';
-    let activeCategories = [...new Set([JSON.parse(localStorage.getItem('pm-category-order') || '[]'), ...cachedFishingPoints.map(p => (p.category || '미분류').trim())])].filter(c => c !== '공중화장실 정보' && c !== 'toilet' && c !== '미분류');
+    let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]');
+    let activeCategories = [...new Set([...savedCatOrder, ...cachedFishingPoints.map(p => (p.category || '미분류').trim())])].filter(cat => cat !== '공중화장실 정보' && cat !== 'toilet' && cat !== '미분류');
     activeCategories.push('미분류'); const savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
-    activeCategories.forEach(catName => { const option = document.createElement('option'); option.value = catName; option.setAttribute('data-color', catName === '미분류' ? '#868e96' : (savedCatColors[catName] || '#007aff')); option.innerText = catName; catSelect.appendChild(option); });
+
+    activeCategories.forEach(catName => {
+      const matchPoints = cachedFishingPoints.filter(p => (p.category || '미분류') === catName);
+      const groupColor = catName === '미분류' ? '#868e96' : (matchPoints.length > 0 ? matchPoints[0].color : (savedCatColors[catName] || '#007aff'));
+      const option = document.createElement('option'); option.value = catName; option.setAttribute('data-color', groupColor); option.innerText = catName;
+      catSelect.appendChild(option);
+    });
     catSelect.value = category || '미분류';
   }
 
