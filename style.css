@@ -2163,7 +2163,6 @@ textarea,
     background: var(--grid-item-bg);
 }
 
-/* 상단 고정 항목 스타일 데코레이터 선언 */
 .notice-item.pinned-item {
     background: var(--grid-item-bg) !important;
 }
@@ -2180,7 +2179,6 @@ textarea,
     justify-content: center;
 }
 
-/* 고정 및 진행상태 전용 통합 배지 스택 */
 .pinned-badge {
     background: #ff3b30;
     color: #ffffff;
@@ -2339,12 +2337,42 @@ textarea,
     margin-top: 5px;
 }
 
-/* 신규 추가된 이벤트 기간 입력 폼 규격 매핑 정의 (ban-detail-row-fix 변형 스택) */
+/* 상단고정 체크박스 영역 정렬 구조 변경 및 앱 스타일 반영 */
+.modal-form-group.notice-pin-row {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+    margin-bottom: 12px;
+    cursor: pointer;
+}
+
+.modal-form-group.notice-pin-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+
+.modal-form-group.notice-pin-row label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+/* 이벤트 기간 입력 폼 그룹 스타일 유니파이드 처리 */
 .modal-form-group.ban-detail-row-fix.event {
     display: flex;
     flex-direction: column;
     gap: 6px;
     margin-bottom: 15px;
+    width: 100%;
 }
 
 .modal-form-group.ban-detail-row-fix.event label {
@@ -2355,24 +2383,32 @@ textarea,
     text-align: left;
 }
 
-.modal-form-group.ban-detail-row-fix.event .event-duration-flex-field {
+.modal-form-group.ban-detail-row-fix.event .ban-detail-input-wrapper {
     display: flex;
     align-items: center;
     gap: 8px;
     width: 100%;
+    box-sizing: border-box;
 }
 
-.modal-form-group.ban-detail-row-fix.event .event-duration-flex-field input[type="date"] {
+/* date 타입 인풋 필드를 모달 메인 인풋 필드 디자인 스택과 완전 통합 */
+.modal-form-group.ban-detail-row-fix.event .ban-detail-input-wrapper input[type="date"] {
     flex: 1;
     height: 40px;
-    padding: 0 10px;
+    padding: 0 12px;
     border: 1px solid var(--border-color);
     background: var(--bg-panel);
     color: var(--text-main);
-    font-size: 13px;
+    font-size: 13.5px;
+    font-family: inherit;
     border-radius: 6px;
     outline: none;
     box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.modal-form-group.ban-detail-row-fix.event .ban-detail-input-wrapper input[type="date"]:focus {
+    border-color: var(--primary-color);
 }
 
 .modal-form-group.ban-detail-row-fix.event .event-range-splitter {
@@ -2380,6 +2416,7 @@ textarea,
     font-size: 14px;
     font-weight: 600;
     flex-shrink: 0;
+    user-select: none;
 }
 
 /* =========================================================================
