@@ -1706,6 +1706,10 @@ textarea,
 .points-management-wrapper .pm-container h3, h4 {
     margin: 10px 0 0 0;
 }
+.points-management-wrapper .pm-container p {
+    margin: 0;
+}
+
 
 .pm-header {
     height: 54px;
