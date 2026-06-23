@@ -109,7 +109,7 @@
                                     <stop offset="100%" stop-color="#000102" />
                                 </linearGradient>
                                 <linearGradient id="hc-island-night" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#06070c" />
+                                    <stop offset="0%" stroke-color="#06070c" />
                                     <stop offset="100%" stop-color="#000001" />
                                 </linearGradient>
                                 <linearGradient id="hc-yunsul-night" x1="0" y1="0" x2="1" y2="0">
@@ -554,7 +554,7 @@
             <div id="info-board-page" class="tab-content">
                 <div class="points-management-wrapper">
                     <div class="pm-header settings-header-flex">
-                        <button id="btnInfoBoardHeaderBack" type="button" onclick="window.handleInfoBoardBackNavigation()"
+                        <button id="btnInfoBoardHeaderBack" type="button" onclick="window.handleNoticeBackNavigation()"
                             class="settings-back-btn">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1080,10 +1080,10 @@
 
         <div id="noticeWriteEventRow" class="modal-form-group ban-detail-row-fix event">
             <label>이벤트 기간</label>
-            <div class="ban-detail-input-wrapper">
-                <input type="date" id="eventStartDate">
+            <div class="event-duration-flex-field">
+                <input type="date" id="eventStartDate" class="modal-input-main">
                 <span class="event-range-splitter">~</span>
-                <input type="date" id="eventEndDate">
+                <input type="date" id="eventEndDate" class="modal-input-main">
             </div>
         </div>
 
