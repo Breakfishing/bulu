@@ -2833,8 +2833,6 @@ textarea,
 }
 
 .hc-spin-anim {
-    transform-box: fill-box;
-    transform-origin: center;
     animation: hcSpinLinearInfinite 0.85s linear infinite !important;
 }
 
