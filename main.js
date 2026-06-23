@@ -1441,7 +1441,9 @@ window.renderInfoContentCards = function (filterKeyword = "") {
       let youtubeId = window.InfoBoardSystem.extractYoutubeId(item.videoUrl);
       const thumbUrl = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50" viewBox="0 0 100 50"></svg>';
       const formattedTags = window.InfoBoardSystem.parseHashTags(item.tags || item.recommend || '');
-      const sourceText = item.source ? `${item.source} · 유튜브` : '유튜브 동영상';
+      
+      // 데이터가 정상적으로 기입되었는지 더 엄격하게 검증하도록 삼항 연산자 조건부 로직 보완
+      const sourceText = (item.source && item.source.trim() !== "") ? `${item.source.trim()} · 유튜브` : '유튜브 동영상';
 
       knotCard.innerHTML = `
         <div class="info-knot-thumb-wrapper" onclick="if('${item.videoUrl}') window.open('${item.videoUrl}', '_blank');">
@@ -1606,11 +1608,11 @@ window.saveFishingBanData = function () {
       species, period, periodType, monthInput, startMonth, startDay, endMonth, endDay, region, note, imageUrl 
     }).then(() => {
       window.closeModals(); alert('수정되었습니다.');
-    });
+    }).catch(() => alert('수정 중 오류가 발생했습니다.'));
   } else {
     db.collection('fishing_ban').add(payload).then(() => {
       window.closeModals(); alert('등록되었습니다.');
-    });
+    }).catch(() => alert('저장 중 오류가 발생했습니다.'));
   }
 };
 
@@ -1630,11 +1632,11 @@ window.saveSizeLimitData = function () {
   if (mode === 'edit') {
     db.collection('size_limit').doc(targetId).update({ species, type, minSize, maxSize, imageUrl }).then(() => {
       window.closeModals(); alert('수정되었습니다.');
-    });
+    }).catch(() => alert('수정 중 오류가 발생했습니다.'));
   } else {
     db.collection('size_limit').add(payload).then(() => {
       window.closeModals(); alert('등록되었습니다.');
-    });
+    }).catch(() => alert('저장 중 오류가 발생했습니다.'));
   }
 };
 
@@ -1653,11 +1655,11 @@ window.saveKnotGuideData = function () {
   if (mode === 'edit') {
     db.collection('knot_guide').doc(targetId).update({ title, tags, recommend: tags, source, videoUrl }).then(() => {
       window.closeModals(); alert('수정되었습니다.');
-    });
+    }).catch(() => alert('수정 중 오류가 발생했습니다.'));
   } else {
     db.collection('knot_guide').add(payload).then(() => {
       window.closeModals(); alert('등록되었습니다.');
-    });
+    }).catch(() => alert('저장 중 오류가 발생했습니다.'));
   }
 };
 
@@ -1689,7 +1691,7 @@ window.saveInfoEditData = function () {
     db.collection('info_static').doc('tide_table').set({ html: nextHtml }).then(() => {
       window.closeModals();
       alert('물때표 정보 가이드 갱신이 완료되었습니다.');
-    });
+    }).catch(() => alert('저장 중 오류가 발생했습니다.'));
   }
 };
 
