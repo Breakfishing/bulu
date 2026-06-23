@@ -1705,7 +1705,11 @@ textarea,
 
 .points-management-wrapper .pm-container h3, h4 {
     margin: 10px 0 0 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
 }
+
 .points-management-wrapper .pm-container p {
     margin: 0;
 }
