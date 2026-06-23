@@ -848,62 +848,116 @@ window.toggleToiletLayer = function (element) {
 };
 
 // =========================================================================
-// [TAB AREA 3] 포인트 관리 대시보드 시스템, 드래그 소팅 및 카테고리 롱프레스 모듈
+// [TAB AREA 3] 포인트 관리 대시보드 시스템, 드래그 소팅 및 카테고리 관리 총괄 엔진
 // =========================================================================
 window.currentActiveCategory = null;
 
-window.bindCategoryLongPressEngine = function() {
-  const container = document.querySelector('.pm-category-tabs-row');
+window.openCategoryManageModal = function () {
+  window.closeModals();
+  const backdrop = document.getElementById('modalBackdrop');
+  const modal = document.getElementById('categoryManageModal');
+  if (backdrop) backdrop.classList.add('active');
+  if (modal) modal.classList.add('active');
+
+  const listContainer = document.getElementById('pm-manage-category-list');
+  if (!listContainer) return;
+
+  listContainer.innerHTML = '';
+  let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]');
+  let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
+
+  if (savedCatOrder.length === 0) {
+    listContainer.innerHTML = '<div class="pm-empty-msg">등록된 커스텀 카테고리가 없습니다.</div>';
+    return;
+  }
+
+  savedCatOrder.forEach(catName => {
+    const row = document.createElement('div');
+    row.className = 'pm-category-manage-item';
+    row.setAttribute('data-name', catName);
+    const color = savedCatColors[catName] || '#007aff';
+
+    row.innerHTML = `
+      <div class="pm-item-left">
+        <div class="pm-category-drag-handle" style="touch-action: none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--text-main)" stroke="var(--text-main)" stroke-width="2.5">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </div>
+        <div class="pm-color-dot" style="background-color: ${color}; margin-right: 8px;"></div>
+        <span class="pm-category-manage-name">${catName}</span>
+      </div>
+      <div class="pm-item-actions">
+        <button class="pm-action-btn edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+        <button class="pm-action-btn delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+      </div>
+    `;
+
+    const eBtn = row.querySelector('.edit');
+    if (eBtn) {
+      eBtn.onclick = (e) => {
+        e.stopPropagation();
+        window.openCategoryEditBottomSheet(catName, color, e);
+      };
+    }
+
+    const dBtn = row.querySelector('.delete');
+    if (dBtn) {
+      dBtn.onclick = (e) => {
+        e.stopPropagation();
+        if (typeof window.deleteCategoryWithGuard === 'function') {
+          window.deleteCategoryWithGuard(catName, e);
+          setTimeout(() => { window.openCategoryManageModal(); }, 100);
+        }
+      };
+    }
+
+    listContainer.appendChild(row);
+  });
+
+  window.bindCategoryDragAndDropEvents(listContainer);
+};
+
+window.bindCategoryDragAndDropEvents = function (container) {
   if (!container) return;
+  container.addEventListener('pointerdown', (e) => {
+    const handle = e.target.closest('.pm-category-drag-handle');
+    if (!handle) return;
+    const item = handle.closest('.pm-category-manage-item');
+    if (!item) return;
+    e.preventDefault();
+    item.classList.add('dragging');
+    handle.setPointerCapture(e.pointerId);
 
-  let longPressTimer = null;
-  const pressDelay = 600; 
-  let isLongPressActionTriggered = false;
+    const onPointerMove = (evt) => {
+      const draggingItem = container.querySelector('.pm-category-manage-item.dragging');
+      if (!draggingItem) return;
+      const nextSibling = [...container.querySelectorAll('.pm-category-manage-item:not(.dragging)')].find(sib => evt.clientY < sib.getBoundingClientRect().top + sib.getBoundingClientRect().height / 2);
+      if (nextSibling) container.insertBefore(draggingItem, nextSibling);
+      else container.appendChild(draggingItem);
+    };
 
-  const startPress = (e) => {
-    const btn = e.target.closest('.pm-category-tab-btn');
-    if (!btn) return;
-    const categoryId = btn.getAttribute('data-id'); 
-    if (!categoryId) return;
+    const onPointerUp = (evt) => {
+      item.classList.remove('dragging');
+      handle.releasePointerCapture(evt.pointerId);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
 
-    if (['전체', '즐겨찾기', '최근 추가된 화장실', '미분류'].includes(categoryId)) {
-      return; 
-    }
-    
-    isLongPressActionTriggered = false;
-    longPressTimer = setTimeout(() => {
-      isLongPressActionTriggered = true;
-      if (navigator.vibrate) navigator.vibrate(40); 
+      const newOrder = [...container.querySelectorAll('.pm-category-manage-item')].map(el => el.getAttribute('data-name'));
+      localStorage.setItem('pm-category-order', JSON.stringify(newOrder));
 
-      if (typeof window.openCategoryEditBottomSheet === 'function') {
-        const savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
-        window.openCategoryEditBottomSheet(categoryId, savedCatColors[categoryId] || '#4f46e5', e);
+      if (typeof window.renderPointsManagementTab === 'function') {
+        window.renderPointsManagementTab();
       }
-    }, pressDelay);
-  };
+    };
 
-  const cancelPress = (e) => {
-    if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
-    if (isLongPressActionTriggered) { 
-      if (e.cancelable) e.preventDefault(); 
-      e.stopPropagation(); 
-    }
-  };
-
-  container.addEventListener('mousedown', startPress);
-  container.addEventListener('touchstart', startPress, { passive: true });
-  container.addEventListener('mouseup', cancelPress);
-  container.addEventListener('mouseleave', cancelPress);
-  container.addEventListener('touchend', cancelPress, { passive: false });
-  container.addEventListener('touchmove', cancelPress, { passive: false });
-
-  container.addEventListener('click', (e) => {
-    if (isLongPressActionTriggered) { 
-      if (e.cancelable) e.preventDefault(); 
-      e.stopPropagation(); 
-      isLongPressActionTriggered = false; 
-    }
-  }, true);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerUp);
+  });
 };
 
 window.renderPointsManagementTab = function () {
@@ -985,7 +1039,6 @@ window.renderPointsManagementTab = function () {
   }
 
   renderActiveCategoryPoints();
-  window.bindCategoryLongPressEngine(); 
 };
 
 function createPointRowComponent(pt, isFavSection) {
