@@ -1792,10 +1792,6 @@ textarea,
     flex-direction: column;
 }
 
-.points-management-wrapper .pm-container h3 {
-
-}
-
 .pm-section {
     display: flex;
     flex-direction: column;
