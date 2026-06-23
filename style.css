@@ -2103,7 +2103,7 @@ textarea,
 }
 
 /* =========================================================================
-    GROUP 9: 공지사항 및 이벤트 전용 직각화 게시판 규격 시스템
+   GROUP 9: 공지사항 및 이벤트 전용 직각화 게시판 규격 시스템
    ========================================================================= */
 .board-sub-tab-container {
     display: flex;
@@ -2163,13 +2163,55 @@ textarea,
     background: var(--grid-item-bg);
 }
 
+/* 상단 고정 항목 스타일 데코레이터 선언 */
+.notice-item.pinned-item {
+    background: var(--grid-item-bg) !important;
+}
+
 .notice-item-num {
     font-size: 13px;
     font-weight: 600;
     color: var(--text-muted);
-    width: 28px;
+    width: 32px;
     text-align: center;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 고정 및 진행상태 전용 통합 배지 스택 */
+.pinned-badge {
+    background: #ff3b30;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+.event-status-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+    color: #ffffff;
+    vertical-align: middle;
+}
+
+.event-status-badge.ongoing {
+    background: #34c759;
+}
+
+.event-status-badge.ended {
+    background: #8e8e93;
+}
+
+.event-status-badge.upcoming {
+    background: #007aff;
 }
 
 .notice-item-title {
@@ -2253,7 +2295,6 @@ textarea,
     width: 100%;
 }
 
-/* 신규 포인트 카테고리 관리 헤더 클래스 스택 병합 처리 */
 .notice-header-write-btn,
 .manage-header-write-btn {
     position: absolute;
@@ -2296,6 +2337,49 @@ textarea,
 
 .notice-write-action-margin {
     margin-top: 5px;
+}
+
+/* 신규 추가된 이벤트 기간 입력 폼 규격 매핑 정의 (ban-detail-row-fix 변형 스택) */
+.modal-form-group.ban-detail-row-fix.event {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 15px;
+}
+
+.modal-form-group.ban-detail-row-fix.event label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    text-align: left;
+}
+
+.modal-form-group.ban-detail-row-fix.event .event-duration-flex-field {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.modal-form-group.ban-detail-row-fix.event .event-duration-flex-field input[type="date"] {
+    flex: 1;
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-panel);
+    color: var(--text-main);
+    font-size: 13px;
+    border-radius: 6px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.modal-form-group.ban-detail-row-fix.event .event-range-splitter {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
 }
 
 /* =========================================================================
