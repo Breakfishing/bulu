@@ -454,7 +454,7 @@
                         <span>앱 설정</span>
                     </div>
                     <div class="pm-container">
-                        <div class="setting-row setting-row-custom">
+                        <div class="setting-row-custom">
                             <span class="setting-label-flex">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -468,7 +468,7 @@
                             </label>
                         </div>
 
-                        <div class="setting-row setting-row-custom setting-row-margin">
+                        <div class="setting-row-custom setting-row-margin">
                             <span class="setting-label-flex">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -873,7 +873,7 @@
         <h3>카테고리 순서 관리</h3>
         <div class="modal-form-group">
             <div id="pm-category-manage-list" class="pm-list-group">
-                </div>
+            </div>
         </div>
         <div class="modal-form-group category-manage-add-row">
             <button type="button" class="btn-main" onclick="window.openCategoryAddBottomSheet()">새 카테고리 추가</button>
@@ -1042,7 +1042,7 @@
         <div class="weather-modal-header weather-header-container">
             <div class="weather-title-wrapper">
                 <div id="weatherModalMarkerIcon"
-                    class="custom-marker-wrapper leaflet-zoom-animated leaflet-interactive weather-preview-box weather-modal-icon-fix">
+                    class="leaflet-marker-icon custom-marker-wrapper leaflet-zoom-animated leaflet-interactive weather-preview-box weather-modal-icon-fix">
                 </div>
                 <h3 id="lblWeatherModalTitle" class="weather-title-text weather-modal-title-fix">포인트 기상 정보</h3>
             </div>
@@ -1067,10 +1067,26 @@
         <h3 id="lblNoticeWriteModalTitle" class="notice-write-title-text">글 등록</h3>
         <input type="hidden" id="noticeWriteMode" value="add">
         <input type="hidden" id="noticeWriteTargetId" value="">
+        
+        <div class="modal-form-group notice-write-group-margin notice-pin-row">
+            <input type="checkbox" id="noticeWritePinned">
+            <label for="noticeWritePinned">상단고정 설정</label>
+        </div>
+
         <div class="modal-form-group">
             <label>제목</label>
             <input type="text" id="noticeWriteTitle" placeholder="제목을 입력하세요">
         </div>
+
+        <div id="noticeWriteEventRow" class="modal-form-group ban-detail-row-fix event">
+            <label>이벤트 기간</label>
+            <div class="ban-detail-input-wrapper">
+                <input type="date" id="eventStartDate">
+                <span class="event-range-splitter">~</span>
+                <input type="date" id="eventEndDate">
+            </div>
+        </div>
+
         <div class="modal-form-group notice-write-group-margin">
             <label>내용</label>
             <textarea id="noticeWriteContent" placeholder="본문 내용을 상세히 입력하세요" class="notice-write-textarea"></textarea>
