@@ -1704,6 +1704,58 @@ window.toggleDarkMode = function (checkbox) {
   if (clean2DLayer) { clean2DLayer.setUrl(isDark ? CARTO_DARK_URL : CARTO_LIGHT_URL); clean2DLayer.redraw(); }
 };
 
+// 중복 코드를 제거하고 초기화 시점에도 재사용할 수 있도록 UI 반영 로직을 별도로 분리했습니다.
+window.applyNaviAppUI = function (app) {
+  // 1. 라벨 영역 - 박스 스타일을 완전히 지우고 텍스트만 표시
+  const label = document.getElementById('naviAppLabel');
+  if (label) {
+    label.style.background = 'none';
+    label.style.color = 'var(--text-main)';
+    label.style.padding = '0';
+    label.style.borderRadius = '0';
+    label.style.display = 'inline';
+    label.style.border = 'none';
+
+    if (app === 'naver') {
+      label.innerText = '네비게이션: 네이버 지도';
+    } else if (app === 'kakao') {
+      label.innerText = '네비게이션: 카카오 지도';
+    } else if (app === 'tmap') {
+      label.innerText = '네비게이션: TMAP';
+    }
+  }
+
+  // 2. 기존 switch 버튼 제어 및 내부 slider 제거
+  const checkbox = document.getElementById('naviAppToggle');
+  if (checkbox) {
+    const switchBtn = checkbox.parentElement;
+    if (switchBtn) {
+      switchBtn.style.transition = 'all 0.25s ease';
+      
+      // 내부에서 움직이던 slider(동그라미) 요소를 완전히 숨김 처리
+      const slider = switchBtn.querySelector('.slider');
+      if (slider) {
+        slider.style.display = 'none';
+      }
+
+      // 3단 앱 브랜드 인스턴스 컬러를 switch 버튼 배경에 직접 매핑
+      if (app === 'naver') {
+        switchBtn.style.background = '#03C75A';
+        switchBtn.style.borderColor = '#03C75A';
+        switchBtn.style.borderRadius = '26px';
+      } else if (app === 'kakao') {
+        switchBtn.style.background = '#FEE500';
+        switchBtn.style.borderColor = '#FEE500';
+        switchBtn.style.borderRadius = '26px';
+      } else if (app === 'tmap') {
+        switchBtn.style.background = 'linear-gradient(135deg, #007BC7, #6F359E)';
+        switchBtn.style.borderColor = 'transparent';
+        switchBtn.style.borderRadius = '26px';
+      }
+    }
+  }
+};
+
 window.toggleNaviApp = function (checkbox) {
   let currentApp = localStorage.getItem('navi-app') || 'naver';
   let nextApp = 'naver';
@@ -1718,54 +1770,7 @@ window.toggleNaviApp = function (checkbox) {
   }
 
   localStorage.setItem('navi-app', nextApp);
-
-  // 1. 라벨 영역 - 박스 스타일을 완전히 지우고 텍스트만 표시
-  const label = document.getElementById('naviAppLabel');
-  if (label) {
-    label.style.background = 'none';
-    label.style.color = 'var(--text-main)';
-    label.style.padding = '0';
-    label.style.borderRadius = '0';
-    label.style.display = 'inline';
-    label.style.border = 'none';
-
-    if (nextApp === 'naver') {
-      label.innerText = '네비게이션: 네이버 지도';
-    } else if (nextApp === 'kakao') {
-      label.innerText = '네비게이션: 카카오 지도';
-    } else if (nextApp === 'tmap') {
-      label.innerText = '네비게이션: TMAP';
-    }
-  }
-
-  // 2. 기존 switch 버튼 제어 및 내부 slider 제거
-  if (checkbox) {
-    const switchBtn = checkbox.parentElement;
-    if (switchBtn) {
-      switchBtn.style.transition = 'all 0.25s ease';
-      
-      // 내부에서 움직이던 slider(동그라미) 요소를 완전히 숨김 처리
-      const slider = switchBtn.querySelector('.slider');
-      if (slider) {
-        slider.style.display = 'none';
-      }
-
-      // 3단 앱 브랜드 인스턴스 컬러를 switch 버튼 배경에 직접 매핑
-      if (nextApp === 'naver') {
-        switchBtn.style.background = '#03C75A';
-        switchBtn.style.borderColor = '#03C75A';
-        switchBtn.style.borderRadius = '26px';
-      } else if (nextApp === 'kakao') {
-        switchBtn.style.background = '#FEE500';
-        switchBtn.style.borderColor = '#FEE500';
-        switchBtn.style.borderRadius = '26px';
-      } else if (nextApp === 'tmap') {
-        switchBtn.style.background = 'linear-gradient(135deg, #007BC7, #6F359E)';
-        switchBtn.style.borderColor = 'transparent';
-        switchBtn.style.borderRadius = '26px';
-      }
-    }
-  }
+  window.applyNaviAppUI(nextApp);
 };
 
 window.showSettingsPage = function () { window.closeModals(); document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active')); document.getElementById('settings-page')?.classList.add('active'); };
@@ -1806,6 +1811,23 @@ window.logToAdminTerminal = function (message) {
   const now = new Date(); terminal.innerHTML += `<div>[${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}] ${message}</div>`;
   terminal.scrollTop = terminal.scrollHeight;
 };
+
+// 페이지 로드 시 시동 라이프사이클 안에서 로컬 스토리지 세팅값을 추적 및 UI 복원하는 엔진
+const initSettingsOnLoad = function () {
+  const savedApp = localStorage.getItem('navi-app') || 'naver';
+  window.applyNaviAppUI(savedApp);
+
+  const darkToggle = document.getElementById('darkModeToggle');
+  if (darkToggle) {
+    darkToggle.checked = localStorage.getItem('dark-mode') === 'true';
+  }
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initSettingsOnLoad);
+} else {
+  initSettingsOnLoad();
+}
 
 // =========================================================================
 // [BACKEND AREA] 백엔드 데이터베이스 실시간 트래킹 모델 및 오버레이 렌더러
