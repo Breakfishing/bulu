@@ -333,8 +333,8 @@
                 <div class="points-management-wrapper">
                     <div class="pm-header .point-header-flex">
                         <div class="pm-title-left-group">포인트 관리</div>
-                        <button id="btn-add-notice" class="notice-header-write-btn"
-                            onclick="window.openCategoryAddBottomSheet()" title="글 등록">
+                        <button id="btn-add-manage" class="manage-header-write-btn"
+                            onclick="window.openCategoryManageModal()" title="카테고리 관리">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -572,7 +572,7 @@
                         </button>
                     </div>
 
-                    <div class="board-sub-tab-container" style="overflow-x: auto; white-space: nowrap;">
+                    <div class="board-sub-tab-container info-board-tab-scroll">
                         <button type="button" id="btnSubTabFishingBan" class="board-sub-tab-btn active"
                             onclick="window.switchInfoSubTab('fishing_ban')">금어기</button>
                         <button type="button" id="btnSubTabSizeLimit" class="board-sub-tab-btn"
@@ -666,10 +666,10 @@
             <span>포인트 등록</span>
         </h3>
         <div class="modal-form-group">
-            <label>위치 주소</label>
-            <div id="pointAddress" class="form-static-text">주소 변환 중...</div>
-        </div>
-        <div class="modal-form-group">
+            <div class="modal-form-group">
+                <label>위치 주소</label>
+                <div id="pointAddress" class="form-static-text">주소 변환 중...</div>
+            </div>
             <label>포인트 이름</label>
             <input type="text" id="pointName" placeholder="포인트 이름을 입력하세요">
         </div>
@@ -866,6 +866,23 @@
         </div>
     </div>
 
+    <div id="categoryManageModal" class="modal">
+        <div class="modal-handle-area" onclick="window.closeModals()">
+            <div class="modal-handle"></div>
+        </div>
+        <h3>카테고리 순서 관리</h3>
+        <div class="modal-form-group">
+            <div id="pm-category-manage-list" class="pm-list-group">
+                </div>
+        </div>
+        <div class="modal-form-group category-manage-add-row">
+            <button type="button" class="btn-main" onclick="window.openCategoryAddBottomSheet()">새 카테고리 추가</button>
+        </div>
+        <div class="modal-action-row-grid">
+            <button type="button" class="modal-btn cancel" onclick="window.closeModals()">닫기</button>
+        </div>
+    </div>
+
     <div id="categoryEditModal" class="modal">
         <h3><span>카테고리 수정</span></h3>
         <input type="hidden" id="editTargetCategoryOldName">
@@ -1023,19 +1040,17 @@
     <div id="weatherModal" class="bottom-sheet-modal-native weather-modal-overlay">
         <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
         <div class="weather-modal-header weather-header-container">
-            <div class="weather-title-wrapper" style="display: flex; align-items: center; gap: 6px;">
+            <div class="weather-title-wrapper">
                 <div id="weatherModalMarkerIcon"
-                    class="leaflet-marker-icon custom-marker-wrapper leaflet-zoom-animated leaflet-interactive weather-preview-box"
-                    style="position: static !important; transform: none !important; flex-shrink: 0; width: 18px !important; height: 26px !important; display: flex; align-items: center; justify-content: center;">
+                    class="leaflet-marker-icon custom-marker-wrapper leaflet-zoom-animated leaflet-interactive weather-preview-box weather-modal-icon-fix">
                 </div>
-                <h3 id="lblWeatherModalTitle" class="weather-title-text"
-                    style="margin: 0; line-height: 1.2; font-size: 18px !important; font-weight: 700;">포인트 기상 정보</h3>
+                <h3 id="lblWeatherModalTitle" class="weather-title-text weather-modal-title-fix">포인트 기상 정보</h3>
             </div>
             <div id="lblDetailDate" class="weather-date-sticky-bar weather-date-margin">날짜 계산 중...</div>
         </div>
 
         <div class="weather-modal-body">
-            <div class="timeline-viewport-container-native" style="position: relative; width: 100%;">
+            <div class="timeline-viewport-container-native">
                 <div class="timeline-sync-line"></div>
                 <div class="timeline-sync-bubble" id="lblIndicatorBubble">00:00</div>
 
@@ -1072,7 +1087,7 @@
         <input type="hidden" id="infoEditTargetTab" value="">
         <div class="modal-form-group notice-write-group-margin">
             <label>내용</label>
-            <textarea id="infoEditContent" placeholder="본문 내용을 HTML 형식이나 일반 텍스트로 입력하세요" class="notice-write-textarea" style="height: 300px !important;"></textarea>
+            <textarea id="infoEditContent" placeholder="본문 내용을 HTML 형식이나 일반 텍스트로 입력하세요" class="notice-write-textarea info-edit-textarea-fix"></textarea>
         </div>
         <div class="modal-action-row-grid notice-write-action-margin">
             <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
@@ -1097,14 +1112,14 @@
             </div>
             <input type="hidden" id="banPeriodType" value="month">
         </div>
-        <div class="modal-form-group" id="banMonthRow" style="display: block;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <input type="number" id="banMonthInput" placeholder="05" style="width: 80px; text-align: center;">
+        <div class="modal-form-group ban-month-row-fix" id="banMonthRow">
+            <div class="ban-month-input-wrapper">
+                <input type="number" id="banMonthInput" placeholder="05" class="ban-month-input-fix">
                 <span>월</span>
             </div>
         </div>
-        <div class="modal-form-group" id="banDetailPeriodRow" style="display: none;">
-            <div style="display: flex; align-items: center; gap: 6px; width: 100%;">
+        <div class="modal-form-group ban-detail-row-fix" id="banDetailPeriodRow">
+            <div class="ban-detail-input-wrapper">
                 <input type="number" id="banStartMonth" placeholder="05" class="hour-input-center">
                 <span>월</span>
                 <input type="number" id="banStartDay" placeholder="01" class="hour-input-center">
@@ -1153,9 +1168,9 @@
         <div class="modal-form-group">
             <label>금지체장 범위 설정</label>
             <div>
-                <input type="number" id="limitMinSize" placeholder="최소(cm)" style="flex: 1;">
+                <input type="number" id="limitMinSize" placeholder="최소(cm)" class="limit-size-input-fix">
                 <span>이상 ~</span>
-                <input type="number" id="limitMaxSize" placeholder="최대(cm)" style="flex: 1;">
+                <input type="number" id="limitMaxSize" placeholder="최대(cm)" class="limit-size-input-fix">
                 <span>이하</span>
             </div>
         </div>
