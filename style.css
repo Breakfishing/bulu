@@ -609,7 +609,6 @@ textarea,
     box-sizing: border-box;
     font-size: 14px;
     outline: none;
-    width: 10%;
 }
 
 #editPointCategory, #editPointParkingPrice, #limitMinSize, #limitMaxSize {
