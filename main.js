@@ -1215,6 +1215,12 @@ window.switchBoardSubTab = function (tab) {
   if (containerEvent) containerEvent.classList.toggle('active', tab === 'event');
   if (detailContainer) detailContainer.classList.remove('active');
 
+  // 모달 내부의 이벤트 전용 기간 입력창 행 디스플레이 제어
+  const eventRow = document.getElementById('noticeWriteEventRow');
+  if (eventRow) {
+    eventRow.style.display = (tab === 'event') ? 'block' : 'none';
+  }
+
   if (tab === 'notice') { document.getElementById('lblNoticeHeaderTitle').innerText = '공지사항'; window.fetchLiveNotices(); }
   else { document.getElementById('lblNoticeHeaderTitle').innerText = '이벤트'; window.fetchLiveEvents(); }
 };
@@ -1238,15 +1244,32 @@ window.fetchLiveNotices = function () {
   const container = document.getElementById('notice-list-container'); if (!container) return;
   container.innerHTML = '<div class="pm-empty-msg">공지사항을 불러오는 중입니다...</div>';
 
-  db.collection('notices').orderBy('createdAt', 'desc').get().then((snapshot) => {
+  db.collection('notices').get().then((snapshot) => {
     cachedNotices = []; container.innerHTML = ''; if (snapshot.empty) { container.innerHTML = '<div class="pm-empty-msg">등록된 공지사항이 없습니다.</div>'; return; }
-    const totalCount = snapshot.size; let index = 0;
+    
     snapshot.forEach((doc) => {
-      const data = doc.data(); cachedNotices.push({ id: doc.id, ...data });
+      cachedNotices.push({ id: doc.id, ...doc.data() });
+    });
+
+    // 상단고정(isPinned) true 최우선 정렬 후 최신등록순 정렬
+    cachedNotices.sort((a, b) => {
+      const aPinned = a.isPinned === true ? 1 : 0;
+      const bPinned = b.isPinned === true ? 1 : 0;
+      if (aPinned !== bPinned) return bPinned - aPinned;
+      const aTime = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
+      const bTime = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
+      return bTime - aTime;
+    });
+
+    const totalCount = cachedNotices.length;
+    cachedNotices.forEach((data, index) => {
       let dateStr = "일자 미상"; if (data.createdAt) { const d = (typeof data.createdAt.toDate === 'function') ? data.createdAt.toDate() : new Date(data.createdAt); dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
-      const item = document.createElement('div'); item.className = 'notice-item';
-      item.innerHTML = `<div class="notice-item-num">${totalCount - index}</div><div class="notice-item-title">${data.title || '제목 없음'}</div><div class="notice-item-date">${dateStr}</div>`;
-      item.onclick = () => window.openNoticeDetail(doc.id); container.appendChild(item); index++;
+      const item = document.createElement('div'); 
+      item.className = 'notice-item' + (data.isPinned ? ' pinned-item' : '');
+      
+      const numDisplay = data.isPinned ? '<span class="pinned-badge">고정</span>' : (totalCount - index);
+      item.innerHTML = `<div class="notice-item-num">${numDisplay}</div><div class="notice-item-title">${data.title || '제목 없음'}</div><div class="notice-item-date">${dateStr}</div>`;
+      item.onclick = () => window.openNoticeDetail(data.id); container.appendChild(item);
     });
   }).catch(() => { container.innerHTML = '<div class="pm-empty-msg">데이터 수신에 실패했습니다.</div>'; });
 };
@@ -1255,15 +1278,55 @@ window.fetchLiveEvents = function () {
   const container = document.getElementById('event-list-container'); if (!container) return;
   container.innerHTML = '<div class="pm-empty-msg">이벤트를 불러오는 중입니다...</div>';
 
-  db.collection('events').orderBy('createdAt', 'desc').get().then((snapshot) => {
+  db.collection('events').get().then((snapshot) => {
     cachedEvents = []; container.innerHTML = ''; if (snapshot.empty) { container.innerHTML = '<div class="pm-empty-msg">등록된 이벤트가 없습니다.</div>'; return; }
-    const totalCount = snapshot.size; let index = 0;
+    
     snapshot.forEach((doc) => {
-      const data = doc.data(); cachedEvents.push({ id: doc.id, ...data });
+      cachedEvents.push({ id: doc.id, ...doc.data() });
+    });
+
+    // 상단고정(isPinned) true 최우선 정렬 후 최신등록순 정렬
+    cachedEvents.sort((a, b) => {
+      const aPinned = a.isPinned === true ? 1 : 0;
+      const bPinned = b.isPinned === true ? 1 : 0;
+      if (aPinned !== bPinned) return bPinned - aPinned;
+      const aTime = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime()) : 0;
+      const bTime = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime()) : 0;
+      return bTime - aTime;
+    });
+
+    const todayStr = '2026-06-24';
+    const totalCount = cachedEvents.length;
+
+    cachedEvents.forEach((data, index) => {
       let dateStr = "일자 미상"; if (data.createdAt) { const d = (typeof data.createdAt.toDate === 'function') ? data.createdAt.toDate() : new Date(data.createdAt); dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
-      const item = document.createElement('div'); item.className = 'notice-item';
-      item.innerHTML = `<div class="notice-item-num">${totalCount - index}</div><div class="notice-item-title">${data.title || '제목 없음'}</div><div class="notice-item-date">${dateStr}</div>`;
-      item.onclick = () => window.openNoticeDetail(doc.id); container.appendChild(item); index++;
+      
+      // 진행중 / 종료됨 상태 판별 로직
+      let statusText = "진행중";
+      let statusClass = "ongoing";
+      if (data.startDate && data.endDate) {
+        if (todayStr > data.endDate) {
+          statusText = "종료됨";
+          statusClass = "ended";
+        } else if (todayStr < data.startDate) {
+          statusText = "예정됨";
+          statusClass = "upcoming";
+        }
+      }
+
+      const item = document.createElement('div'); 
+      item.className = 'notice-item' + (data.isPinned ? ' pinned-item' : '');
+      
+      const numDisplay = data.isPinned ? '<span class="pinned-badge">고정</span>' : (totalCount - index);
+      item.innerHTML = `
+        <div class="notice-item-num">${numDisplay}</div>
+        <div class="notice-item-title">
+          <span class="event-status-badge ${statusClass}">${statusText}</span>
+          ${data.title || '제목 없음'}
+        </div>
+        <div class="notice-item-date">${dateStr}</div>
+      `;
+      item.onclick = () => window.openNoticeDetail(data.id); container.appendChild(item);
     });
   }).catch(() => { container.innerHTML = '<div class="pm-empty-msg">데이터 수신에 실패했습니다.</div>'; });
 };
@@ -1275,7 +1338,11 @@ window.openNoticeDetail = function (docId) {
   document.getElementById('lblInlineNoticeTitle').innerText = notice.title || '제목 없음';
   if (document.getElementById('lblInlineNoticeDate') && notice.createdAt) {
     const d = (typeof notice.createdAt.toDate === 'function') ? notice.createdAt.toDate() : new Date(notice.createdAt);
-    document.getElementById('lblInlineNoticeDate').innerText = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+    let displayDate = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+    if (currentBoardTab === 'event' && notice.startDate && notice.endDate) {
+      displayDate += ` (기간: ${notice.startDate} ~ ${notice.endDate})`;
+    }
+    document.getElementById('lblInlineNoticeDate').innerText = displayDate;
   }
   document.getElementById('lblInlineNoticeContent').innerText = notice.content || '';
   document.getElementById('notice-list-container')?.classList.remove('active');
@@ -1285,6 +1352,18 @@ window.openNoticeDetail = function (docId) {
   document.getElementById('btnNoticeInlineEdit').onclick = () => {
     document.getElementById('noticeWriteMode').value = 'edit'; document.getElementById('noticeWriteTargetId').value = docId;
     document.getElementById('noticeWriteTitle').value = notice.title || ''; document.getElementById('noticeWriteContent').value = notice.content || '';
+    
+    const pinCheckbox = document.getElementById('noticeWritePinned');
+    if (pinCheckbox) pinCheckbox.checked = notice.isPinned === true;
+
+    if (currentBoardTab === 'event') {
+      document.getElementById('eventStartDate').value = notice.startDate || '';
+      document.getElementById('eventEndDate').value = notice.endDate || '';
+      document.getElementById('noticeWriteEventRow').style.display = 'block';
+    } else {
+      document.getElementById('noticeWriteEventRow').style.display = 'none';
+    }
+
     document.getElementById('lblNoticeWriteModalTitle').innerText = '글 수정';
     document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('noticeWriteModal')?.classList.add('active');
   };
@@ -1301,6 +1380,18 @@ window.openNoticeDetail = function (docId) {
 window.openNoticeWriteModal = function () {
   if (document.getElementById('noticeWriteTitle')) document.getElementById('noticeWriteTitle').value = '';
   if (document.getElementById('noticeWriteContent')) document.getElementById('noticeWriteContent').value = '';
+  
+  const pinCheckbox = document.getElementById('noticeWritePinned');
+  if (pinCheckbox) pinCheckbox.checked = false;
+
+  if (currentBoardTab === 'event') {
+    document.getElementById('eventStartDate').value = '';
+    document.getElementById('eventEndDate').value = '';
+    document.getElementById('noticeWriteEventRow').style.display = 'block';
+  } else {
+    document.getElementById('noticeWriteEventRow').style.display = 'none';
+  }
+
   document.getElementById('noticeWriteMode').value = 'add'; document.getElementById('noticeWriteTargetId').value = '';
   document.getElementById('lblNoticeWriteModalTitle').innerText = '글 등록';
   document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('noticeWriteModal')?.classList.add('active');
@@ -1312,17 +1403,33 @@ window.saveNoticeData = function () {
   const mode = document.getElementById('noticeWriteMode').value;
   const targetId = document.getElementById('noticeWriteTargetId').value;
   const collectionName = (currentBoardTab === 'notice') ? 'notices' : 'events';
+  
+  const pinCheckbox = document.getElementById('noticeWritePinned');
+  const isPinned = pinCheckbox ? pinCheckbox.checked : false;
 
   if (!title || !content) return alert('제목과 내용을 모두 입력해 주세요.');
 
+  let payload = { title, content, isPinned };
+
+  if (currentBoardTab === 'event') {
+    const startDate = document.getElementById('eventStartDate').value;
+    const endDate = document.getElementById('eventEndDate').value;
+    if (!startDate || !endDate) return alert('이벤트 시작일과 종료일을 모두 입력해 주세요.');
+    payload.startDate = startDate;
+    payload.endDate = endDate;
+  }
+
   if (mode === 'edit') {
-    db.collection(collectionName).doc(targetId).update({ title, content }).then(() => {
+    db.collection(collectionName).doc(targetId).update(payload).then(() => {
       window.closeModals(); alert('성공적으로 수정되었습니다.');
       document.getElementById('lblInlineNoticeTitle').innerText = title; document.getElementById('lblInlineNoticeContent').innerText = content;
       if (currentBoardTab === 'notice') window.fetchLiveNotices(); else window.fetchLiveEvents();
     }).catch(() => alert('수정 중 오류가 발생했습니다.'));
   } else {
-    db.collection(collectionName).add({ title, content, date: window.getFormattedCurrentTime(), createdAt: firebase.firestore.FieldValue.serverTimestamp() }).then(() => {
+    payload.date = window.getFormattedCurrentTime();
+    payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    
+    db.collection(collectionName).add(payload).then(() => {
       window.closeModals(); alert('성공적으로 등록되었습니다.');
       document.getElementById('notice-inline-detail-container')?.classList.remove('active');
       if (currentBoardTab === 'notice') { document.getElementById('notice-list-container')?.classList.add('active'); window.fetchLiveNotices(); }
@@ -1575,7 +1682,6 @@ window.renderInfoContentCards = function (filterKeyword = "") {
       const thumbUrl = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50" viewBox="0 0 100 50"></svg>';
       const formattedTags = window.InfoBoardSystem.parseHashTags(item.tags || item.recommend || '');
       
-      // 데이터가 정상적으로 기입되었는지 더 엄격하게 검증하도록 삼항 연산자 조건부 로직 보완
       const sourceText = (item.source && item.source.trim() !== "") ? `${item.source.trim()} · 유튜브` : '유튜브 동영상';
 
       knotCard.innerHTML = `
