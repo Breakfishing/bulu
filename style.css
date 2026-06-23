@@ -2367,7 +2367,8 @@ textarea,
 }
 
 /* 이벤트 및 금어기 기간 입력 폼 그룹 스타일 유니파이드 처리 */
-.modal-form-group.ban-detail-row-fix.event {
+.modal-form-group.ban-detail-row-fix.event,
+.modal-form-group.ban-detail-row-fix {
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -2375,7 +2376,8 @@ textarea,
     width: 100%;
 }
 
-.modal-form-group.ban-detail-row-fix.event label {
+.modal-form-group.ban-detail-row-fix.event label,
+.modal-form-group.ban-detail-row-fix label {
     display: block;
     font-size: 13px;
     font-weight: 600;
@@ -2384,7 +2386,8 @@ textarea,
 }
 
 /* 이벤트 및 금어기 공통 기간 입력 구조적 정렬 필드 스택 */
-.event-duration-flex-field {
+.event-duration-flex-field,
+.ban-detail-input-wrapper {
     display: flex;
     align-items: center;
     gap: 6px;
@@ -2392,7 +2395,8 @@ textarea,
     box-sizing: border-box;
 }
 
-.event-duration-flex-field span {
+.event-duration-flex-field span,
+.ban-detail-input-wrapper span {
     color: var(--text-main);
     font-size: 14px;
     font-weight: 600;
@@ -3034,7 +3038,7 @@ input[type="date"].modal-input-main {
     align-items: center;
 }
 
-#limitMaxSize, #limitMinSize, .ban-month-input-fix {
+#limitMaxSize, #limitMinSize {
     width: 10%;
 }
 
