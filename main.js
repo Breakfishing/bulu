@@ -1895,7 +1895,6 @@ window.openToiletModal = function () {
   window.selectedNewToiletHoursValue = "24시간";
 
   const chips = document.getElementById('newToiletHoursChips');
-  // 문법 오류가 있던 .add('active') 부분을 ?.classList.add('active')로 안전하게 수정했습니다.
   if (chips) { chips.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active')); document.getElementById('chipNewHours24')?.classList.add('active'); }
   document.getElementById('newToiletHoursDetailRow').classList.remove('active');
   window.fetchAddressForModal(tempLatLng.lat, tempLatLng.lng, 'toiletAddress');
@@ -2180,7 +2179,6 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
       e.stopPropagation(); document.getElementById('lblWeatherModalTitle').innerText = name;
       const wIcon = document.getElementById('weatherModalMarkerIcon');
       if (wIcon) {
-        // 기상 정보 모달 내의 상단 아이콘도 조절된 물방울 형태로 통일 매핑
         if (category === 'toilet') {
           wIcon.innerHTML = `<svg width="20" height="30" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#ff9500"/>
@@ -2196,8 +2194,33 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
 
   const naviOpenBtn = document.getElementById('btnDetailNaviOpen');
   if (naviOpenBtn) {
-    const naviApp = localStorage.getItem('navi-app'); naviOpenBtn.style.backgroundColor = (naviApp === 'naver') ? '#03C75A' : '#FEE500'; naviOpenBtn.style.color = (naviApp === 'naver') ? '#ffffff' : '#111111';
-    naviOpenBtn.onclick = function (e) { e.stopPropagation(); window.open(localStorage.getItem('navi-app') === 'naver' ? `https://map.naver.com/index.nhn?elat=${lat}&elng=${lng}&etext=${encodeURIComponent(name)}&menu=route` : `https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`, '_blank'); };
+    const naviApp = localStorage.getItem('navi-app') || 'naver';
+    
+    // 네이버 > 카카오 > 티맵 앱 순서에 맞춰 각각의 브랜드 테마 색상 지정
+    if (naviApp === 'naver') {
+      naviOpenBtn.style.background = '#03C75A';
+      naviOpenBtn.style.color = '#ffffff';
+    } else if (naviApp === 'kakao') {
+      naviOpenBtn.style.background = '#FEE500';
+      naviOpenBtn.style.color = '#111111';
+    } else if (naviApp === 'tmap') {
+      naviOpenBtn.style.background = 'linear-gradient(135deg, #007BC7, #6F359E)';
+      naviOpenBtn.style.color = '#ffffff';
+    }
+
+    naviOpenBtn.onclick = function (e) { 
+      e.stopPropagation(); 
+      const currentApp = localStorage.getItem('navi-app') || 'naver';
+      
+      if (currentApp === 'naver') {
+        window.open(`https://map.naver.com/index.nhn?elat=${lat}&elng=${lng}&etext=${encodeURIComponent(name)}&menu=route`, '_blank');
+      } else if (currentApp === 'kakao') {
+        window.open(`https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`, '_blank');
+      } else if (currentApp === 'tmap') {
+        // TMAP 호출 목적지 가이드 (rGoX: 경도, rGoY: 위도 배치 준수)
+        window.open(`tmap://route?rGoName=${encodeURIComponent(name)}&rGoX=${lng}&rGoY=${lat}`, '_blank');
+      }
+    };
   }
 };
 
