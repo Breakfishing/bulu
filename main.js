@@ -904,7 +904,7 @@ window.openCategoryManageModal = function () {
     const matchPoints = cachedFishingPoints.filter(p => String(p.category || '미분류').trim() === catName.trim());
     const color = matchPoints.length > 0 ? (matchPoints[0].color || '#007aff') : (savedCatColors[catName] || '#007aff');
 
-    // 충돌을 일으키던 인라인 스타일을 완전 제거하고 CSS 클래스 구조만을 정형화하여 매핑
+    // 축소 붕괴 버그 방지를 위해 pm-item-info 에 flex: 1 과 min-width: 0 을 명시적으로 삽입
     row.innerHTML = `
       <div class="pm-item-left">
         <div class="pm-drag-handle pm-category-drag-handle" style="touch-action: none;">
@@ -914,9 +914,9 @@ window.openCategoryManageModal = function () {
             <line x1="3" y1="18" x2="21" y2="18"></line>
           </svg>
         </div>
-        <div class="pm-color-dot" style="background-color: ${color};"></div>
-        <div class="pm-item-info">
-          <span class="pm-item-name">${catName}</span>
+        <div class="pm-color-dot" style="background-color: ${color}; flex-shrink: 0;"></div>
+        <div class="pm-item-info" style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+          <span class="pm-item-name" style="color: var(--text-main); display: block; width: 100%; font-weight: 600;">${catName}</span>
         </div>
       </div>
       <div class="pm-item-actions">
