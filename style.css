@@ -1459,7 +1459,6 @@ textarea,
     margin: 0;
     font-size: 18px;
     color: var(--text-main);
-    margin-bottom: 12px;
 }
 
 .weather-title-text {
@@ -2833,6 +2832,8 @@ textarea,
 }
 
 .hc-spin-anim {
+    transform-box: fill-box;
+    transform-origin: center;
     animation: hcSpinLinearInfinite 0.85s linear infinite !important;
 }
 
