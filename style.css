@@ -1703,7 +1703,7 @@ textarea,
     box-sizing: border-box;
 }
 
-.points-management-wrapper .pm-container h3 {
+.points-management-wrapper .pm-container h3, h4 {
     margin: 10px 0 0 0;
 }
 
