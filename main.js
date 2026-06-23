@@ -1705,8 +1705,48 @@ window.toggleDarkMode = function (checkbox) {
 };
 
 window.toggleNaviApp = function (checkbox) {
-  const isNaver = checkbox.checked; localStorage.setItem('navi-app', isNaver ? 'naver' : 'kakao');
-  const label = document.getElementById('naviAppLabel'); if (label) label.innerText = isNaver ? '네비게이션: 네이버 지도' : '네비게이션: 카카오 지도';
+  let currentApp = localStorage.getItem('navi-app') || 'naver';
+  let nextApp = 'naver';
+
+  // 네이버 > 카카오 > 티맵 순서로 3단 순환 체계 구축
+  if (currentApp === 'naver') {
+    nextApp = 'kakao';
+  } else if (currentApp === 'kakao') {
+    nextApp = 'tmap';
+  } else if (currentApp === 'tmap') {
+    nextApp = 'naver';
+  }
+
+  localStorage.setItem('navi-app', nextApp);
+
+  const label = document.getElementById('naviAppLabel');
+  if (label) {
+    // 배경색이 시각적으로 자연스럽게 감싸도록 최소한의 인라인 스타일 보정 부여
+    label.style.transition = 'all 0.25s ease';
+    label.style.display = 'inline-block';
+    label.style.padding = '6px 14px';
+    label.style.borderRadius = '30px';
+    label.style.fontWeight = '600';
+
+    if (nextApp === 'naver') {
+      label.innerText = '네비게이션: 네이버 지도';
+      label.style.background = '#03C75A';
+      label.style.color = '#ffffff';
+    } else if (nextApp === 'kakao') {
+      label.innerText = '네비게이션: 카카오 지도';
+      label.style.background = '#FEE500';
+      label.style.color = '#111111';
+    } else if (nextApp === 'tmap') {
+      label.innerText = '네비게이션: TMAP';
+      label.style.background = 'linear-gradient(135deg, #007BC7, #6F359E)';
+      label.style.color = '#ffffff';
+    }
+  }
+
+  // HTML 엘리먼트가 체크박스일 경우 오작동 및 UI 깨짐을 방지하기 위한 하위 호환성 유지
+  if (checkbox) {
+    checkbox.checked = (nextApp === 'naver');
+  }
 };
 
 window.showSettingsPage = function () { window.closeModals(); document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active')); document.getElementById('settings-page')?.classList.add('active'); };
