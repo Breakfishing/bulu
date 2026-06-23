@@ -859,13 +859,12 @@ window.openCategoryManageModal = function () {
   if (backdrop) backdrop.classList.add('active');
   if (modal) modal.classList.add('active');
 
-  // 엘리먼트 ID 불일치 방지를 위한 매핑 폴백 가드 구성
-  const listContainer = document.getElementById('pm-manage-category-list') || document.getElementById('pm-list-group');
+  // 명세서 규격에 맞춰 ID 단어 순서 교정(pm-category-manage-list) 및 클래스 선택자 폴백 가드 수립
+  const listContainer = document.getElementById('pm-category-manage-list') || document.querySelector('#categoryManageModal .pm-list-group');
   if (!listContainer) return;
 
   listContainer.innerHTML = '';
   
-  // 1. 로컬 스토리지에 저장된 카테고리 순서 배열 추출 및 유효성 검사
   let savedCatOrder = [];
   try {
     const rawOrder = localStorage.getItem('pm-category-order');
@@ -876,18 +875,15 @@ window.openCategoryManageModal = function () {
     savedCatOrder = [];
   }
 
-  // 2. 현재 적재된 포인트 데이터 내의 커스텀 카테고리 추출
   let currentCats = [...new Set(cachedFishingPoints.map(p => p.category ? String(p.category).trim() : ''))]
     .filter(cat => cat !== '' && !['전체', '즐겨찾기', '공중화장실 정보', '최근 추가된 화장실', 'toilet', '미분류'].includes(cat));
 
-  // 3. 로컬 스토리지 정렬 데이터와 실제 카테고리 데이터 통합
   let finalCatOrder = [...savedCatOrder];
   currentCats.forEach(cat => { 
     if (!finalCatOrder.includes(cat)) finalCatOrder.push(cat); 
   });
   
-  // 최종 데이터 정제 가드 (잘못된 문자열 정화)
-  finalCatOrder = [...new Set(finalCatOrder)].filter(cat => cat && typeof cat === 'string' && cat.trim() !== '' && cat !== 'undefined' && cat !== 'null');
+  finalCatOrder = [...new Set(finalCatOrder)].filter(cat => cat && typeof cat === 'string' && cat.trim() !== '');
 
   let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
 
@@ -898,13 +894,13 @@ window.openCategoryManageModal = function () {
 
   finalCatOrder.forEach(catName => {
     const row = document.createElement('div');
-    row.className = 'pm-item'; // CSS 명세서의 규격 디자인을 온전히 상속받도록 명시적 일치화
+    row.className = 'pm-item'; 
     row.setAttribute('data-name', catName);
     
     const matchPoints = cachedFishingPoints.filter(p => String(p.category || '미분류').trim() === catName.trim());
     const color = matchPoints.length > 0 ? (matchPoints[0].color || '#007aff') : (savedCatColors[catName] || '#007aff');
 
-    // 축소 붕괴 버그 방지를 위해 pm-item-info 에 flex: 1 과 min-width: 0 을 명시적으로 삽입
+    // 부모 flex 요소 하위에서 text-overflow가 작동할 때 너비가 붕괴되는 현상을 막기 위해 flex: 1 인라인 주입
     row.innerHTML = `
       <div class="pm-item-left">
         <div class="pm-drag-handle pm-category-drag-handle" style="touch-action: none;">
@@ -915,8 +911,8 @@ window.openCategoryManageModal = function () {
           </svg>
         </div>
         <div class="pm-color-dot" style="background-color: ${color}; flex-shrink: 0;"></div>
-        <div class="pm-item-info" style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
-          <span class="pm-item-name" style="color: var(--text-main); display: block; width: 100%; font-weight: 600;">${catName}</span>
+        <div class="pm-item-info" style="flex: 1; min-width: 0;">
+          <span class="pm-item-name">${catName}</span>
         </div>
       </div>
       <div class="pm-item-actions">
