@@ -1895,7 +1895,8 @@ window.openToiletModal = function () {
   window.selectedNewToiletHoursValue = "24시간";
 
   const chips = document.getElementById('newToiletHoursChips');
-  if (chips) { chips.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active')); document.getElementById('chipNewHours24')?.add('active'); }
+  // 문법 오류가 있던 .add('active') 부분을 ?.classList.add('active')로 안전하게 수정했습니다.
+  if (chips) { chips.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active')); document.getElementById('chipNewHours24')?.classList.add('active'); }
   document.getElementById('newToiletHoursDetailRow').classList.remove('active');
   window.fetchAddressForModal(tempLatLng.lat, tempLatLng.lng, 'toiletAddress');
 };
@@ -1940,7 +1941,6 @@ window.openPointEditModal = function (docId, name, category, memo, pType, pUnit,
     searchNearestCoastalLandmark(lat, lng, nearestAddr => { if (pointEditAddrEl) pointEditAddrEl.innerText = nearestAddr; db.collection('fishing_points').doc(docId).update({ address: nearestAddr }); }, () => {});
   }
 
-  // 드롭다운 카테고리 옵션 생성 부분을 포인트 추가 모달 공식으로 통일 및 오류 수정
   const catSelect = document.getElementById('editPointCategory');
   if (catSelect) {
     catSelect.innerHTML = '';
