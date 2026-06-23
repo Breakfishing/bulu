@@ -599,7 +599,6 @@ textarea,
     box-sizing: border-box;
     font-size: 14px;
     outline: none;
-    text-align: center;
 }
 .modal-form-group input[type="number"] {
     padding: 10px;
@@ -610,8 +609,10 @@ textarea,
     box-sizing: border-box;
     font-size: 14px;
     outline: none;
-    text-align: center;
 }
+
+
+
 .form-textarea,
 .modal-form-group textarea {
     resize: none;
