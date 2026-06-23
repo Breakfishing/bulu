@@ -1712,6 +1712,9 @@ textarea,
 
 .points-management-wrapper .pm-container p {
     margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+
 }
 
 
