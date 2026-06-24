@@ -421,6 +421,17 @@
                         </svg>
                         <span class="grid-label">매듭법</span>
                     </div>
+                    <div class="grid-item" onclick="window.showLinePage()">
+                        <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 18V6a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"></path>
+                            <line x1="6" y1="8" x2="18" y2="8"></line>
+                            <line x1="6" y1="12" x2="18" y2="12"></line>
+                            <line x1="6" y1="16" x2="18" y2="16"></line>
+                            <path d="M12 2v2M12 20v2"></path>
+                        </svg>
+                        <span class="grid-label">라인 정보</span>
+                    </div>
                     <div class="grid-item">
                         <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
@@ -588,6 +599,92 @@
                     </div>
 
                     <div class="pm-container" id="infoBoardContentContainer">
+                    </div>
+                </div>
+            </div>
+
+            <div id="line-page" class="tab-content">
+                <div class="points-management-wrapper">
+                    <div class="pm-header settings-header-flex">
+                        <button type="button" onclick="window.handleNoticeBackNavigation()" class="settings-back-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                        </button>
+                        <span>라인 규격 정보</span>
+                    </div>
+
+                    <div class="board-sub-tab-container">
+                        <button type="button" id="btnSubTabLineCarbonNylon" class="board-sub-tab-btn active"
+                            onclick="window.switchLineSubTab('carbon_nylon')">카본·나일론</button>
+                        <button type="button" id="btnSubTabLinePE" class="board-sub-tab-btn"
+                            onclick="window.switchLineSubTab('pe')">PE 합사</button>
+                    </div>
+
+                    <div class="pm-container">
+                        <div id="line-carbon-nylon-container" class="line-list-group active">
+                            <table class="line-spec-table">
+                                <thead>
+                                    <tr>
+                                        <th>호수 (#)</th>
+                                        <th>라인 직경 (mm)</th>
+                                        <th>LB CLASS (lb)</th>
+                                        <th>인장강도 (kg)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>0.2호</td><td>0.074 mm</td><td>1 lb</td><td>약 0.45 kg</td></tr>
+                                    <tr><td>0.4호</td><td>0.104 mm</td><td>1.5 lb</td><td>약 0.70 kg</td></tr>
+                                    <tr><td>0.6호</td><td>0.128 mm</td><td>2.5 lb</td><td>약 1.10 kg</td></tr>
+                                    <tr><td>0.8호</td><td>0.148 mm</td><td>3 lb</td><td>약 1.35 kg</td></tr>
+                                    <tr><td>1.0호</td><td>0.165 mm</td><td>4 lb</td><td>약 1.80 kg</td></tr>
+                                    <tr><td>1.2호</td><td>0.185 mm</td><td>5 lb</td><td>약 2.25 kg</td></tr>
+                                    <tr><td>1.5호</td><td>0.205 mm</td><td>6 lb</td><td>약 2.70 kg</td></tr>
+                                    <tr><td>2.0호</td><td>0.235 mm</td><td>8 lb</td><td>약 3.60 kg</td></tr>
+                                    <tr><td>2.5호</td><td>0.260 mm</td><td>10 lb</td><td>약 4.50 kg</td></tr>
+                                    <tr><td>3.0호</td><td>0.285 mm</td><td>12 lb</td><td>약 5.40 kg</td></tr>
+                                    <tr><td>3.5호</td><td>0.310 mm</td><td>14 lb</td><td>약 6.35 kg</td></tr>
+                                    <tr><td>4.0호</td><td>0.330 mm</td><td>16 lb</td><td>약 7.25 kg</td></tr>
+                                    <tr><td>5.0호</td><td>0.370 mm</td><td>20 lb</td><td>약 9.00 kg</td></tr>
+                                    <tr><td>6.0호</td><td>0.405 mm</td><td>22 lb</td><td>약 10.00 kg</td></tr>
+                                    <tr><td>7.0호</td><td>0.435 mm</td><td>25 lb</td><td>약 11.30 kg</td></tr>
+                                    <tr><td>8.0호</td><td>0.470 mm</td><td>30 lb</td><td>약 13.60 kg</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id="line-pe-container" class="line-list-group">
+                            <table class="line-spec-table">
+                                <thead>
+                                    <tr>
+                                        <th>호수 (#)</th>
+                                        <th>라인 직경 (mm)</th>
+                                        <th>LB CLASS (lb)</th>
+                                        <th>인장강도 (kg)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td>0.2호</td><td>약 0.070 mm</td><td>4 ~ 5 lb</td><td>약 1.8 ~ 2.2 kg</td></tr>
+                                    <tr><td>0.4호</td><td>약 0.100 mm</td><td>6 ~ 8 lb</td><td>약 2.7 ~ 3.6 kg</td></tr>
+                                    <tr><td>0.6호</td><td>약 0.130 mm</td><td>10 ~ 12 lb</td><td>약 4.5 ~ 5.4 kg</td></tr>
+                                    <tr><td>0.8호</td><td>약 0.150 mm</td><td>14 ~ 16 lb</td><td>약 6.3 ~ 7.2 kg</td></tr>
+                                    <tr><td>1.0호</td><td>약 0.170 mm</td><td>18 ~ 20 lb</td><td>약 8.1 ~ 9.0 kg</td></tr>
+                                    <tr><td>1.2호</td><td>약 0.190 mm</td><td>22 ~ 25 lb</td><td>약 10.0 ~ 11.3 kg</td></tr>
+                                    <tr><td>1.5호</td><td>약 0.210 mm</td><td>28 ~ 30 lb</td><td>약 12.7 ~ 13.6 kg</td></tr>
+                                    <tr><td>2.0호</td><td>약 0.240 mm</td><td>33 ~ 35 lb</td><td>약 15.0 ~ 15.8 kg</td></tr>
+                                    <tr><td>2.5호</td><td>약 0.260 mm</td><td>40 lb</td><td>약 18.1 kg</td></tr>
+                                    <tr><td>3.0호</td><td>약 0.290 mm</td><td>45 ~ 50 lb</td><td>약 20.4 ~ 22.6 kg</td></tr>
+                                    <tr><td>3.5호</td><td>약 0.310 mm</td><td>55 lb</td><td>약 25.0 kg</td></tr>
+                                    <tr><td>4.0호</td><td>약 0.330 mm</td><td>60 lb</td><td>약 27.2 kg</td></tr>
+                                    <tr><td>5.0호</td><td>약 0.370 mm</td><td>70 ~ 80 lb</td><td>약 31.7 ~ 36.2 kg</td></tr>
+                                    <tr><td>6.0호</td><td>약 0.410 mm</td><td>85 ~ 90 lb</td><td>약 38.5 ~ 40.8 kg</td></tr>
+                                    <tr><td>7.0호</td><td>약 0.440 mm</td><td>100 lb</td><td>약 45.3 kg</td></tr>
+                                    <tr><td>8.0호</td><td>약 0.480 mm</td><td>110 ~ 120 lb</td><td>약 49.8 ~ 54.4 kg</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1042,7 +1139,7 @@
         <div class="weather-modal-header weather-header-container">
             <div class="weather-title-wrapper">
                 <div id="weatherModalMarkerIcon"
-                    class="custom-marker-wrapper leaflet-zoom-animated leaflet-interactive weather-preview-box weather-modal-icon-fix">
+                    class="leaflet-marker-icon custom-marker-wrapper leaflet-zoom-animated leaflet-interactive weather-preview-box weather-modal-icon-fix">
                 </div>
                 <h3 id="lblWeatherModalTitle" class="weather-title-text weather-modal-title-fix">포인트 기상 정보</h3>
             </div>
