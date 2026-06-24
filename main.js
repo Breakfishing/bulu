@@ -789,7 +789,6 @@ window.toggleMapLayer = function () {
 map.on('locationfound', function (e) {
   userLatLng = e.latlng;
 
-  // 중복되는 L.circle(정확도 반경 서클) 랜더링 엔진 로직을 완전히 제거했습니다.
   if (!userMarker) userMarker = L.marker(e.latlng, { icon: myLocationIcon }).addTo(map);
   else userMarker.setLatLng(e.latlng);
 
@@ -859,13 +858,11 @@ window.openCategoryManageModal = function () {
   if (backdrop) backdrop.classList.add('active');
   if (modal) modal.classList.add('active');
 
-  // 엘리먼트 ID 불일치 방지를 위한 매핑 폴백 가드 구성
   const listContainer = document.getElementById('pm-category-manage-list') || document.querySelector('#categoryManageModal .pm-list-group');
   if (!listContainer) return;
 
   listContainer.innerHTML = '';
   
-  // 1. 로컬 스토리지에 저장된 카테고리 순서 배열 추출 및 유효성 검사
   let savedCatOrder = [];
   try {
     const rawOrder = localStorage.getItem('pm-category-order');
@@ -876,11 +873,9 @@ window.openCategoryManageModal = function () {
     savedCatOrder = [];
   }
 
-  // 2. 현재 적재된 포인트 데이터 내의 커스텀 카테고리 추출
   let currentCats = [...new Set(cachedFishingPoints.map(p => p.category ? String(p.category).trim() : ''))]
     .filter(cat => cat !== '' && !['전체', '즐겨찾기', '공중화장실 정보', '최근 추가된 화장실', 'toilet', '미분류'].includes(cat));
 
-  // 3. 로컬 스토리지 정렬 데이터와 실제 카테고리 데이터 통합
   let finalCatOrder = [...savedCatOrder];
   currentCats.forEach(cat => { 
     if (!finalCatOrder.includes(cat)) finalCatOrder.push(cat); 
@@ -927,7 +922,6 @@ window.openCategoryManageModal = function () {
           e.stopPropagation();
           window.openCategoryEditBottomSheet(catName, color, e);
           
-          // 수정 완료되거나 취소될 때 관리 모달이 완전히 닫히는 현상을 방지하는 트리거 훅 연동
           setTimeout(() => {
             const editModal = document.getElementById('categoryEditModal') || document.querySelector('.bottom-sheet-modal-native.active') || document.querySelector('.bottom-sheet.active');
             if (editModal) {
@@ -971,7 +965,6 @@ window.openCategoryManageModal = function () {
     });
   }
 
-  // 카테고리 최대 생성 개수 가드 및 추가 버튼 상태 동적 제어 (최대 10개)
   const addBtnRow = modal.querySelector('.category-manage-add-row') || document.querySelector('.category-manage-add-row');
   if (addBtnRow) {
     const addBtn = addBtnRow.querySelector('.btn-main');
@@ -1215,7 +1208,6 @@ window.switchBoardSubTab = function (tab) {
   if (containerEvent) containerEvent.classList.toggle('active', tab === 'event');
   if (detailContainer) detailContainer.classList.remove('active');
 
-  // 모달 내부의 이벤트 전용 기간 입력창 행 디스플레이 제어
   const eventRow = document.getElementById('noticeWriteEventRow');
   if (eventRow) {
     eventRow.style.display = (tab === 'event') ? 'block' : 'none';
@@ -1251,7 +1243,6 @@ window.fetchLiveNotices = function () {
       cachedNotices.push({ id: doc.id, ...doc.data() });
     });
 
-    // 상단고정(isPinned) true 최우선 정렬 후 최신등록순 정렬
     cachedNotices.sort((a, b) => {
       const aPinned = a.isPinned === true ? 1 : 0;
       const bPinned = b.isPinned === true ? 1 : 0;
@@ -1285,7 +1276,6 @@ window.fetchLiveEvents = function () {
       cachedEvents.push({ id: doc.id, ...doc.data() });
     });
 
-    // 상단고정(isPinned) true 최우선 정렬 후 최신등록순 정렬
     cachedEvents.sort((a, b) => {
       const aPinned = a.isPinned === true ? 1 : 0;
       const bPinned = b.isPinned === true ? 1 : 0;
@@ -1301,7 +1291,6 @@ window.fetchLiveEvents = function () {
     cachedEvents.forEach((data, index) => {
       let dateStr = "일자 미상"; if (data.createdAt) { const d = (typeof data.createdAt.toDate === 'function') ? data.createdAt.toDate() : new Date(data.createdAt); dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
       
-      // 진행중 / 종료됨 상태 판별 로직
       let statusText = "진행중";
       let statusClass = "ongoing";
       if (data.startDate && data.endDate) {
@@ -1934,6 +1923,31 @@ window.saveInfoEditData = function () {
   }
 };
 
+// --- 라인 정보 전용 페이지 및 서브 탭 제어 엔진 영역 ---
+window.showLinePage = function (initialTab) {
+  window.closeModals();
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  document.getElementById('line-page')?.classList.add('active');
+  window.switchLineSubTab(initialTab || 'type');
+};
+
+window.switchLineSubTab = function (subTabId) {
+  const buttons = {
+    'type': document.getElementById('btnSubTabLineType'),
+    'strength': document.getElementById('btnSubTabLineStrength')
+  };
+  const sections = {
+    'type': document.getElementById('line-type-section'),
+    'strength': document.getElementById('line-strength-section')
+  };
+
+  Object.values(buttons).forEach(btn => btn?.classList.remove('active'));
+  Object.values(sections).forEach(sec => sec?.classList.remove('active'));
+
+  if (buttons[subTabId]) buttons[subTabId].classList.add('active');
+  if (sections[subTabId]) sections[subTabId].classList.add('active');
+};
+
 // =========================================================================
 // [TAB AREA 5] 더보기 탭, 전역 앱 설정 및 관리자 디버깅 패널 가드 시스템
 // =========================================================================
@@ -1943,9 +1957,7 @@ window.toggleDarkMode = function (checkbox) {
   if (clean2DLayer) { clean2DLayer.setUrl(isDark ? CARTO_DARK_URL : CARTO_LIGHT_URL); clean2DLayer.redraw(); }
 };
 
-// 중복 코드를 제거하고 초기화 시점에도 재사용할 수 있도록 UI 반영 로직을 별도로 분리했습니다.
 window.applyNaviAppUI = function (app) {
-  // 1. 라벨 영역 - 박스 스타일을 완전히 지우고 텍스트만 표시
   const label = document.getElementById('naviAppLabel');
   if (label) {
     label.style.background = 'none';
@@ -1964,20 +1976,17 @@ window.applyNaviAppUI = function (app) {
     }
   }
 
-  // 2. 기존 switch 버튼 제어 및 내부 slider 제거
   const checkbox = document.getElementById('naviAppToggle');
   if (checkbox) {
     const switchBtn = checkbox.parentElement;
     if (switchBtn) {
       switchBtn.style.transition = 'all 0.25s ease';
       
-      // 내부에서 움직이던 slider(동그라미) 요소를 완전히 숨김 처리
       const slider = switchBtn.querySelector('.slider');
       if (slider) {
         slider.style.display = 'none';
       }
 
-      // 3단 앱 브랜드 인스턴스 컬러를 switch 버튼 배경에 직접 매핑
       if (app === 'naver') {
         switchBtn.style.background = '#03C75A';
         switchBtn.style.borderColor = '#03C75A';
@@ -1999,7 +2008,6 @@ window.toggleNaviApp = function (checkbox) {
   let currentApp = localStorage.getItem('navi-app') || 'naver';
   let nextApp = 'naver';
 
-  // 네이버 > 카카오 > 티맵 순서로 3단 순환
   if (currentApp === 'naver') {
     nextApp = 'kakao';
   } else if (currentApp === 'kakao') {
@@ -2051,7 +2059,6 @@ window.logToAdminTerminal = function (message) {
   terminal.scrollTop = terminal.scrollHeight;
 };
 
-// 페이지 로드 시 시동 라이프사이클 안에서 로컬 스토리지 세팅값을 추적 및 UI 복원하는 엔진
 const initSettingsOnLoad = function () {
   const savedApp = localStorage.getItem('navi-app') || 'naver';
   window.applyNaviAppUI(savedApp);
@@ -2130,7 +2137,6 @@ function updateVisibleMarkersOnMap() {
     targetToilets.slice(0, 20).forEach(item => {
       if (!item || item.lat === undefined || item.lng === undefined || isNaN(item.lat) || isNaN(item.lng) || item.lat === null || item.lng === null) return;
       
-      // 화장실 마커도 pm-color-dot과 통일성 있는 물방울 형태로 변경 (크기 24x36 자동 조절)
       const toiletHtml = `<svg width="24" height="36" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#ff9500"/>
         <circle cx="12" cy="12" r="4" fill="#ffffff"/>
@@ -2145,7 +2151,6 @@ function updateVisibleMarkersOnMap() {
 map.on('moveend zoomend', updateVisibleMarkersOnMap);
 
 function getFishingPointSvg(color) {
-  // 낚시 포인트 전용 깔끔한 물방울(핀) 디자인 및 pm-color-dot 통일화 구조
   return `<svg width="26" height="39" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg" class="fishing-marker-svg-anchor">
     <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="${color}"/>
     <circle cx="12" cy="12" r="4" fill="#ffffff"/>
@@ -2215,7 +2220,7 @@ window.openToiletModal = function () {
   window.selectedNewToiletHoursValue = "24시간";
 
   const chips = document.getElementById('newToiletHoursChips');
-  if (chips) { chips.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active')); document.getElementById('chipNewHours24')?.classList.add('active'); }
+  if (chips) { chips.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active')); document.getElementById('chipNewHours24')?.add('active'); }
   document.getElementById('newToiletHoursDetailRow').classList.remove('active');
   window.fetchAddressForModal(tempLatLng.lat, tempLatLng.lng, 'toiletAddress');
 };
@@ -2516,7 +2521,6 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
   if (naviOpenBtn) {
     const naviApp = localStorage.getItem('navi-app') || 'naver';
     
-    // 네이버 > 카카오 > 티맵 앱 순서에 맞춰 각각의 브랜드 테마 색상 지정
     if (naviApp === 'naver') {
       naviOpenBtn.style.background = '#03C75A';
       naviOpenBtn.style.color = '#ffffff';
@@ -2537,7 +2541,6 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
       } else if (currentApp === 'kakao') {
         window.open(`https://map.kakao.com/link/to/${encodeURIComponent(name)},${lat},${lng}`, '_blank');
       } else if (currentApp === 'tmap') {
-        // TMAP 호출 목적지 가이드 (rGoX: 경도, rGoY: 위도 배치 준수)
         window.open(`tmap://route?rGoName=${encodeURIComponent(name)}&rGoX=${lng}&rGoY=${lat}`, '_blank');
       }
     };
