@@ -7,6 +7,12 @@ import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 import 'leaflet-edgebuffer';
 
+// src/main.js 상단 로드부 영역 예시
+import './style.css'; 
+
+// 게시판 컴포넌트 스레드 엔진 결합
+import './components/board/board.js';
+
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
