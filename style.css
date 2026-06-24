@@ -186,7 +186,6 @@ textarea,
 }
 
 @keyframes splashLogoFloat {
-
     0%,
     100% {
         transform: translateY(0);
@@ -614,7 +613,6 @@ textarea,
 #editPointCategory, #editPointParkingPrice, #limitMinSize, #limitMaxSize {
     text-align: center;
 }
-
 
 .form-textarea,
 .modal-form-group textarea {
@@ -1719,9 +1717,7 @@ textarea,
     margin: 0;
     font-size: 16px;
     color: var(--text-muted);
-
 }
-
 
 .pm-header {
     height: 54px;
@@ -2091,7 +2087,6 @@ textarea,
     background: var(--bg-main) !important;
 }
 
-/* 신규 모달 내 하단 배치 영역 스타일 정의 */
 .category-manage-add-row {
     margin-top: 15px;
     width: 100%;
@@ -2337,7 +2332,6 @@ textarea,
     margin-top: 5px;
 }
 
-/* 상단고정 체크박스 영역 정렬 구조 변경 및 앱 스타일 반영 */
 .modal-form-group.notice-pin-row {
     display: flex !important;
     flex-direction: row !important;
@@ -2366,7 +2360,6 @@ textarea,
     user-select: none;
 }
 
-/* 이벤트 및 금어기 기간 입력 폼 그룹 스타일 유니파이드 처리 */
 .modal-form-group.ban-detail-row-fix.event,
 .modal-form-group.ban-detail-row-fix {
     display: flex;
@@ -2385,7 +2378,6 @@ textarea,
     text-align: left;
 }
 
-/* 이벤트 및 금어기 공통 기간 입력 구조적 정렬 필드 스택 */
 .event-duration-flex-field,
 .ban-detail-input-wrapper {
     display: flex;
@@ -2404,7 +2396,6 @@ textarea,
     user-select: none;
 }
 
-/* 모달 내부 개별/기간 입력 요소 공통 메인 디자인 스택 규격 통합 */
 .modal-input-main {
     flex: 1;
     height: 40px;
@@ -2421,7 +2412,6 @@ textarea,
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-/* Date 타입 피커 브라우저 고유 정렬 텍스트 패딩 조율 */
 input[type="date"].modal-input-main {
     text-align: left;
     padding: 0 12px;
@@ -2914,58 +2904,56 @@ input[type="date"].modal-input-main {
 }
 
 /* =========================================================================
-   수심 팝업 스타일 (Custom Depth Popup)
+    수심 팝업 스타일 (Custom Depth Popup)
    ========================================================================= */
-
 .custom-depth-popup .leaflet-popup-content-wrapper {
-  background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 0;
-  overflow: hidden;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 0;
+    overflow: hidden;
 }
 
 .custom-depth-popup .leaflet-popup-content {
-  margin: 0;
-  padding: 8px 12px;
-  line-height: 1.4;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 8px 12px;
+    line-height: 1.4;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .custom-depth-popup .leaflet-popup-tip {
-  background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.95);
 }
 
 /* 다크모드 대응 */
 [data-theme='dark'] .custom-depth-popup .leaflet-popup-content-wrapper {
-  background: rgba(30, 30, 30, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(30, 30, 30, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 [data-theme='dark'] .custom-depth-popup .leaflet-popup-tip {
-  background: rgba(30, 30, 30, 0.95);
+    background: rgba(30, 30, 30, 0.95);
 }
 
 [data-theme='dark'] .custom-depth-popup span {
-  color: #4da3ff !important;
+    color: #4da3ff !important;
 }
 
 .leaflet-tooltip {
-  background: rgba(30, 30, 30, 0.85) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 6px !important;
-  color: #ffffff !important;
-  font-weight: 700 !important;
-  font-size: 11px !important;
-  padding: 4px 8px !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+    background: rgba(30, 30, 30, 0.85) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 6px !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    padding: 4px 8px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
 }
 
 /* =========================================================================
     GROUP 12: 새로고침 버튼 실시간 회전 애니메이션 및 기상 수정 레이어 셋
    ========================================================================= */
-
 @keyframes hcSpinLinearInfinite {
     0% {
         transform: rotate(0deg);
@@ -3032,7 +3020,7 @@ input[type="date"].modal-input-main {
     padding: 16px;
     margin-bottom: 12px;
     display: flex;
-    flex-direction: row; /* 가로 배열 정의 */
+    flex-direction: row;
     gap: 16px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     align-items: center;
@@ -3157,7 +3145,7 @@ input[type="date"].modal-input-main {
 /* 유튜브 쇼츠 종횡비 고정 세로 썸네일 규격(9:16) 설계 */
 .info-knot-thumb-wrapper {
     width: 100%;
-    aspect-ratio: 9 / 16; /* 16:9에서 9:16 쇼츠 비율로 교체 */
+    aspect-ratio: 9 / 16;
     background-color: #000000;
     position: relative;
     overflow: hidden;
@@ -3195,7 +3183,6 @@ input[type="date"].modal-input-main {
     gap: 6px;
     flex: 1;
 }
-
 
 .info-knot-title {
     font-size: 14.5px;
