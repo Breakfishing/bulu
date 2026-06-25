@@ -6,7 +6,7 @@ import { db } from './utils/firebase.js';
 
 // 하위 컴포넌트 모듈 스레드 가동
 import './components/board/board.js';
-//import './components/map/map.js';
+import './components/map/map.js';
 
 // --- 전역 변수 및 상태 레이어 관리 ---
 window.cachedFishingPoints = [];
