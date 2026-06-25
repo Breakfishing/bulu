@@ -1,22 +1,25 @@
 // =========================================================================
 // [TAB AREA 0] 글로벌 패키징, 파이어베이스 코어 인스턴스 및 공통 인프라
 // =========================================================================
+// src/main.js
+
+// 1. 스타일 및 파이어베이스 초기화 (최상단)
+import './style.css'; 
+import { db } from './src/utils/firebase.js'; 
+
+// 2. 컴포넌트 엔진 로드
+import './src/components/board/board.js';
+// import './src/components/map/map.js'; (나중에 만들 예정)
+
+// 3. 라이브러리 및 에셋 (지도 등)
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/firestore';
 import 'leaflet-edgebuffer';
-
-// src/main.js 상단 로드부 영역 예시
-import './style.css'; 
-
-// 게시판 컴포넌트 스레드 엔진 결합
-import './components/board/board.js';
-
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
+// 지도 아이콘 설정
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: markerIcon2x,
@@ -24,21 +27,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: markerShadow,
 });
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDg8nOLQfGVYZu57S5m0C-zccDGSrdtvg4",
-  authDomain: "fishing-25978.firebaseapp.com",
-  projectId: "fishing-25978",
-  storageBucket: "fishing-25978.firebasestorage.app",
-  messagingSenderId: "681283419168",
-  appId: "1:681283419168:web:0cc86b6274c92f03d3d045",
-  measurementId: "G-R7M94V4L0P"
-};
-
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
-const db = firebase.firestore();
-
+// 4. 전역 변수 관리 (공통으로 쓰이는 상태값들)
 let cachedFishingPoints = [];
 let cachedPublicToilets = [];
 let userMarker = null;
@@ -48,21 +37,32 @@ let tempLatLng = null;
 let tempTargetVisual = null;
 let cachedActiveAddressStr = "";
 
-window.db = db;
-window.firebase = firebase;
 window.timelineDatesArray = [];
 window.allTidesSchedule = [];
+window.globalSunTimesCache = {};
+window.isFishingPointsLoaded = false;
+window.isPublicToiletsLoaded = false;
 
+// API 키들 (나중에 src/constants.js 로 옮기면 더 좋습니다)
 const PUBLIC_PORTAL_KEY = "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
 window.DATA_GO_KR_SERVICE_KEY = PUBLIC_PORTAL_KEY;
 const KHOA_API_KEY = PUBLIC_PORTAL_KEY;
 const KMA_AUTH_KEY = "RAp21103R7OKdtddNwezzw";
 
-window.globalSunTimesCache = {};
+// 5. 공통 UI 제어 함수 (전역 유지)
+window.checkAndHideSplash = function () {
+  // ... (기존 로직 동일)
+};
 
-window.isFishingPointsLoaded = false;
-window.isPublicToiletsLoaded = false;
+window.closeModals = function () {
+  // ... (기존 로직 동일)
+};
 
+window.switchTab = function (tabId, navItem) {
+  // ... (기존 로직 동일)
+};
+
+// ... 이하 지도(Map) 관련 로직 및 API 호출 로직들 유지
 window.checkAndHideSplash = function () {
   const splashEl = document.getElementById('splash-screen');
   if (!splashEl) return;
