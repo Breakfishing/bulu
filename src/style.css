@@ -2097,6 +2097,340 @@ textarea,
     flex: 1;
 }
 
+/* =========================================================================
+    GROUP 9: 공지사항 및 이벤트 전용 직각화 게시판 규격 시스템
+   ========================================================================= */
+.board-sub-tab-container {
+    display: flex;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border-color);
+    width: 100%;
+}
+
+.board-sub-tab-btn {
+    flex: 1;
+    padding: 14px 0;
+    background: none;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-align: center;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.board-sub-tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    font-weight: 700;
+}
+
+.notice-list-flex {
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    width: 100% !important;
+    position: relative;
+    border: 1px solid var(--border-color);
+}
+
+.notice-list-flex.active {
+    display: flex !important;
+}
+
+.notice-item {
+    display: flex;
+    align-items: center;
+    padding: 15px 12px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background-color 0.2s;
+    gap: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 0 !important;
+}
+
+.notice-item:active {
+    background: var(--grid-item-bg);
+}
+
+.notice-item.pinned-item {
+    background: var(--grid-item-bg) !important;
+}
+
+.notice-item-num {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    width: 32px;
+    text-align: center;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pinned-badge {
+    background: #ff3b30;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
+.event-status-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+    color: #ffffff;
+    vertical-align: middle;
+}
+
+.event-status-badge.ongoing {
+    background: #34c759;
+}
+
+.event-status-badge.ended {
+    background: #8e8e93;
+}
+
+.event-status-badge.upcoming {
+    background: #007aff;
+}
+
+.notice-item-title {
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--text-main);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+}
+
+.notice-item-date {
+    font-size: 12px;
+    color: var(--text-muted);
+    width: 76px;
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.notice-detail-inline-panel {
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    background: var(--bg-panel);
+    padding: 8px 4px;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--border-color);
+}
+
+.notice-detail-inline-panel.active {
+    display: flex !important;
+}
+
+.notice-inline-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px;
+    width: 100%;
+}
+
+.notice-inline-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 0;
+    text-align: left;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notice-inline-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.notice-inline-date {
+    font-size: 12px;
+    padding: 10px;
+    color: var(--text-muted);
+    text-align: left;
+    width: 100%;
+}
+
+.notice-inline-content {
+    font-size: 14.5px;
+    padding: 10px;
+    color: var(--text-main);
+    line-height: 1.4;
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-all;
+    width: 100%;
+}
+
+.notice-header-write-btn,
+.manage-header-write-btn {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 6px;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.notice-header-write-btn:active,
+.manage-header-write-btn:active {
+    background-color: var(--grid-item-bg);
+}
+
+.notice-write-title-text {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 18px;
+    color: var(--text-main);
+    text-align: left;
+}
+
+.notice-write-group-margin {
+    margin-bottom: 15px;
+}
+
+.notice-write-textarea {
+    height: 100px !important;
+    resize: none;
+}
+
+.notice-write-action-margin {
+    margin-top: 5px;
+}
+
+.modal-form-group.notice-pin-row {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+    margin-bottom: 12px;
+    cursor: pointer;
+}
+
+.modal-form-group.notice-pin-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--primary-color);
+    cursor: pointer;
+}
+
+.modal-form-group.notice-pin-row label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+    cursor: pointer;
+    user-select: none;
+}
+
+.modal-form-group.ban-detail-row-fix.event,
+.modal-form-group.ban-detail-row-fix {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.modal-form-group.ban-detail-row-fix.event label,
+.modal-form-group.ban-detail-row-fix label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-main);
+    text-align: left;
+}
+
+.event-duration-flex-field,
+.ban-detail-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.event-duration-flex-field span,
+.ban-detail-input-wrapper span {
+    color: var(--text-main);
+    font-size: 14px;
+    font-weight: 600;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.modal-input-main {
+    flex: 1;
+    height: 40px;
+    padding: 0 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-main);
+    color: var(--text-main);
+    font-size: 14px;
+    font-family: inherit;
+    border-radius: 8px;
+    outline: none;
+    box-sizing: border-box;
+    text-align: center;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[type="date"].modal-input-main {
+    text-align: left;
+    padding: 0 12px;
+}
+
+.modal-input-main:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+    background: var(--bg-panel);
+}
+
+.event-range-splitter {
+    color: var(--text-muted) !important;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0 4px;
+    flex-shrink: 0;
+    user-select: none;
+}
 
 /* =========================================================================
     GROUP 10: 바텀시트, 애니메이션 스택 및 예외 레이어 가드 최종 선언
@@ -2651,7 +2985,233 @@ textarea,
     animation: none !important;
 }
 
+/* =========================================================================
+    신규 추가: 정보 게시판 동적 리스트 및 프리미엄 카드 템플릿 시스템
+   ========================================================================= */
+.info-search-wrapper {
+    padding: 12px 16px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border-color);
+    display: none;
+}
 
+/* 검색 기능 통합 활성화 대응 */
+.info-search-wrapper.active {
+    display: block !important;
+}
+
+.info-search-wrapper input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-size: 14px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+/* 금어기, 금지체장 레이아웃 변형 (좌측 이미지, 우측 정보 횡단 정렬) */
+.info-card-item {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    align-items: center;
+}
+
+#limitMaxSize, #limitMinSize {
+    width: 10%;
+}
+
+/* 우측 텍스트 정보 박스 컨테이너 */
+.info-card-content-box {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.info-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.info-card-species {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.info-card-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.info-card-badge.sea {
+    background-color: #007aff;
+}
+
+.info-card-badge.fresh {
+    background-color: #28a745;
+}
+
+.info-card-body-flex {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.info-card-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+}
+
+.info-detail-row {
+    font-size: 13.5px;
+    line-height: 1.4;
+    color: var(--text-main);
+    text-align: left;
+}
+
+.info-detail-row strong {
+    color: var(--text-muted);
+    font-weight: 600;
+    display: inline-block;
+    width: 65px;
+}
+
+/* 좌측 배치 어종 이미지 박스 규격 */
+.info-card-img-box {
+    width: 84px;
+    height: 84px;
+    border-radius: 10px;
+    background-color: var(--grid-item-bg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info-card-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.info-card-img-box svg {
+    width: 28px;
+    height: 28px;
+    stroke: var(--text-muted);
+    opacity: 0.4;
+}
+
+/* 매듭법 그리드 */
+.info-knot-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: 100%;
+}
+
+.info-knot-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 유튜브 쇼츠 종횡비 고정 세로 썸네일 규격(9:16) 설계 */
+.info-knot-thumb-wrapper {
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    background-color: #000000;
+    position: relative;
+    overflow: hidden;
+}
+
+.info-knot-thumb-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.info-knot-play-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.info-knot-play-overlay svg {
+    width: 36px;
+    height: 36px;
+    fill: #ffffff;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+}
+
+.info-knot-info-area {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.info-knot-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--text-main);
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 매듭법 해시태그 텍스트 렌더링 규격 */
+.info-knot-tags {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--primary-color);
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 카드 하단 출처 채널명 마킹 소형 폰트 설계 */
+.info-knot-source {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: left;
+    margin-top: 2px;
+}
 
 #infoEditModal,
 #infoEditModal textarea {
