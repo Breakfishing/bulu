@@ -419,7 +419,7 @@ window.handleHomeFavoriteChange = function (selectEl) {
       window.updateHomeCardByLocation(window.userLatLng.lat, window.userLatLng.lng);
     } else {
       if (mainCardEl) mainCardEl.style.opacity = "1";
-      console.log("GPS 신호를 추적하는 중입니다. 신호가 수신되면 데이터가 자동 반전됩니다.");
+      console.log("GPS 신호를 추적하는 중입니다. 신호가 수신되면 데이터가 automatic 반전됩니다.");
     }
   } else {
     const [lat, lng] = selectEl.value.split(",").map(Number);
@@ -632,7 +632,7 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
 
 window.applyHomeCardDOM = function (payload) {
   if (!payload) return;
-  const setTxt = (className, val) => { const el = document.querySelector(`.hc-premium-card ${className}`); if (el) el.textContent = val; };
+  const setTxt = (className, val) => { const el = document.querySelector(`.hc-premium-card ${className}`); if el.textContent = val; };
 
   setTxt(".hc-temp", payload.temp); setTxt(".hc-weather", payload.weather); setTxt(".hc-rain", payload.rain); setTxt(".hc-wind", payload.wind);
   setTxt(".hc-sunrise", payload.sunrise); setTxt(".hc-sunset", payload.sunset); setTxt(".hc-tide-idx", payload.tideIdx); setTxt(".hc-wave", payload.wave);
