@@ -2785,5 +2785,5 @@ input[type="date"].modal-input-main {
 }
 
 .pm-custom-table tr:nth-child(even) {
-    background-color: var(--bg-main);;
+    background-color: var(--bg-main);
 }
