@@ -6,7 +6,7 @@ import { db } from './utils/firebase.js';
 
 // 하위 컴포넌트 모듈 스레드 가동
 import './components/board/board.js';
-// import './components/map/map.js';
+import './components/map/map.js';
 
 // --- 전역 변수 및 상태 레이어 관리 ---
 window.cachedFishingPoints = [];
@@ -896,42 +896,6 @@ window.bindCategoryDragAndDropEvents = function (container) {
     window.addEventListener('pointercancel', onPointerUp);
   });
 };
-
-// [카토 레이어 제어 엔진 추가]
-window.toggleMapLayer = function(layerType) {
-    if (!window.mapObj) return;
-    
-    // 기존 레이어 제거 (Base Layer 제외하고 모두 제거)
-    window.mapObj.eachLayer((layer) => {
-        if (layer.options && layer.options.isCartoLayer) {
-            window.mapObj.removeLayer(layer);
-        }
-    });
-
-    // 새로운 레이어 주입
-    if (layerType === 'carto') {
-        const cartoLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
-            isCartoLayer: true,
-            attribution: '© CartoDB'
-        }).addTo(window.mapObj);
-        window.isToiletLayerActive = true;
-    }
-};
-
-// [초기 부팅 시점 자동 실행]
-window.loadCoastalDepthData = async function() {
-  try {
-    const response = await fetch('coastal_depth_compact.json');
-    if (response.ok) {
-      window.coastalDepthData = await response.json();
-      console.log(`[수심 데이터 로드 완료] 총 ${window.coastalDepthData.length} 격자 확보`);
-      
-      // 데이터 로드 완료 후 지도 레이어 강제 활성화 시도
-      if (window.mapObj) window.toggleMapLayer('carto'); 
-    }
-  } catch (err) { console.error("수심 데이터 로드 중 에러 발생:", err); }
-};
-
 
 window.renderPointsManagementTab = function () {
   const tabsContainer = document.getElementById('pm-category-tabs');
