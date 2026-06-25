@@ -5,10 +5,10 @@
 
 // 1. 스타일 및 파이어베이스 초기화 (최상단)
 import './style.css'; 
-import { db } from './src/utils/firebase.js'; 
+import { db } from './utils/firebase.js'; 
 
 // 2. 컴포넌트 엔진 로드
-import './src/components/board/board.js';
+import './components/board/board.js';
 // import './src/components/map/map.js'; (나중에 만들 예정)
 
 // 3. 라이브러리 및 에셋 (지도 등)
