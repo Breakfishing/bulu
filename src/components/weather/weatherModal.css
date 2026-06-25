@@ -1,0 +1,131 @@
+/* =========================================================================
+    [COMPONENT] 실시간 연안 종합 기상/조석 타임라인 디자인 시스템
+   ========================================================================= */
+
+/* 1. 상단 환경 정보 레이어 요약 블록 */
+.timeline-environmental-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--text-main);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.timeline-environmental-header strong {
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-right: 4px;
+}
+
+.timeline-environmental-header span {
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+/* 2. 타임라인 스크롤 축 뷰포트 컨테이너 */
+.timeline-scroll-axis {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 4px 12px 4px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 3. 시간별 버티컬 슬롯 카드 */
+.timeline-hour-slot {
+    flex: 0 0 66px;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px 6px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11.5px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+/* 4. 가변 데이터별 가독성 색상 배정 */
+.timeline-hour-slot .active-current-time {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.timeline-hour-slot .weather-sky-status {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.timeline-hour-slot .weather-temp-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.timeline-hour-slot .weather-wind-value {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    background-color: var(--grid-item-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* 5. 현재 활성화(현재 시간) 슬롯 강조 스타일 */
+.timeline-hour-slot.active-current {
+    border-color: var(--primary-color) !important;
+    background-color: var(--bg-main) !important;
+    box-shadow: 0 4px 10px rgba(0, 167, 153, 0.1);
+    transform: translateY(-2px);
+}
+
+/* 스크롤바 커스텀 보정 */
+.timeline-scroll-axis::-webkit-scrollbar {
+    height: 6px;
+}
+
+.timeline-scroll-axis::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.timeline-scroll-axis::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 10px;
+}
+
+/* 6. 모달 로딩 애니메이션 스켈레톤 */
+.timeline-loading-skeleton {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 0;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.skeleton-spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: hc-spin-anim 0.8s linear infinite;
+    margin-bottom: 12px;
+}
+
+@keyframes hc-spin-anim {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
