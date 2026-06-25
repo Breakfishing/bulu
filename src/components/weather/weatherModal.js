@@ -116,7 +116,8 @@ window.fetchKMAWeatherPromise = async function (lat, lng) {
   const baseTime = `${String(hour).padStart(2, '0')}00`;
 
   const serviceKey = window.DATA_GO_KR_SERVICE_KEY || "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
-  const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst?serviceKey=${encodeURIComponent(serviceKey)}&pageNo=1&numOfRows=60&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${gridObj.x}&ny=${gridObj.y}`;
+  // Vite 가상 프록시 라우터(/api-kma) 매핑 구조로 전면 전환 및 중복 인코딩 문제 차단
+  const url = `/api-kma/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst?serviceKey=${serviceKey}&pageNo=1&numOfRows=60&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${gridObj.x}&ny=${gridObj.y}`;
 
   try {
     const res = await fetch(url);
@@ -158,7 +159,8 @@ window.fetchRealWaterTempPromise = async function (lat, lng, dateStrList) {
   const serviceKey = window.DATA_GO_KR_SERVICE_KEY || "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
   const todayStr = dateStrList[0];
   
-  const url = `https://www.khoa.go.kr/api/oceandata/tideObsRealTime/search.do?ServiceKey=${serviceKey}&ObsCode=${obsCode}&ResultType=json`;
+  // Vite 가상 프록시 라우터(/api-tide) 매핑 구조로 도메인을 제거하여 CORS 전면 차단 해제
+  const url = `/api-tide/api/oceandata/tideObsRealTime/search.do?ServiceKey=${serviceKey}&ObsCode=${obsCode}&ResultType=json`;
 
   try {
     const res = await fetch(url);
@@ -204,7 +206,8 @@ window.fetchTideData3DaysPromise = async function (lat, lng) {
   const d2 = formatD(new Date(now.getTime() + 48 * 60 * 60 * 1000));
   window.timelineDatesArray = [d0, d1, d2];
 
-  const url = `https://www.khoa.go.kr/api/oceandata/tideObsPre/search.do?ServiceKey=${serviceKey}&ObsCode=${obsCode}&ResultType=json`;
+  // Vite 가상 프록시 라우터(/api-tide) 매핑 구조로 도메인을 제거하여 CORS 전면 차단 해제
+  const url = `/api-tide/api/oceandata/tideObsPre/search.do?ServiceKey=${serviceKey}&ObsCode=${obsCode}&ResultType=json`;
 
   try {
     const res = await fetch(url);
