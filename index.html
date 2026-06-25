@@ -277,7 +277,7 @@
                             <text x="20" y="234" class="hc-txt-white hc-txt-shadow hc-tide-high" font-size="11"
                                 font-weight="700">만조 --:-- ▲--cm</text>
 
-                            <g id="hc-home-refresh-btn" transform="translate(365, 211)" cursor="pointer"
+                            <g class="hc-home-refresh-btn" transform="translate(365, 211)" cursor="pointer"
                                 onclick="window.refreshHomeLocation(this)">
                                 <circle cx="10" cy="10" r="16" fill="transparent" transform="translate(-5, -5)" />
                                 <g transform="scale(0.75)">
@@ -295,7 +295,7 @@
             <div id="tab-map" class="tab-content active">
                 <div id="map"></div>
 
-                <button class="top-center-ctrl" onclick="refreshMapData()">
+                <button class="top-center-ctrl" onclick="window.refreshMapData()">
                     <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
@@ -303,13 +303,13 @@
                 </button>
 
                 <div class="top-right-ctrl-group">
-                    <button id="btn-layer" class="floating-btn" onclick="toggleMapLayer()">
+                    <button id="btn-layer" class="floating-btn" onclick="window.toggleMapLayer()">
                         <svg class="app-icon mode-2d-icon" viewBox="0 0 24 24">
                             <text x="50%" y="70%" fill="var(--text-main)" text-anchor="middle">2D</text>
                         </svg>
                     </button>
 
-                    <button id="btn-prohibited" class="floating-btn" onclick="toggleProhibitedZones()">
+                    <button id="btn-prohibited" class="floating-btn" onclick="window.toggleProhibitedZones()">
                         <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
@@ -317,7 +317,7 @@
                         </svg>
                     </button>
 
-                    <button id="btn-toilet" class="floating-btn" onclick="toggleToiletLayer(this)">
+                    <button id="btn-toilet" class="floating-btn" onclick="window.toggleToiletLayer(this)">
                         <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="var(--text-main)" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
                             <path d="M7 2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
@@ -439,12 +439,12 @@
                         </svg>
                         <span class="grid-label">1:1문의</span>
                     </div>
-                    <div class="grid-item" onclick="showSettingsPage()">
+                    <div class="grid-item" onclick="window.showSettingsPage()">
                         <svg class="settings-grid-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="3"></circle>
                             <path
-                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 g 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
                             </path>
                         </svg>
                         <span class="grid-label">앱 설정</span>
@@ -455,7 +455,7 @@
             <div id="settings-page" class="tab-content">
                 <div class="points-management-wrapper">
                     <div class="pm-header settings-header-flex">
-                        <button type="button" onclick="hideSettingsPage()" class="settings-back-btn">
+                        <button type="button" onclick="window.hideSettingsPage()" class="settings-back-btn">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -474,7 +474,7 @@
                                 <span>다크 모드</span>
                             </span>
                             <label class="switch">
-                                <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode(this)">
+                                <input type="checkbox" id="darkModeToggle" onchange="window.toggleDarkMode(this)">
                                 <span class="slider"></span>
                             </label>
                         </div>
@@ -692,7 +692,7 @@
         </main>
 
         <nav id="bottom-nav">
-            <div class="nav-item" onclick="switchTab('tab-home', this)">
+            <div class="nav-item" onclick="window.switchTab('tab-home', this)">
                 <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -700,7 +700,7 @@
                 </svg>
                 <span class="nav-label">홈</span>
             </div>
-            <div class="nav-item active" onclick="switchTab('tab-map', this)">
+            <div class="nav-item active" onclick="window.switchTab('tab-map', this)">
                 <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
@@ -709,7 +709,7 @@
                 </svg>
                 <span class="nav-label">지도</span>
             </div>
-            <div class="nav-item" onclick="switchTab('tab-manage', this)">
+            <div class="nav-item" onclick="window.switchTab('tab-manage', this)">
                 <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <line x1="8" y1="6" x2="21" y2="6"></line>
@@ -721,7 +721,7 @@
                 </svg>
                 <span class="nav-label">포인트관리</span>
             </div>
-            <div class="nav-item" onclick="switchTab('tab-more', this)">
+            <div class="nav-item" onclick="window.switchTab('tab-more', this)">
                 <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="1"></circle>
@@ -736,14 +736,14 @@
     <div id="firstModal" class="modal">
         <h3>위치 정보 등록</h3>
         <div class="modal-action-row-grid first-modal-grid-flex">
-            <button class="btn-main first-modal-btn-register" onclick="openPointModal()">
+            <button class="btn-main first-modal-btn-register" onclick="window.openPointModal()">
                 <svg viewBox="0 0 24 24" class="first-modal-btn-icon">
                     <path d="M12 20h9"></path>
                     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                 </svg>
                 <span>포인트 등록</span>
             </button>
-            <button class="btn-main first-modal-btn-toilet" onclick="openToiletModal()">
+            <button class="btn-main first-modal-btn-toilet" onclick="window.openToiletModal()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"
                     stroke-linejoin="round" class="first-modal-btn-icon">
                     <path d="M7 2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path>
@@ -751,7 +751,7 @@
                 </svg>
                 <span>화장실 등록</span>
             </button>
-            <button class="btn-sub first-modal-btn-cancel" onclick="closeModals()">취소</button>
+            <button class="btn-sub first-modal-btn-cancel" onclick="window.closeModals()">취소</button>
         </div>
     </div>
 
@@ -777,15 +777,15 @@
         <div class="modal-form-group">
             <label>주차 요금</label>
             <div class="chip-group-row">
-                <button type="button" class="chip-btn active" onclick="selectParking('none', this)">주차 불가</button>
-                <button type="button" class="chip-btn" onclick="selectParking('free', this)">무료 주차</button>
-                <button type="button" class="chip-btn" onclick="selectParking('paid', this)">유료 주차</button>
+                <button type="button" class="chip-btn active" onclick="window.selectParking('none', this)">주차 불가</button>
+                <button type="button" class="chip-btn" onclick="window.selectParking('free', this)">무료 주차</button>
+                <button type="button" class="chip-btn" onclick="window.selectParking('paid', this)">유료 주차</button>
             </div>
         </div>
 
         <div class="modal-form-group parking-detail-row-flex" id="parkingDetailRow">
             <button type="button" id="btnParkingUnit" class="chip-btn parking-unit-btn-reset"
-                onclick="shiftParkingUnit(this)">10분</button>
+                onclick="window.shiftParkingUnit(this)">10분</button>
             <input type="number" id="parkingPrice" placeholder="금액" class="parking-price-input-reset">
             <span class="parking-currency-label">원</span>
         </div>
@@ -885,14 +885,13 @@
                     onclick="window.selectEditPointParking('none', this)">주차 불가</button>
                 <button type="button" class="chip-btn" id="chipEditParkingFree"
                     onclick="window.selectEditPointParking('free', this)">무료 주차</button>
-                <button type="button" class="chip-btn" onclick="window.selectEditPointParking('paid', this)">유료
-                    주차</button>
+                <button type="button" class="chip-btn" onclick="window.selectEditPointParking('paid', this)">유료 주차</button>
             </div>
         </div>
 
         <div class="modal-form-group parking-detail-row-flex" id="editPointParkingDetailRow">
             <button type="button" id="btnEditPointParkingUnit" class="chip-btn parking-unit-btn-reset"
-                onclick="shiftEditPointParkingUnit(this)">10분</button>
+                onclick="window.shiftEditPointParkingUnit(this)">10분</button>
             <input type="number" id="editPointParkingPrice" placeholder="금액" class="parking-price-input-reset">
             <span class="parking-currency-label">원</span>
         </div>
