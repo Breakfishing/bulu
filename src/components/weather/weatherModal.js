@@ -4,6 +4,11 @@
 import './weatherModal.css';
 import { db } from '../../utils/firebase.js';
 
+// 전역 캐시 및 데이터 저장소 초기화 바인딩
+window.globalSunTimesCache = window.globalSunTimesCache || {};
+window.allTidesSchedule = window.allTidesSchedule || [];
+window.timelineDatesArray = window.timelineDatesArray || [];
+
 // 조석 관측소 참조 데이터 스택 복크
 const LOCAL_TIDE_STATIONS = [
   { code: 'DT_0005', name: '부산', lat: 35.0975, lng: 129.0369 },
@@ -20,13 +25,12 @@ const LOCAL_TIDE_STATIONS = [
 // -------------------------------------------------------------------------
 window.getNearestTideStation = function (lat, lng) {
   let minDistance = Infinity;
-  let targetCode = 'DT_0005'; // 기본값 부산
+  let targetCode = 'DT_0005';
 
   for (let i = 0; i < LOCAL_TIDE_STATIONS.length; i++) {
     const station = LOCAL_TIDE_STATIONS[i];
     const stationLng = station.lng !== undefined ? station.lng : station.mesh;
     
-    // 유클리드 평면 기하 거리 근사 연산 피타고라스 스레드 적용
     const dLat = station.lat - lat;
     const dLng = stationLng - lng;
     const distSquare = dLat * dLat + dLng * dLng;
@@ -43,14 +47,14 @@ window.getNearestTideStation = function (lat, lng) {
 // [GEOMETRIC PART] 대한민국 기상청 람베르트 정각원추도법 좌표 변환 스레드
 // -------------------------------------------------------------------------
 function convertDfsXy(lat, lng) {
-  const RE = 6371.00877; // 지구 반경(km)
-  const GRID = 5.0;      // 격자 간격(km)
-  const SLAT1 = 30.0;    // 투영 위도1(degree)
-  const SLAT2 = 60.0;    // 투영 위도2(degree)
-  const OLON = 126.0;    // 기준점 경도(degree)
-  const OLAT = 38.0;     // 기준점 위도(degree)
-  const XO = 43;         // 기준점 X좌표(GRID)
-  const YO = 136;        // 기준점 Y좌표(GRID)
+  const RE = 6371.00877;
+  const GRID = 5.0;
+  const SLAT1 = 30.0;
+  const SLAT2 = 60.0;
+  const OLON = 126.0;
+  const OLAT = 38.0;
+  const XO = 43;
+  const YO = 136;
 
   const DEGRAD = Math.PI / 180.0;
 
@@ -85,11 +89,12 @@ function convertDfsXy(lat, lng) {
 // -------------------------------------------------------------------------
 window.fetchSunriseSunsetForDatesPromise = function (lat, lng, dateStrList) {
   return new Promise((resolve) => {
-    // 내부 연산 엔진 대체 및 전역 캐시 트래킹 바인딩
     dateStrList.forEach(dateStr => {
       window.globalSunTimesCache[dateStr] = { sunrise: "05:12", sunset: "19:42" };
     });
-    window.logApiStatus("KASI_SUN", "SUCCESS_LOCAL_CALC", { count: dateStrList.length });
+    if (typeof window.logApiStatus === "function") {
+      window.logApiStatus("KASI_SUN", "SUCCESS_LOCAL_CALC", { count: dateStrList.length });
+    }
     resolve(window.globalSunTimesCache);
   });
 };
@@ -114,17 +119,17 @@ window.fetchKMAWeatherPromise = async function (lat, lng) {
     }
   }
   const baseTime = `${String(hour).padStart(2, '0')}00`;
-
   const serviceKey = window.DATA_GO_KR_SERVICE_KEY || "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
-  // 공공데이터포털 기상청 단기예보 서비스 표준 오퍼레이션 경로 반영
-  const url = `/api-tide/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst?serviceKey=${serviceKey}&pageNo=1&numOfRows=60&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${gridObj.x}&ny=${gridObj.y}`;
+  
+  // vite.config.js의 /api-hub 프록시 규칙(apihub.kma.go.kr)에 맞춘 단기예보 엔드포인트 및 authKey 파라미터 매핑
+  const url = `/api-hub/api/typ02/openApi/VilageFcstInfoService_2.0/getUltraSrtFcst?authKey=${serviceKey}&pageNo=1&numOfRows=60&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${gridObj.x}&ny=${gridObj.y}`;
 
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP_STATUS_${res.status}`);
     const json = await res.json();
     
-    if (json.response?.header?.resultCode !== '00') {
+    if (json.response?.header?.resultCode !== '00' && json.response?.header?.resultCode !== '0000') {
       throw new Error(`KMA_CODE_${json.response?.header?.resultCode}`);
     }
 
@@ -137,55 +142,55 @@ window.fetchKMAWeatherPromise = async function (lat, lng) {
       structureMap[forecastKey][it.category] = it.fcstValue;
     });
 
-    window.logApiStatus("KMA_WEATHER", "SUCCESS", { records: items.length });
+    if (typeof window.logApiStatus === "function") {
+      window.logApiStatus("KMA_WEATHER", "SUCCESS", { records: items.length });
+    }
     return structureMap;
   } catch (err) {
-    window.logApiStatus("KMA_WEATHER", "FAIL_FALLBACK", { error: err.message });
+    if (typeof window.logApiStatus === "function") {
+      window.logApiStatus("KMA_WEATHER", "FAIL_FALLBACK", { error: err.message });
+    }
     return generateOptimisticWeatherMap(baseDate);
   }
 };
-
-function generateOptimisticWeatherMap(baseDateStr) {
-  const mockMap = {};
-  for (let i = 0; i < 24; i++) {
-    const tKey = `${baseDateStr}${String(i).padStart(2, '0')}00`;
-    mockMap[tKey] = { TMP: "22", SKY: "1", PTY: "0", PCP: "강수없음", WSD: "2.4", VEC: "180", WAV: "0.4" };
-  }
-  return mockMap;
-}
 
 window.fetchRealWaterTempPromise = async function (lat, lng, dateStrList) {
   const obsCode = window.getNearestTideStation(lat, lng);
   const serviceKey = window.DATA_GO_KR_SERVICE_KEY || "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
   const todayStr = dateStrList[0];
   
-  // 공공데이터포털에 등록된 국립해양조사원 관측데이터 표준 오퍼레이션 주소 체계 반영
-  const url = `/api-tide/1352000/ODAM/getTideObsRealTime?ServiceKey=${serviceKey}&ObsCode=${obsCode}&ResultType=json`;
+  // vite.config.js의 /api-tide 프록시 규칙(apis.data.go.kr)과 공공데이터포털 고위 관측데이터 서비스 명세 동기화
+  const url = `/api-tide/1192136/dtRecent?serviceKey=${serviceKey}&obsCode=${obsCode}&resultType=json`;
 
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`KHOA_HTTP_${res.status}`);
     const json = await res.json();
     
-    if (!json.result?.data) throw new Error("KHOA_EMPTY_PAYLOAD");
+    const items = json.response?.body?.items?.item;
+    if (!items) throw new Error("KHOA_EMPTY_PAYLOAD");
 
-    const dataArr = json.result.data;
     const waterTempContainer = {};
+    const dataArr = Array.isArray(items) ? items : [items];
 
     dataArr.forEach(item => {
-      if (item.record_time && item.water_temp) {
-        const cleanTime = item.record_time.replace(/[-_:/ ]/g, '');
+      if (item.recordtime && item.watertemp) {
+        const cleanTime = item.recordtime.replace(/[-_:/ ]/g, '');
         if (cleanTime.length >= 10) {
           const matchingKey = `${cleanTime.substring(0, 8)}${cleanTime.substring(8, 10)}00`;
-          waterTempContainer[matchingKey] = `${parseFloat(item.water_temp).toFixed(1)}°C`;
+          waterTempContainer[matchingKey] = `${parseFloat(item.watertemp).toFixed(1)}°C`;
         }
       }
     });
 
-    window.logApiStatus("KHOA_WATER_TEMP", "SUCCESS", { obsCode });
+    if (typeof window.logApiStatus === "function") {
+      window.logApiStatus("KHOA_WATER_TEMP", "SUCCESS", { obsCode });
+    }
     return waterTempContainer;
   } catch (err) {
-    window.logApiStatus("KHOA_WATER_TEMP", "FALLBACK_MOCK", { error: err.message });
+    if (typeof window.logApiStatus === "function") {
+      window.logApiStatus("KHOA_WATER_TEMP", "FALLBACK_MOCK", { error: err.message });
+    }
     const fallbackContainer = {};
     for (let i = 0; i < 24; i++) {
       fallbackContainer[`${todayStr}${String(i).padStart(2, '0')}00`] = "19.8°C";
@@ -206,22 +211,23 @@ window.fetchTideData3DaysPromise = async function (lat, lng) {
   const d2 = formatD(new Date(now.getTime() + 48 * 60 * 60 * 1000));
   window.timelineDatesArray = [d0, d1, d2];
 
-  // 공공데이터포털에 등록된 국립해양조사원 조석예보 표준 오퍼레이션 주소 체계 반영
-  const url = `/api-tide/1352000/ODAM/getTideObsPre?ServiceKey=${serviceKey}&ObsCode=${obsCode}&ResultType=json`;
+  // vite.config.js의 /api-tide 프록시 규칙(apis.data.go.kr)과 공공데이터포털 조석예보 서비스 명세 동기화
+  const url = `/api-tide/1192136/tideFcstTime?serviceKey=${serviceKey}&obsCode=${obsCode}&resultType=json`;
 
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`TIDE_HTTP_${res.status}`);
     const json = await res.json();
     
-    if (!json.result?.pre_data) throw new Error("TIDE_PAYLOAD_EMPTY");
+    const items = json.response?.body?.items?.item;
+    if (!items) throw new Error("TIDE_PAYLOAD_EMPTY");
 
-    const preData = json.result.pre_data;
+    const preData = Array.isArray(items) ? items : [items];
     const parseContainer = [];
 
     preData.forEach(item => {
       if (item.value && item.time) {
-        const type = item.hl_code === 'High' ? '만조' : '간조';
+        const type = item.hlcode === 'High' || item.hl_code === 'High' ? '만조' : '간조';
         const tStr = item.time.substring(11, 16);
         parseContainer.push({
           type,
@@ -234,10 +240,14 @@ window.fetchTideData3DaysPromise = async function (lat, lng) {
     });
 
     window.allTidesSchedule = parseContainer;
-    window.logApiStatus("KHOA_TIDE_PREDICTION", "SUCCESS", { totalEvents: parseContainer.length });
+    if (typeof window.logApiStatus === "function") {
+      window.logApiStatus("KHOA_TIDE_PREDICTION", "SUCCESS", { totalEvents: parseContainer.length });
+    }
     return parseContainer;
   } catch (err) {
-    window.logApiStatus("KHOA_TIDE_PREDICTION", "MOCK_MODE", { error: err.message });
+    if (typeof window.logApiStatus === "function") {
+      window.logApiStatus("KHOA_TIDE_PREDICTION", "MOCK_MODE", { error: err.message });
+    }
     const dummyContainer = [];
     for (let dayIdx = 0; dayIdx < 3; dayIdx++) {
       const targetBaseMs = now.getTime() + dayIdx * 24 * 60 * 60 * 1000;
@@ -275,7 +285,7 @@ window.loadTimelineWithOptimisticUI = async function (lat, lng) {
     const [sunTimes, weatherMap, seaWeatherMap, waterTempMap, tideData] = await Promise.all([
       window.fetchSunriseSunsetForDatesPromise(lat, lng, [dStr]),
       window.fetchKMAWeatherPromise(lat, lng),
-      window.fetchKMAWeatherPromise(35.0975, 129.0369), // 해상 기준 샘플
+      window.fetchKMAWeatherPromise(35.0975, 129.0369),
       window.fetchRealWaterTempPromise(lat, lng, [dStr]),
       window.fetchTideData3DaysPromise(lat, lng)
     ]);
@@ -305,14 +315,12 @@ window.buildTimelineUI = function (lat, lng, targetContainer, weatherMap, waterT
     return best || map[keys[0]]; 
   };
 
-  // 수심 탐색 연산 결합
   let depthDisplayStr = "확인 불가";
   if (typeof window.findNearestDepth === 'function') {
     const depthVal = window.findNearestDepth(lat, lng);
     if (depthVal !== null) depthDisplayStr = `${Math.abs(depthVal).toFixed(1)}m`;
   }
 
-  // 상단 환경 요약 블록 배치
   const summaryBlock = document.createElement('div');
   summaryBlock.className = 'timeline-environmental-header';
   summaryBlock.style.cssText = 'display:flex; justify-content:space-between; padding:12px; background:var(--bg-card); border-radius:10px; margin-bottom:14px; font-size:12px; border:1px solid var(--border-line);';
@@ -331,7 +339,6 @@ window.buildTimelineUI = function (lat, lng, targetContainer, weatherMap, waterT
   `;
   container.appendChild(summaryBlock);
 
-  // 타임라인 슬롯 축 생성 (00시 ~ 23시 루프 그래픽 정렬)
   const timelineScrollWrapper = document.createElement('div');
   timelineScrollWrapper.className = 'timeline-scroll-axis';
   timelineScrollWrapper.style.cssText = 'display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; scroll-behavior:smooth;';
@@ -351,14 +358,12 @@ window.buildTimelineUI = function (lat, lng, targetContainer, weatherMap, waterT
       slot.style.background = 'var(--bg-main)';
     }
 
-    // 시간 타이틀 명시
     const timeLabel = document.createElement('div');
     timeLabel.innerText = `${String(h).padStart(2, '0')}시`;
     timeLabel.style.fontWeight = 'bold';
     if (h === currentHour) timeLabel.style.color = 'var(--primary-color)';
     slot.appendChild(timeLabel);
 
-    // 기상 상태 그래픽 텍스트 매핑
     let skyText = "맑음";
     if (wData) {
       if (wData.PTY && wData.PTY !== "0") skyText = wData.PTY === "3" ? "눈" : "비";
@@ -370,13 +375,11 @@ window.buildTimelineUI = function (lat, lng, targetContainer, weatherMap, waterT
     skyLabel.style.color = 'var(--text-main)';
     slot.appendChild(skyLabel);
 
-    // 온도 레이어
     const tempLabel = document.createElement('div');
     tempLabel.innerText = wData?.TMP ? `${wData.TMP}°` : "--°";
     tempLabel.style.cssText = 'font-size:12px; font-weight:600; color:var(--text-main);';
     slot.appendChild(tempLabel);
 
-    // 풍속 파트 연산 가변 추출
     let windSpeed = wData?.WSD ? `${parseFloat(wData.WSD).toFixed(1)}m` : "-m";
     const windLabel = document.createElement('div');
     windLabel.innerText = windSpeed;
@@ -388,7 +391,6 @@ window.buildTimelineUI = function (lat, lng, targetContainer, weatherMap, waterT
 
   container.appendChild(timelineScrollWrapper);
 
-  // 활성화된 현재 시간 노드로 강제 가로 스크롤 포커싱 연산
   setTimeout(() => {
     const targetSlot = timelineScrollWrapper.querySelector('.active-current');
     if (targetSlot) {
@@ -397,5 +399,4 @@ window.buildTimelineUI = function (lat, lng, targetContainer, weatherMap, waterT
   }, 100);
 };
 
-// 초기 실행 상태 동기화 인스턴스 바인딩 공표
 console.log("[SYSTEM] 기상 모듈 스레드 파이프라인 마운트 완료");
