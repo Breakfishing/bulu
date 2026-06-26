@@ -314,7 +314,7 @@ window.fetchRealWaterTempPromise = function (lat, lng, dateStrings) {
 // -------------------------------------------------------------------------
 // [WEATHER CORE] 기상/조석 해양 기하 타임라인 가변 그래픽 스레드 모듈
 // -------------------------------------------------------------------------
-window.loadTimelineWithOptimisticUI = function (lat, lng) {
+window.loadTimelineWithOptimisticUI = async function (lat, lng) {
   const modalBody = document.querySelector('.weather-modal-body'), dateSticky = document.getElementById('lblDetailDate'), bridge = document.getElementById('timelineInnerBridge');
   if (modalBody && dateSticky && dateSticky.parentNode !== modalBody) modalBody.insertBefore(dateSticky, modalBody.firstChild);
 
@@ -334,17 +334,35 @@ window.loadTimelineWithOptimisticUI = function (lat, lng) {
   const obsCode = safeGetStationFunc(lat, lng); 
   const stationObj = safeStations.find(s => s && s.code === obsCode) || safeStations[0] || { lat: lat, lng: lng };
 
-  Promise.all([
-    window.fetchSunriseSunsetForDatesPromise(lat, lng, dateStrings), window.fetchKMAWeatherPromise(lat, lng), window.fetchTideData3DaysPromise(lat, lng),
-    window.fetchRealWaterTempPromise(lat, lng, dateStrings), window.fetchKMAWeatherPromise(stationObj.lat, stationObj.lng !== undefined ? stationObj.lng : (stationObj.mesh !== undefined ? stationObj.mesh : lng))
-  ]).then(([_, liveWeatherMap, realTidesSchedule, realWaterTempMap, seaWeatherMap]) => {
-    document.getElementById('miniSplashBodyBlock')?.remove(); if (dateSticky) dateSticky.style.visibility = 'visible';
+  try {
+    const [_, liveWeatherMap, realTidesSchedule, realWaterTempMap, seaWeatherMap] = await Promise.all([
+      window.fetchSunriseSunsetForDatesPromise(lat, lng, dateStrings),
+      window.fetchKMAWeatherPromise(lat, lng),
+      window.fetchTideData3DaysPromise(lat, lng),
+      window.fetchRealWaterTempPromise(lat, lng, dateStrings),
+      window.fetchKMAWeatherPromise(stationObj.lat, stationObj.lng !== undefined ? stationObj.lng : (stationObj.mesh !== undefined ? stationObj.mesh : lng))
+    ]);
+
+    document.getElementById('miniSplashBodyBlock')?.remove(); 
+    if (dateSticky) dateSticky.style.visibility = 'visible';
     if (bridge) { bridge.style.visibility = 'visible'; bridge.innerHTML = ''; }
+    
     window.buildTimelineUI(lat, lng, liveWeatherMap, realTidesSchedule, realWaterTempMap, seaWeatherMap);
-  }).catch(() => {
-    document.getElementById('miniSplashBodyBlock')?.remove(); if (dateSticky) dateSticky.style.visibility = 'visible';
+
+    // [중요] 타임라인 UI 렌더링이 완료된 후 전역 스플래시 해제 및 상태 동기화
+    window.isWeatherLoaded = true;
+    if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
+
+  } catch (error) {
+    console.error("[기상 모듈] 데이터 연동 중 치명적 에러:", error);
+    document.getElementById('miniSplashBodyBlock')?.remove(); 
+    if (dateSticky) dateSticky.style.visibility = 'visible';
     if (bridge) { bridge.style.visibility = 'visible'; bridge.innerHTML = '<div class="pm-empty-msg">기상 정보 연동에 실패했습니다.</div>'; }
-  });
+    
+    // 에러가 나더라도 스플래시는 걷어내어 앱 전체가 멈추는 것을 방지
+    window.isWeatherLoaded = true;
+    if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
+  }
 };
 
 window.buildTimelineUI = function (lat, lng, weatherMap, realTides, waterTempMap, seaWeatherMap) {
