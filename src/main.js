@@ -2085,6 +2085,61 @@ db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot((snapsho
 }, () => { window.isPublicToiletsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash(); });
 
 // =========================================================================
+// [UI MODAL & EVENT CONTROL] 설정 창 및 전역 모달 UI 제어 스레드
+// =========================================================================
+
+window.showSettingsPage = function () {
+  const settingsModal = document.getElementById('settingsModal');
+  const overlay = document.getElementById('modalOverlay') || document.querySelector('.modal-overlay');
+  
+  if (settingsModal) {
+    settingsModal.style.display = 'block';
+    settingsModal.classList.add('active');
+  }
+  if (overlay) {
+    overlay.style.display = 'block';
+    overlay.classList.add('active');
+  }
+  // 모달 활성화 시 배경 스크롤 방지
+  document.body.style.overflow = 'hidden'; 
+  console.log("[SYSTEM] 설정 페이지 모달 호출 완료");
+};
+
+window.closeSettingsPage = function () {
+  const settingsModal = document.getElementById('settingsModal');
+  const overlay = document.getElementById('modalOverlay') || document.querySelector('.modal-overlay');
+  
+  if (settingsModal) {
+    settingsModal.style.display = 'none';
+    settingsModal.classList.remove('active');
+  }
+  if (overlay) {
+    overlay.style.display = 'none';
+    overlay.classList.remove('active');
+  }
+  // 배경 스크롤 복구
+  document.body.style.overflow = ''; 
+};
+
+window.initGlobalModalEvents = function () {
+  const overlay = document.getElementById('modalOverlay') || document.querySelector('.modal-overlay');
+  if (overlay) {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) {
+        window.closeSettingsPage();
+        if (typeof window.closeWeatherModal === 'function') {
+          window.closeWeatherModal();
+        }
+      }
+    });
+  }
+};
+
+// DOM 로드 완료 시 전역 이벤트 초기화 바인딩
+document.addEventListener('DOMContentLoaded', function() {
+  window.initGlobalModalEvents();
+});
+// =========================================================================
 // 전역 초기 부팅 실행 시퀀스
 // =========================================================================
 window.initHomeDataSequence();
