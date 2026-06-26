@@ -116,15 +116,20 @@ window.fetchSunriseSunsetForDatesPromise = function (lat, lng, dateStrings) {
     } catch (e) {
       localStorage.removeItem(`cc_sun_${ck}_${ds}`);
     }
-    // CORS 방지를 위해 /api-tide 프록시 통신 파이프라인 결합
-    return fetch(`/api-tide/B090041/openapi/service/RiseSetInfoService/getLCRiseSetInfo?latitude=${lat}&longitude=${lng}&locdate=${ds}&ServiceKey=${safeServiceKey}&_type=json`).then(res => res.json()).then(d => {
-      const item = d?.response?.body?.items?.item; 
-      if (item?.sunrise && item?.sunset) { 
-        const ro = { sunrise: `${item.sunrise.trim().substring(0,2)}:${item.sunrise.trim().substring(2,4)}`, sunset: `${item.sunset.trim().substring(0,2)}:${item.sunset.trim().substring(2,4)}` }; 
-        window.globalSunTimesCache[ds] = ro; 
-        localStorage.setItem(`cc_sun_${ck}_${ds}`, JSON.stringify(ro)); 
-      }
-    }).catch(() => {});
+    return fetch(`/api-tide/B090041/openapi/service/RiseSetInfoService/getLCRiseSetInfo?latitude=${lat}&longitude=${lng}&locdate=${ds}&ServiceKey=${safeServiceKey}&_type=json`)
+      .then(async res => {
+        if (!res.ok) return fetch(`https://apis.data.go.kr/B090041/openapi/service/RiseSetInfoService/getLCRiseSetInfo?latitude=${lat}&longitude=${lng}&locdate=${ds}&ServiceKey=${safeServiceKey}&_type=json`);
+        return res;
+      })
+      .then(res => res.json())
+      .then(d => {
+        const item = d?.response?.body?.items?.item; 
+        if (item?.sunrise && item?.sunset) { 
+          const ro = { sunrise: `${item.sunrise.trim().substring(0,2)}:${item.sunrise.trim().substring(2,4)}`, sunset: `${item.sunset.trim().substring(0,2)}:${item.sunset.trim().substring(2,4)}` }; 
+          window.globalSunTimesCache[ds] = ro; 
+          localStorage.setItem(`cc_sun_${ck}_${ds}`, JSON.stringify(ro)); 
+        }
+      }).catch(() => {});
   }));
 };
 
@@ -198,7 +203,10 @@ window.fetchTideData3DaysPromise = function (lat, lng) {
     let items = []; 
     for (const sd of dates) { 
       try { 
-        const res = await fetch(`/api-tide/1192136/tideFcstHghLw/GetTideFcstHghLwApiService?serviceKey=${safeKhoaKey}&type=json&pageNo=1&numOfRows=10&obsCode=${obsCode}&reqDate=${sd}`); 
+        let res = await fetch(`/api-tide/1192136/tideFcstHghLw/GetTideFcstHghLwApiService?serviceKey=${safeKhoaKey}&type=json&pageNo=1&numOfRows=10&obsCode=${obsCode}&reqDate=${sd}`); 
+        if (!res.ok) {
+          res = await fetch(`https://apis.data.go.kr/1192136/tideFcstHghLw/GetTideFcstHghLwApiService?serviceKey=${safeKhoaKey}&type=json&pageNo=1&numOfRows=10&obsCode=${obsCode}&reqDate=${sd}`);
+        }
         const json = await res.json(); 
         const node = (json?.body || json?.response?.body)?.items?.item; 
         if (node) items.push(...(Array.isArray(node) ? node : [node])); 
@@ -249,9 +257,16 @@ window.fetchRealWaterTempPromise = function (lat, lng, dateStrings) {
   }
   
   const offset = 0.15; 
-  const url = `/api-tide/1192136/roms/GetRomsApiService?serviceKey=${safePortalKey}&type=json&ymin=${(lat - offset).toFixed(4)}&ymax=${(lat + offset).toFixed(4)}&xmin=${(lng - offset).toFixed(4)}&xmax=${(lng + offset).toFixed(4)}&pageNo=1&numOfRows=300`;
+  const targetPath = `/1192136/roms/GetRomsApiService?serviceKey=${safePortalKey}&type=json&ymin=${(lat - offset).toFixed(4)}&ymax=${(lat + offset).toFixed(4)}&xmin=${(lng - offset).toFixed(4)}&xmax=${(lng + offset).toFixed(4)}&pageNo=1&numOfRows=300`;
 
-  return fetch(url).then(async res => { const text = await res.text(); if (!res.ok || text.includes("Unexpected errors")) throw new Error(); return JSON.parse(text); }).then(json => {
+  return fetch(`/api-tide${targetPath}`).then(async res => {
+    if (!res.ok) return fetch(`https://apis.data.go.kr${targetPath}`);
+    return res;
+  }).then(async res => { 
+    const text = await res.text(); 
+    if (!res.ok || text.includes("Unexpected errors") || text.trim().startsWith("<")) throw new Error(); 
+    return JSON.parse(text); 
+  }).then(json => {
     const wtm = { details: {} }; 
     const extract = (obj) => { if (Array.isArray(obj)) return obj; if (typeof obj === 'object') { for (const k in obj) { if (Array.isArray(obj[k])) return obj[k]; } for (const k in obj) { const r = extract(obj[k]); if (r?.length) return r; } } return []; };
     const items = extract(json);
@@ -411,7 +426,7 @@ window.buildTimelineUI = function (lat, lng, weatherMap, realTides, waterTempMap
     let k = 0; while (true) {
       let xH = 112 * (Math.PI / 2 + 2 * k * Math.PI), xL = 112 * (3 * Math.PI / 2 + 2 * k * Math.PI); if (xH > 4032 && xL > 4032) break;
       if (xH >= 0 && xH <= 4032) { let hH = xH / 56; let dH = new Date(now.getTime() + hH * 60 * 60 * 1000); window.allTidesSchedule.push({ type: '만조', color: '#ff3b30', time: `${String(dH.getHours()).padStart(2, '0')}:${String(dH.getMinutes()).padStart(2, '0')}`, hoursFromNow: hH, level: '270', diff: 220, rawDt: dH.toISOString() }); }
-      if (xL >= 0 && xL <= 4032) { let hL = xL / 56; let dL = new Date(now.getTime() + hL * 60 * 60 * 1000); window.allTidesSchedule.push({ type: '간조', color: '#007aff', time: `${String(dL.getHours()).padStart(2, '0')}:${String(dL.getMinutes()).padStart(2, '0')}`, hoursFromNow: hL, level: '50', diff: -220, rawDt: dL.toISOString() }); }
+      if (xL >= 0 && xL <= 4032) { let hL = xL / 56; let dL = new Date(now.getTime() + hL * 60 * 60 * 1000); window.allTidesSchedule.push({ type: '간조', color: '#007aff', time: `${String(dH.getHours()).padStart(2, '0')}:${String(dH.getMinutes()).padStart(2, '0')}`, hoursFromNow: hL, level: '50', diff: -220, rawDt: dL.toISOString() }); }
       k++;
     }
   }
