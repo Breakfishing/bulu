@@ -5,7 +5,7 @@ import './style.css';
 import { db } from './utils/firebase.js'; 
 
 // 하위 컴포넌트 모듈 스레드 가동
-import './components/board/board.js';
+import './components/more/more.js';
 import './components/map/map.js';
 import './components/weather/weatherModal.js';
 
