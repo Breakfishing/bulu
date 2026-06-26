@@ -121,7 +121,6 @@ window.fetchKMAWeatherPromise = async function (lat, lng) {
   const baseTime = `${String(hour).padStart(2, '0')}00`;
   const serviceKey = window.DATA_GO_KR_SERVICE_KEY || "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
   
-  // vite.config.js의 /api-hub 프록시 규칙(apihub.kma.go.kr)에 맞춘 단기예보 엔드포인트 및 authKey 파라미터 매핑
   const url = `/api-hub/api/typ02/openApi/VilageFcstInfoService_2.0/getUltraSrtFcst?authKey=${serviceKey}&pageNo=1&numOfRows=60&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${gridObj.x}&ny=${gridObj.y}`;
 
   try {
@@ -159,8 +158,7 @@ window.fetchRealWaterTempPromise = async function (lat, lng, dateStrList) {
   const serviceKey = window.DATA_GO_KR_SERVICE_KEY || "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
   const todayStr = dateStrList[0];
   
-  // vite.config.js의 /api-tide 프록시 규칙(apis.data.go.kr)과 공공데이터포털 고위 관측데이터 서비스 명세 동기화
-  const url = `/api-tide/1192136/dtRecent?serviceKey=${serviceKey}&obsCode=${obsCode}&resultType=json`;
+  const url = `/api-tide/1192136/tideObsRealTime/GetTideObsRealTimeApiService?serviceKey=${serviceKey}&ObsCode=${obsCode}&ResultType=json`;
 
   try {
     const res = await fetch(url);
@@ -174,11 +172,13 @@ window.fetchRealWaterTempPromise = async function (lat, lng, dateStrList) {
     const dataArr = Array.isArray(items) ? items : [items];
 
     dataArr.forEach(item => {
-      if (item.recordtime && item.watertemp) {
-        const cleanTime = item.recordtime.replace(/[-_:/ ]/g, '');
+      const rTime = item.recordtime || item.recordTime || item.record_time;
+      const wTemp = item.watertemp || item.waterTemp || item.water_temp;
+      if (rTime && wTemp) {
+        const cleanTime = rTime.replace(/[-_:/ ]/g, '');
         if (cleanTime.length >= 10) {
           const matchingKey = `${cleanTime.substring(0, 8)}${cleanTime.substring(8, 10)}00`;
-          waterTempContainer[matchingKey] = `${parseFloat(item.watertemp).toFixed(1)}°C`;
+          waterTempContainer[matchingKey] = `${parseFloat(wTemp).toFixed(1)}°C`;
         }
       }
     });
@@ -211,8 +211,7 @@ window.fetchTideData3DaysPromise = async function (lat, lng) {
   const d2 = formatD(new Date(now.getTime() + 48 * 60 * 60 * 1000));
   window.timelineDatesArray = [d0, d1, d2];
 
-  // vite.config.js의 /api-tide 프록시 규칙(apis.data.go.kr)과 공공데이터포털 조석예보 서비스 명세 동기화
-  const url = `/api-tide/1192136/tideFcstTime?serviceKey=${serviceKey}&obsCode=${obsCode}&resultType=json`;
+  const url = `/api-tide/1192136/tideFcstHghLw/GetTideFcstHghLwApiService?serviceKey=${serviceKey}&ObsCode=${obsCode}&ResultType=json&SearchDate=${d0}`;
 
   try {
     const res = await fetch(url);
@@ -226,15 +225,19 @@ window.fetchTideData3DaysPromise = async function (lat, lng) {
     const parseContainer = [];
 
     preData.forEach(item => {
-      if (item.value && item.time) {
-        const type = item.hlcode === 'High' || item.hl_code === 'High' ? '만조' : '간조';
-        const tStr = item.time.substring(11, 16);
+      const hl = item.hlcode || item.hlCode || item.hl_code || '';
+      const type = (hl === 'High' || hl === '만조') ? '만조' : '간조';
+      const timeStr = item.time || item.tideTime || item.tidetime || '';
+      const levelStr = item.value || item.tideLevel || item.tidelevel || '';
+      
+      if (timeStr) {
+        const tStr = timeStr.length >= 16 ? timeStr.substring(11, 16) : timeStr;
         parseContainer.push({
           type,
           time: tStr,
-          level: String(item.value),
-          rawDt: item.time,
-          hoursFromNow: (new Date(item.time.replace(/-/g, '/')).getTime() - now.getTime()) / (1000 * 60 * 60)
+          level: String(levelStr),
+          rawDt: timeStr,
+          hoursFromNow: (new Date(timeStr.replace(/-/g, '/')).getTime() - now.getTime()) / (1000 * 60 * 60)
         });
       }
     });
