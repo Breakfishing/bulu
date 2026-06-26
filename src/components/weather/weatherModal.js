@@ -121,14 +121,17 @@ window.fetchKMAWeatherPromise = async function (lat, lng) {
   const baseTime = `${String(hour).padStart(2, '0')}00`;
   const serviceKey = window.DATA_GO_KR_SERVICE_KEY || "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
   
-  // 로컬 프록시 거치지 않고 공공데이터포털 절대 경로 직접 호출 연동
   const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst?serviceKey=${serviceKey}&pageNo=1&numOfRows=60&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${gridObj.x}&ny=${gridObj.y}`;
 
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP_STATUS_${res.status}`);
-    const json = await res.json();
     
+    // XML 에러 메시지 가로채기 레이어 구조화 (JSON 파싱 인터셉터)
+    const textData = await res.text();
+    if (textData.trim().startsWith('<')) throw new Error("PORTAL_XML_ERROR_INTERCEPTED");
+    
+    const json = JSON.parse(textData);
     const items = json.response?.body?.items?.item;
     if (!items) throw new Error("KMA_EMPTY_PAYLOAD");
 
@@ -165,14 +168,16 @@ window.fetchRealWaterTempPromise = async function (lat, lng, dateStrList) {
   const serviceKey = window.DATA_GO_KR_SERVICE_KEY || "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
   const todayStr = dateStrList[0];
   
-  // 절대 경로 변환 및 국립해양조사원 표준 대소문자 규격 오퍼레이션 매핑
   const url = `https://apis.data.go.kr/1192136/tideObsRealTime/GetTideObsRealTimeApiService?serviceKey=${serviceKey}&ObsCode=${obsCode}&ResultType=json`;
 
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`KHOA_HTTP_${res.status}`);
-    const json = await res.json();
     
+    const textData = await res.text();
+    if (textData.trim().startsWith('<')) throw new Error("KHOA_TEMP_XML_INTERCEPTED");
+    
+    const json = JSON.parse(textData);
     const items = json.response?.body?.items?.item;
     if (!items) throw new Error("KHOA_EMPTY_PAYLOAD");
 
@@ -219,14 +224,16 @@ window.fetchTideData3DaysPromise = async function (lat, lng) {
   const d2 = formatD(new Date(now.getTime() + 48 * 60 * 60 * 1000));
   window.timelineDatesArray = [d0, d1, d2];
 
-  // 지정하신 대소문자 규격 명세 엔드포인트 완벽 반영 및 절대 경로 직접 타격 구현
   const url = `https://apis.data.go.kr/1192136/tideFcstHghLw/GetTideFcstHghLwApiService?serviceKey=${serviceKey}&ObsCode=${obsCode}&ResultType=json&SearchDate=${d0}`;
 
   try {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`TIDE_HTTP_${res.status}`);
-    const json = await res.json();
     
+    const textData = await res.text();
+    if (textData.trim().startsWith('<')) throw new Error("KHOA_TIDE_XML_INTERCEPTED");
+    
+    const json = JSON.parse(textData);
     const items = json.response?.body?.items?.item;
     if (!items) throw new Error("TIDE_PAYLOAD_EMPTY");
 
@@ -236,8 +243,8 @@ window.fetchTideData3DaysPromise = async function (lat, lng) {
     preData.forEach(item => {
       const hl = item.hlcode || item.hlCode || item.hl_code || '';
       const type = (hl === 'High' || hl === '만조' || hl === '고조') ? '만조' : '간조';
-      const timeStr = item.time || item.tideTime || item.tidetime || '';
-      const levelStr = item.value || item.tideLevel || item.tidelevel || '';
+      const timeStr = item.time || item.tideTime || item.tidetime || item.tide_time || '';
+      const levelStr = item.value || item.tideLevel || item.tidelevel || item.tide_level || '';
       
       if (timeStr) {
         const tStr = timeStr.length >= 16 ? timeStr.substring(11, 16) : timeStr;
