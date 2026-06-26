@@ -9,8 +9,14 @@ window.globalSunTimesCache = window.globalSunTimesCache || {};
 window.allTidesSchedule = window.allTidesSchedule || [];
 window.timelineDatesArray = window.timelineDatesArray || [];
 
+// 백업본 코어 인증키 상수 선언 및 바인딩
+const PUBLIC_PORTAL_KEY = "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
+window.DATA_GO_KR_SERVICE_KEY = PUBLIC_PORTAL_KEY;
+const KHOA_API_KEY = PUBLIC_PORTAL_KEY;
+const KMA_AUTH_KEY = "RAp21103R7OKdtddNwezzw";
+
 // 조석 관측소 참조 데이터 스택 복크
-const LOCAL_TIDE_STATIONS = [
+const TIDE_STATIONS = [
   { code: 'DT_0005', name: '부산', lat: 35.0975, lng: 129.0369 },
   { code: 'DT_0023', name: '통영', lat: 34.8286, lng: 128.4328 },
   { code: 'DT_0026', name: '삼천포', lat: 34.9258, lng: 128.0336 },
@@ -24,398 +30,464 @@ const LOCAL_TIDE_STATIONS = [
 // [GEOMETRIC PART] 최인접 조석 관측소 기하학적 매핑 연산
 // -------------------------------------------------------------------------
 window.getNearestTideStation = function (lat, lng) {
-  let minDistance = Infinity;
-  let targetCode = 'DT_0005';
-
-  for (let i = 0; i < LOCAL_TIDE_STATIONS.length; i++) {
-    const station = LOCAL_TIDE_STATIONS[i];
+  let minDistance = Infinity; 
+  let nearestStation = TIDE_STATIONS[0];
+  TIDE_STATIONS.forEach(station => {
     const stationLng = station.lng !== undefined ? station.lng : station.mesh;
-    
-    const dLat = station.lat - lat;
-    const dLng = stationLng - lng;
-    const distSquare = dLat * dLat + dLng * dLng;
-
-    if (distSquare < minDistance) {
-      minDistance = distSquare;
-      targetCode = station.code;
-    }
-  }
-  return targetCode;
+    const dist = Math.sqrt(Math.pow(station.lat - lat, 2) + Math.pow(stationLng - lng, 2));
+    if (dist < minDistance) { minDistance = dist; nearestStation = station; }
+  });
+  return nearestStation.code;
 };
 
 // -------------------------------------------------------------------------
 // [GEOMETRIC PART] 대한민국 기상청 람베르트 정각원추도법 좌표 변환 스레드
 // -------------------------------------------------------------------------
-function convertDfsXy(lat, lng) {
-  const RE = 6371.00877;
-  const GRID = 5.0;
-  const SLAT1 = 30.0;
-  const SLAT2 = 60.0;
-  const OLON = 126.0;
-  const OLAT = 38.0;
-  const XO = 43;
+window.convertLatLngToGrid = function (lat, lng) {
+  const RE = 6371.00877; 
+  const GRID = 5.0; 
+  const SLAT1 = 30.0; 
+  const SLAT2 = 60.0; 
+  const OLON = 126.0; 
+  const OLAT = 38.0; 
+  const XO = 43; 
   const YO = 136;
-
-  const DEGRAD = Math.PI / 180.0;
-
-  const re = RE / GRID;
-  const slat1 = SLAT1 * DEGRAD;
-  const slat2 = SLAT2 * DEGRAD;
-  const olon = OLON * DEGRAD;
-  const olat = OLAT * DEGRAD;
-
-  let sn = Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5);
-  sn = Math.log(Math.cos(slat1) / Math.cos(slat2)) / Math.log(sn);
-  let sf = Math.tan(Math.PI * 0.25 + slat1 * 0.5);
-  sf = (Math.pow(sf, sn) * Math.cos(slat1)) / sn;
-  let ro = Math.tan(Math.PI * 0.25 + olat * 0.5);
-  ro = (re * sf) / Math.pow(ro, sn);
   
-  let rs = {};
-  let ra = Math.tan(Math.PI * 0.25 + (lat) * DEGRAD);
-  ra = (re * sf) / Math.pow(ra, sn);
-  let theta = lng * DEGRAD - olon;
-  if (theta > Math.PI) theta -= 2.0 * Math.PI;
-  if (theta < -Math.PI) theta += 2.0 * Math.PI;
+  const re = RE / GRID; 
+  const DEGRAD = Math.PI / 180.0; 
+  const slat1 = SLAT1 * DEGRAD; 
+  const slat2 = SLAT2 * DEGRAD; 
+  const olon = OLON * DEGRAD; 
+  const olat = OLAT * DEGRAD;
+  
+  let sn = Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5); 
+  sn = Math.log(Math.cos(slat1) / Math.cos(slat2)) / Math.log(sn);
+  
+  let sf = Math.tan(Math.PI * 0.25 + slat1 * 0.5); 
+  sf = Math.pow(sf, sn) * Math.cos(slat1) / sn;
+  
+  let ro = Math.tan(Math.PI * 0.25 + olat * 0.5); 
+  ro = re * sf / Math.pow(ro, sn);
+  
+  let ra = Math.tan(Math.PI * 0.25 + lat * DEGRAD * 0.5); 
+  ra = re * sf / Math.pow(ra, sn);
+  
+  let theta = lng * DEGRAD - olon; 
+  if (theta > Math.PI) theta -= 2.0 * Math.PI; 
+  if (theta < -Math.PI) theta += 2.0 * Math.PI; 
   theta *= sn;
   
-  rs['x'] = Math.floor(ra * Math.sin(theta) + XO + 0.5);
-  rs['y'] = Math.floor(ro - ra * Math.cos(theta) + YO + 0.5);
-  return rs;
-}
+  return { 
+    nx: Math.floor(ra * Math.sin(theta) + XO + 0.5), 
+    ny: Math.floor(ro - ra * Math.cos(theta) + YO + 0.5) 
+  };
+};
 
-// -------------------------------------------------------------------------
-// [API ENGINE] 외부 공공데이터 오픈 API 비동기 네트워크 스레드 파이프라인
-// -------------------------------------------------------------------------
-window.fetchSunriseSunsetForDatesPromise = function (lat, lng, dateStrList) {
-  return new Promise((resolve) => {
-    dateStrList.forEach(dateStr => {
-      window.globalSunTimesCache[dateStr] = { sunrise: "05:12", sunset: "19:42" };
-    });
-    if (typeof window.logApiStatus === "function") {
-      window.logApiStatus("KASI_SUN", "SUCCESS_LOCAL_CALC", { count: dateStrList.length });
+window.getSunTimesForDate = function (targetDate) {
+  if (!window.globalSunTimesCache) window.globalSunTimesCache = {};
+  const key = `${targetDate.getFullYear()}${String(targetDate.getMonth() + 1).padStart(2, '0')}${String(targetDate.getDate()).padStart(2, '0')}`;
+  if (window.globalSunTimesCache[key]) return window.globalSunTimesCache[key];
+  return { sunrise: `05:${32 + (targetDate.getDate() % 5)}`, sunset: `19:${41 - (targetDate.getDate() % 5)}` };
+};
+
+window.getKMABaseDateTime = function () {
+  const now = new Date(); 
+  const hours = [2, 5, 8, 11, 14, 17, 20, 23]; 
+  let ch = now.getHours(), cm = now.getMinutes(), bd = new Date(now.getTime()), bt = "2300", f = false;
+  for (let i = hours.length - 1; i >= 0; i--) { 
+    if (ch > hours[i] || (ch === hours[i] && cm >= 15)) { 
+      bt = String(hours[i]).padStart(2, '0') + "00"; 
+      f = true; 
+      break; 
+    } 
+  }
+  if (!f) { bd.setDate(bd.getDate() - 1); bt = "2300"; }
+  return { baseDate: `${bd.getFullYear()}${String(bd.getMonth() + 1).padStart(2, '0')}${String(bd.getDate()).padStart(2, '0')}`, baseTime: bt };
+};
+
+window.fetchSunriseSunsetForDatesPromise = function (lat, lng, dateStrings) {
+  if (!window.globalSunTimesCache) window.globalSunTimesCache = {}; 
+  const ck = `${lat.toFixed(1)}_${lng.toFixed(1)}`;
+  const safeServiceKey = typeof PUBLIC_PORTAL_KEY !== 'undefined' ? PUBLIC_PORTAL_KEY : '';
+  return Promise.all(dateStrings.map(ds => {
+    try {
+      const lData = localStorage.getItem(`cc_sun_${ck}_${ds}`);
+      if (lData) { window.globalSunTimesCache[ds] = JSON.parse(lData); return Promise.resolve(); }
+    } catch (e) {
+      localStorage.removeItem(`cc_sun_${ck}_${ds}`);
     }
-    resolve(window.globalSunTimesCache);
+    // CORS 방지를 위해 /api-tide 프록시 통신 파이프라인 결합
+    return fetch(`/api-tide/B090041/openapi/service/RiseSetInfoService/getLCRiseSetInfo?latitude=${lat}&longitude=${lng}&locdate=${ds}&ServiceKey=${safeServiceKey}&_type=json`).then(res => res.json()).then(d => {
+      const item = d?.response?.body?.items?.item; 
+      if (item?.sunrise && item?.sunset) { 
+        const ro = { sunrise: `${item.sunrise.trim().substring(0,2)}:${item.sunrise.trim().substring(2,4)}`, sunset: `${item.sunset.trim().substring(0,2)}:${item.sunset.trim().substring(2,4)}` }; 
+        window.globalSunTimesCache[ds] = ro; 
+        localStorage.setItem(`cc_sun_${ck}_${ds}`, JSON.stringify(ro)); 
+      }
+    }).catch(() => {});
+  }));
+};
+
+window.fetchKMAWeatherPromise = function (lat, lng) {
+  const grid = window.convertLatLngToGrid(lat, lng); 
+  const cacheKey = `cc_weather_v6_${grid.nx}_${grid.ny}`; 
+  const safeLogger = typeof window.logApiStatus === 'function' ? window.logApiStatus : () => {};
+  const safeAuthKey = typeof KMA_AUTH_KEY !== 'undefined' ? KMA_AUTH_KEY : '';
+  
+  safeLogger("KMA_WEATHER", "호출 시도", { nx: grid.nx, ny: grid.ny });
+
+  try {
+    const lData = localStorage.getItem(cacheKey);
+    if (lData) {
+      const parsed = JSON.parse(lData);
+      if (Date.now() - parsed.timestamp < 3 * 60 * 60 * 1000) {
+        safeLogger("KMA_WEATHER", "캐시 적중");
+        return Promise.resolve(parsed.data);
+      }
+    }
+  } catch (e) {
+    localStorage.removeItem(cacheKey);
+  }
+
+  const base = window.getKMABaseDateTime();
+  return fetch(`/api-hub/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?pageNo=1&numOfRows=2000&dataType=JSON&base_date=${base.baseDate}&base_time=${base.baseTime}&nx=${grid.nx}&ny=${grid.ny}&authKey=${safeAuthKey}`).then(res => res.json()).then(json => {
+    const wm = {}; 
+    const node = json?.response?.body?.items?.item;
+    if (!node) {
+      safeLogger("KMA_WEATHER", "실패 (데이터 없음)", { code: json?.response?.header?.resultCode });
+      return null;
+    }
+    node.forEach(item => { if (item?.fcstDate && item?.fcstTime) { const k = item.fcstDate + item.fcstTime; if (!wm[k]) wm[k] = {}; wm[k][item.category] = item.fcstValue; } });
+    localStorage.setItem(cacheKey, JSON.stringify({ data: wm, timestamp: Date.now() })); 
+    safeLogger("KMA_WEATHER", "성공");
+    return wm;
+  }).catch(err => {
+    safeLogger("KMA_WEATHER", "에러 발생", { error: err.message });
+    return null;
   });
 };
 
-window.getSunTimesForDate = function (date) {
-  const dStr = `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
-  return window.globalSunTimesCache[dStr] || { sunrise: "05:12", sunset: "19:42" };
-};
-
-window.fetchKMAWeatherPromise = async function (lat, lng) {
-  const gridObj = convertDfsXy(lat, lng);
-  const now = new Date();
+window.fetchTideData3DaysPromise = function (lat, lng) {
+  const safeGetStationFunc = typeof window.getNearestTideStation === 'function' ? window.getNearestTideStation : () => 'DT_0005';
+  const obsCode = safeGetStationFunc(lat, lng); 
+  const cacheKey = `cc_tide_v5_${obsCode}`; 
+  const safeLogger = typeof window.logApiStatus === 'function' ? window.logApiStatus : () => {};
+  const safeKhoaKey = typeof KHOA_API_KEY !== 'undefined' ? KHOA_API_KEY : '';
   
-  let baseDate = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-  let hour = now.getHours();
-  if (now.getMinutes() < 45) {
-    hour -= 1;
-    if (hour < 0) {
-      hour = 23;
-      const prevDay = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      baseDate = `${prevDay.getFullYear()}${String(prevDay.getMonth() + 1).padStart(2, '0')}${String(prevDay.getDate()).padStart(2, '0')}`;
-    }
-  }
-  const baseTime = `${String(hour).padStart(2, '0')}00`;
-  const serviceKey = window.DATA_GO_KR_SERVICE_KEY || "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
-  
-  const url = `https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst?serviceKey=${serviceKey}&pageNo=1&numOfRows=60&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${gridObj.x}&ny=${gridObj.y}`;
+  safeLogger("TIDE_API", "호출 시도", { obsCode });
 
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP_STATUS_${res.status}`);
-    
-    // XML 에러 메시지 가로채기 레이어 구조화 (JSON 파싱 인터셉터)
-    const textData = await res.text();
-    if (textData.trim().startsWith('<')) throw new Error("PORTAL_XML_ERROR_INTERCEPTED");
-    
-    const json = JSON.parse(textData);
-    const items = json.response?.body?.items?.item;
-    if (!items) throw new Error("KMA_EMPTY_PAYLOAD");
-
-    const structureMap = {};
-    items.forEach(it => {
-      const forecastKey = `${it.fcstDate}${it.fcstTime}`;
-      if (!structureMap[forecastKey]) structureMap[forecastKey] = {};
-      structureMap[forecastKey][it.category] = it.fcstValue;
-    });
-
-    if (typeof window.logApiStatus === "function") {
-      window.logApiStatus("KMA_WEATHER", "SUCCESS", { records: items.length });
+    const lData = localStorage.getItem(cacheKey);
+    if (lData) {
+      const parsed = JSON.parse(lData);
+      if (Date.now() - parsed.timestamp < 3 * 60 * 60 * 1000) {
+        safeLogger("TIDE_API", "캐시 적중");
+        return Promise.resolve(parsed.data);
+      }
     }
-    return structureMap;
-  } catch (err) {
-    if (typeof window.logApiStatus === "function") {
-      window.logApiStatus("KMA_WEATHER", "FAIL_FALLBACK", { error: err.message });
-    }
-    return generateOptimisticWeatherMap(baseDate);
+  } catch (e) {
+    localStorage.removeItem(cacheKey);
   }
+
+  const dates = []; 
+  for (let d = 0; d < 5; d++) { 
+    const td = new Date(new Date().getTime() + d * 24 * 60 * 60 * 1000); 
+    dates.push(`${td.getFullYear()}${String(td.getMonth() + 1).padStart(2, '0')}${String(td.getDate()).padStart(2, '0')}`); 
+  }
+  return (async () => {
+    let items = []; 
+    for (const sd of dates) { 
+      try { 
+        const res = await fetch(`/api-tide/1192136/tideFcstHghLw/GetTideFcstHghLwApiService?serviceKey=${safeKhoaKey}&type=json&pageNo=1&numOfRows=10&obsCode=${obsCode}&reqDate=${sd}`); 
+        const json = await res.json(); 
+        const node = (json?.body || json?.response?.body)?.items?.item; 
+        if (node) items.push(...(Array.isArray(node) ? node : [node])); 
+      } catch {} 
+    }
+    if (items.length === 0) {
+      safeLogger("TIDE_API", "실패 (데이터 없음)");
+      return [];
+    }
+    items.sort((a, b) => new Date(a.predcDt.replace(/-/g, '/')) - new Date(b.predcDt.replace(/-/g, '/')));
+
+    let schedule = [];
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i]; if (!it?.predcDt) continue; const lvl = Math.round(it.predcTdlvVl); let type = '만조', diff = 0;
+      if (i === 0) { if (items[1]) type = (items[1].predcTdlvVl < it.predcTdlvVl) ? '만조' : '간조'; }
+      else { const prev = items[i - 1]; if (prev) { const plvl = Math.round(prev.predcTdlvVl); type = (lvl > plvl) ? '만조' : '간조'; diff = lvl - plvl; } }
+      const hrs = (new Date(it.predcDt.replace(/-/g, '/')).getTime() - new Date().getTime()) / (1000 * 60 * 60);
+      if (hrs >= -12 && hrs <= 120) schedule.push({ type, color: type === '만조' ? '#ff3b30' : '#007aff', time: it.predcDt.split(' ')[1], level: lvl.toString(), diff, hoursFromNow: hrs, rawDt: it.predcDt });
+    }
+    if (schedule.length > 0) {
+      localStorage.setItem(cacheKey, JSON.stringify({ data: schedule, timestamp: Date.now() })); 
+      safeLogger("TIDE_API", "성공");
+    } else {
+      safeLogger("TIDE_API", "실패 (조건 부적합)");
+    }
+    return schedule;
+  })();
 };
 
-function generateOptimisticWeatherMap(baseDateStr) {
-  const mockMap = {};
-  for (let i = 0; i < 24; i++) {
-    const tKey = `${baseDateStr}${String(i).padStart(2, '0')}00`;
-    mockMap[tKey] = { TMP: "22", SKY: "1", PTY: "0", PCP: "강수없음", WSD: "2.4", VEC: "180", WAV: "0.4" };
-  }
-  return mockMap;
-}
-
-window.fetchRealWaterTempPromise = async function (lat, lng, dateStrList) {
-  const obsCode = window.getNearestTideStation(lat, lng);
-  const serviceKey = window.DATA_GO_KR_SERVICE_KEY || "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
-  const todayStr = dateStrList[0];
+window.fetchRealWaterTempPromise = function (lat, lng, dateStrings) {
+  const cacheKey = `cc_roms_dual_track_v3_${lat.toFixed(2)}_${lng.toFixed(2)}`; 
+  const safeLogger = typeof window.logApiStatus === 'function' ? window.logApiStatus : () => {};
+  const safePortalKey = typeof PUBLIC_PORTAL_KEY !== 'undefined' ? PUBLIC_PORTAL_KEY : '';
   
-  const url = `https://apis.data.go.kr/1192136/tideObsRealTime/GetTideObsRealTimeApiService?serviceKey=${serviceKey}&ObsCode=${obsCode}&ResultType=json`;
+  safeLogger("ROMS_WATER_TEMP", "호출 시도", { lat, lng });
 
   try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`KHOA_HTTP_${res.status}`);
-    
-    const textData = await res.text();
-    if (textData.trim().startsWith('<')) throw new Error("KHOA_TEMP_XML_INTERCEPTED");
-    
-    const json = JSON.parse(textData);
-    const items = json.response?.body?.items?.item;
-    if (!items) throw new Error("KHOA_EMPTY_PAYLOAD");
+    const lData = localStorage.getItem(cacheKey);
+    if (lData) {
+      const parsed = JSON.parse(lData);
+      if (Date.now() - parsed.timestamp < 3 * 60 * 60 * 1000) {
+        safeLogger("ROMS_WATER_TEMP", "캐시 적중");
+        return Promise.resolve(parsed.data);
+      }
+    }
+  } catch (e) {
+    localStorage.removeItem(cacheKey);
+  }
+  
+  const offset = 0.15; 
+  const url = `/api-tide/1192136/roms/GetRomsApiService?serviceKey=${safePortalKey}&type=json&ymin=${(lat - offset).toFixed(4)}&ymax=${(lat + offset).toFixed(4)}&xmin=${(lng - offset).toFixed(4)}&xmax=${(lng + offset).toFixed(4)}&pageNo=1&numOfRows=300`;
 
-    const waterTempContainer = {};
-    const dataArr = Array.isArray(items) ? items : [items];
+  return fetch(url).then(async res => { const text = await res.text(); if (!res.ok || text.includes("Unexpected errors")) throw new Error(); return JSON.parse(text); }).then(json => {
+    const wtm = { details: {} }; 
+    const extract = (obj) => { if (Array.isArray(obj)) return obj; if (typeof obj === 'object') { for (const k in obj) { if (Array.isArray(obj[k])) return obj[k]; } for (const k in obj) { const r = extract(obj[k]); if (r?.length) return r; } } return []; };
+    const items = extract(json);
+    
+    if (items && items.length > 0) {
+      console.log("[ROMS 수신 성공] 원본 데이터 필드 구조 샘플:", items[0]);
+    } else {
+      console.warn("[ROMS 격자 탐색 실패] 해당 좌표 반경 내에 관측/예측 해양 모델 레이어가 없습니다.");
+    }
 
-    dataArr.forEach(item => {
-      const rTime = item.recordtime || item.recordTime || item.record_time;
-      const wTemp = item.watertemp || item.waterTemp || item.water_temp;
-      if (rTime && wTemp) {
-        const cleanTime = rTime.replace(/[-_:/ ]/g, '');
-        if (cleanTime.length >= 10) {
-          const matchingKey = `${cleanTime.substring(0, 8)}${cleanTime.substring(8, 10)}00`;
-          waterTempContainer[matchingKey] = `${parseFloat(wTemp).toFixed(1)}°C`;
+    items.forEach(item => {
+      let pt = item.predDate || item.predcDt || item.date || item.time || item.pred_date;
+      let wt = item.wtem !== undefined ? item.wtem : (item.wTemp || item.w_temp || item.wtemp || item.temp || item.wt || item.w_t);
+      let cd = item.crdir;
+      let cs = item.crsp;
+      
+      if (pt) {
+        const key = String(pt).replace(/\D/g, '').substring(0,10) + "00";
+        if (key) {
+          const formattedWtemp = wt !== undefined ? parseFloat(wt).toFixed(1) + "°C" : "--°C";
+          
+          wtm[key] = formattedWtemp;
+          
+          wtm.details[key] = {
+            wtemp: formattedWtemp,
+            crdir: cd !== undefined ? parseFloat(cd) : null,
+            crsp: cs !== undefined ? parseFloat(cs).toFixed(2) + "m/s" : "--m/s"
+          };
         }
       }
     });
-
-    if (typeof window.logApiStatus === "function") {
-      window.logApiStatus("KHOA_WATER_TEMP", "SUCCESS", { obsCode });
+    if (Object.keys(wtm).length > 1) {
+      localStorage.setItem(cacheKey, JSON.stringify({ data: wtm, timestamp: Date.now() })); 
+      safeLogger("ROMS_WATER_TEMP", "성공");
+    } else {
+      safeLogger("ROMS_WATER_TEMP", "실패 (데이터 없음)");
     }
-    return waterTempContainer;
-  } catch (err) {
-    if (typeof window.logApiStatus === "function") {
-      window.logApiStatus("KHOA_WATER_TEMP", "FALLBACK_MOCK", { error: err.message });
-    }
-    const fallbackContainer = {};
-    for (let i = 0; i < 24; i++) {
-      fallbackContainer[`${todayStr}${String(i).padStart(2, '0')}00`] = "19.8°C";
-    }
-    return fallbackContainer;
-  }
+    return wtm;
+  }).catch(err => {
+    safeLogger("ROMS_WATER_TEMP", "에러 발생", { error: err.message });
+    return { details: {} };
+  });
 };
 
-window.fetchTideData3DaysPromise = async function (lat, lng) {
-  const obsCode = window.getNearestTideStation(lat, lng);
-  const serviceKey = window.DATA_GO_KR_SERVICE_KEY || "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
+// -------------------------------------------------------------------------
+// [WEATHER CORE] 기상/조석 해양 기하 타임라인 가변 그래픽 스레드 모듈
+// -------------------------------------------------------------------------
+window.loadTimelineWithOptimisticUI = function (lat, lng) {
+  const modalBody = document.querySelector('.weather-modal-body'), dateSticky = document.getElementById('lblDetailDate'), bridge = document.getElementById('timelineInnerBridge');
+  if (modalBody && dateSticky && dateSticky.parentNode !== modalBody) modalBody.insertBefore(dateSticky, modalBody.firstChild);
+
+  if (modalBody && !document.getElementById('miniSplashBodyBlock')) {
+    const splashBlock = document.createElement('div'); splashBlock.id = 'miniSplashBodyBlock';
+    splashBlock.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; min-height: 430px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--text-muted); background: var(--modal-bg, #ffffff); z-index: 100;';
+    splashBlock.innerHTML = `<div class="mini-splash-spinner spinning" style="width: 36px; height: 36px; border: 4px solid var(--border-color); border-top-color: var(--primary-color); border-radius: 50%;"></div><div class="mini-splash-text" style="font-size: 13.5px; font-weight: 700;">실시간 데이터 분석 중...</div>`;
+    modalBody.style.position = 'relative'; modalBody.style.minHeight = '430px'; modalBody.appendChild(splashBlock);
+    if (dateSticky) dateSticky.style.visibility = 'hidden'; if (bridge) bridge.style.visibility = 'hidden';
+  }
+
+  const dateStrings = []; const baseNow = new Date();
+  for (let d = 0; d < 5; d++) { const tDate = new Date(baseNow.getTime() + d * 24 * 60 * 60 * 1000); dateStrings.push(`${tDate.getFullYear()}${String(tDate.getMonth() + 1).padStart(2, '0')}${String(tDate.getDate()).padStart(2, '0')}`); }
   
-  const now = new Date();
-  const formatD = (d) => `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+  const safeStations = typeof TIDE_STATIONS !== 'undefined' ? TIDE_STATIONS : [];
+  const safeGetStationFunc = typeof window.getNearestTideStation === 'function' ? window.getNearestTideStation : () => 'DT_0005';
+  const obsCode = safeGetStationFunc(lat, lng); 
+  const stationObj = safeStations.find(s => s && s.code === obsCode) || safeStations[0] || { lat: lat, lng: lng };
+
+  Promise.all([
+    window.fetchSunriseSunsetForDatesPromise(lat, lng, dateStrings), window.fetchKMAWeatherPromise(lat, lng), window.fetchTideData3DaysPromise(lat, lng),
+    window.fetchRealWaterTempPromise(lat, lng, dateStrings), window.fetchKMAWeatherPromise(stationObj.lat, stationObj.lng !== undefined ? stationObj.lng : (stationObj.mesh !== undefined ? stationObj.mesh : lng))
+  ]).then(([_, liveWeatherMap, realTidesSchedule, realWaterTempMap, seaWeatherMap]) => {
+    document.getElementById('miniSplashBodyBlock')?.remove(); if (dateSticky) dateSticky.style.visibility = 'visible';
+    if (bridge) { bridge.style.visibility = 'visible'; bridge.innerHTML = ''; }
+    window.buildTimelineUI(lat, lng, liveWeatherMap, realTidesSchedule, realWaterTempMap, seaWeatherMap);
+  }).catch(() => {
+    document.getElementById('miniSplashBodyBlock')?.remove(); if (dateSticky) dateSticky.style.visibility = 'visible';
+    if (bridge) { bridge.style.visibility = 'visible'; bridge.innerHTML = '<div class="pm-empty-msg">기상 정보 연동에 실패했습니다.</div>'; }
+  });
+};
+
+window.buildTimelineUI = function (lat, lng, weatherMap, realTides, waterTempMap, seaWeatherMap) {
+  const scroller = document.getElementById('timelineScrollWrapper'), bridge = document.getElementById('timelineInnerBridge'); if (!bridge) return;
+
+  const fragment = document.createDocumentFragment();
+  window.timelineDatesArray = []; window.allTidesSchedule = [];
   
-  const d0 = formatD(now);
-  const d1 = formatD(new Date(now.getTime() + 24 * 60 * 60 * 1000));
-  const d2 = formatD(new Date(now.getTime() + 48 * 60 * 60 * 1000));
-  window.timelineDatesArray = [d0, d1, d2];
+  const gridRow = document.createElement('div'); gridRow.className = 'timeline-grid-row';
+  const now = new Date(); let svgHighlightsHtml = ''; const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
-  const url = `https://apis.data.go.kr/1192136/tideFcstHghLw/GetTideFcstHghLwApiService?serviceKey=${serviceKey}&ObsCode=${obsCode}&ResultType=json&SearchDate=${d0}`;
+  const dayBrightColor = '#e3f2fd', dayMainColor = '#b3e5fc', nightColor = '#1a263f', seaTopColor = '#6cb0f6', seaBottomColor = '#2b6cb0';
+  let allSegments = []; let prevType = null; let segmentStartX = 0;
 
-  try {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`TIDE_HTTP_${res.status}`);
-    
-    const textData = await res.text();
-    if (textData.trim().startsWith('<')) throw new Error("KHOA_TIDE_XML_INTERCEPTED");
-    
-    const json = JSON.parse(textData);
-    const items = json.response?.body?.items?.item;
-    if (!items) throw new Error("TIDE_PAYLOAD_EMPTY");
+  for (let m = 0; m <= 72 * 60; m += 10) {
+    let isNightTime = false;
+    if (m < 72 * 60) {
+      const testDate = new Date(now.getTime() + (m * 60 * 1000)); const sunTimes = window.getSunTimesForDate(testDate);
+      isNightTime = (testDate.getHours() * 60 + testDate.getMinutes() < (parseInt(sunTimes.sunrise.split(':')[0]) * 60 + parseInt(sunTimes.sunrise.split(':')[1]))) || (testDate.getHours() * 60 + testDate.getMinutes() >= (parseInt(sunTimes.sunset.split(':')[0]) * 60 + parseInt(sunTimes.sunset.split(':')[1])));
+    }
+    let currentType = isNightTime ? 'night' : 'day';
+    if (m === 0) { prevType = currentType; segmentStartX = 0; }
+    else if (currentType !== prevType || m === 72 * 60) { let endX = (m / 60) * 56; allSegments.push({ type: prevType, start: segmentStartX, width: endX - segmentStartX }); prevType = currentType; segmentStartX = endX; }
+  }
 
-    const preData = Array.isArray(items) ? items : [items];
-    const parseContainer = [];
-
-    preData.forEach(item => {
-      const hl = item.hlcode || item.hlCode || item.hl_code || '';
-      const type = (hl === 'High' || hl === '만조' || hl === '고조') ? '만조' : '간조';
-      const timeStr = item.time || item.tideTime || item.tidetime || item.tide_time || '';
-      const levelStr = item.value || item.tideLevel || item.tidelevel || item.tide_level || '';
-      
-      if (timeStr) {
-        const tStr = timeStr.length >= 16 ? timeStr.substring(11, 16) : timeStr;
-        parseContainer.push({
-          type,
-          time: tStr,
-          level: String(levelStr),
-          rawDt: timeStr,
-          hoursFromNow: (new Date(timeStr.replace(/-/g, '/')).getTime() - now.getTime()) / (1000 * 60 * 60)
-        });
+  let svgBackgroundsHtml = '';
+  allSegments.forEach(seg => {
+    if (seg.type === 'day') svgBackgroundsHtml += `<rect x="${seg.start.toFixed(2)}" y="0" width="${seg.width.toFixed(2)}" height="160" fill="url(#dayGradient)" />`;
+    else {
+      svgBackgroundsHtml += `<rect x="${seg.start.toFixed(2)}" y="0" width="${seg.width.toFixed(2)}" height="160" fill="${nightColor}" />`;
+      for (let s = 0; s < Math.floor(seg.width / 15); s++) svgBackgroundsHtml += `<circle cx="${(seg.start + (Math.random() * seg.width)).toFixed(2)}" cy="${(5 + (Math.random() * 35)).toFixed(2)}" r="${(0.6 + Math.random() * 0.4).toFixed(1)}" fill="#ffffff" opacity="${(0.3 + Math.random() * 0.6).toFixed(2)}" />`;
+      if (seg.width > 30) {
+        const moonX = (seg.start + seg.width / 2).toFixed(2); const phase = (((new Date(now.getTime() + (seg.start + seg.width / 2) / 56 * 60 * 60 * 1000).getTime() - new Date(Date.UTC(2000, 0, 6, 18, 14, 0)).getTime()) / (1000 * 60 * 60 * 24)) % 29.530588853 + 29.530588853) % 29.530588853;
+        let mc = (phase < 1.5 || phase > 28.0) ? `<circle cx="14" cy="14" r="11" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-dasharray="2,2"/>` : `<circle cx="14" cy="14" r="11" fill="none" stroke="#ffffff" stroke-opacity="0.15"/><path d="M 14 3 A 11 11 0 0 ${phase < 14.7 ? 1 : 0} 14 25 A 6 11 0 0 ${phase < 14.7 ? 0 : 1} 14 3 Z" fill="#ffd700"/>`;
+        svgBackgroundsHtml += `<g transform="translate(${(moonX - 14)}, 12)">${mc}</g>`;
       }
-    });
+    }
+    if (seg.type === 'day' && seg.width > 30) svgBackgroundsHtml += `<g transform="translate(${((seg.start + seg.width / 2) - 14).toFixed(2)}, 12)"><circle cx="14" cy="14" r="6" fill="#ff9500" opacity="0.85"/><path d="M14 3v3M14 22v3M3 14h3M22 14h3" stroke="#ff9500" stroke-width="2" stroke-linecap="round" opacity="0.85"/></g>`;
+  });
 
-    window.allTidesSchedule = parseContainer;
-    if (typeof window.logApiStatus === "function") {
-      window.logApiStatus("KHOA_TIDE_PREDICTION", "SUCCESS", { totalEvents: parseContainer.length });
-    }
-    return parseContainer;
-  } catch (err) {
-    if (typeof window.logApiStatus === "function") {
-      window.logApiStatus("KHOA_TIDE_PREDICTION", "MOCK_MODE", { error: err.message });
-    }
-    const dummyContainer = [];
-    for (let dayIdx = 0; dayIdx < 3; dayIdx++) {
-      const targetBaseMs = now.getTime() + dayIdx * 24 * 60 * 60 * 1000;
-      const dObj = new Date(targetBaseMs);
-      const baseIso = `${dObj.getFullYear()}-${String(dObj.getMonth()+1).padStart(2,'0')}-${String(dObj.getDate()).padStart(2,'0')}`;
+  for (let i = 0; i < 72; i++) {
+    const futureHour = new Date(now.getTime() + (i * 60 * 60 * 1000)); window.timelineDatesArray.push(futureHour);
+    const kmaKey = `${futureHour.getFullYear()}${String(futureHour.getMonth() + 1).padStart(2, '0')}${String(futureHour.getDate()).padStart(2, '0')}${String(futureHour.getHours()).padStart(2, '0')}00`;
 
-      dummyContainer.push({ type: '만조', time: '04:15', level: '265', rawDt: `${baseIso} 04:15:00`, hoursFromNow: dayIdx * 24 + 4 });
-      dummyContainer.push({ type: '간조', time: '10:30', level: '62', rawDt: `${baseIso} 10:30:00`, hoursFromNow: dayIdx * 24 + 10.5 });
-      dummyContainer.push({ type: '만조', time: '16:45', level: '280', rawDt: `${baseIso} 16:45:00`, hoursFromNow: dayIdx * 24 + 16.75 });
-      dummyContainer.push({ type: '간조', time: '23:10', level: '48', rawDt: `${baseIso} 23:10:00`, hoursFromNow: dayIdx * 24 + 23.16 });
+    let tempVal = "20°", rainVal = '0mm', windVal = "2m/s", dirVal = "↓", skyIcon = "맑음", iconColor = isDark ? '#ffb948' : '#ff9500', waveVal = "--m", wtempVal = "--°C", crdirVal = "---", crspVal = "--m/s";
+    
+    if (weatherMap && weatherMap[kmaKey]) {
+      const kma = weatherMap[kmaKey]; if (kma.TMP) tempVal = kma.TMP + "°"; if (kma.PCP) rainVal = kma.PCP === '강수없음' ? '0mm' : kma.PCP; if (kma.WSD) windVal = parseFloat(kma.WSD).toFixed(0) + "m/s";
+      if (kma.WAV) waveVal = parseFloat(kma.WAV).toFixed(1) + "m"; else if (seaWeatherMap && seaWeatherMap[kmaKey] && seaWeatherMap[kmaKey].WAV) waveVal = parseFloat(seaWeatherMap[kmaKey].WAV).toFixed(1) + "m";
+      if (kma.VEC) { const deg = parseFloat(kma.VEC); dirVal = (deg >= 337.5 || deg < 22.5) ? "↓" : (deg < 67.5) ? "↙" : (deg < 112.5) ? "←" : (deg < 157.5) ? "↖" : (deg < 202.5) ? "↑" : (deg < 247.5) ? "↗" : (deg < 292.5) ? "→" : "↘"; }
+      if (kma.PTY && kma.PTY !== "0") { skyIcon = "비"; iconColor = "#2f96ff"; } else if (kma.SKY === "3") { skyIcon = "구름많음"; iconColor = "#a2a2a7"; } else if (kma.SKY === "4") { skyIcon = "흐림"; iconColor = "#747479"; }
+    } else if (seaWeatherMap && seaWeatherMap[kmaKey] && seaWeatherMap[kmaKey].WAV) waveVal = parseFloat(seaWeatherMap[kmaKey].WAV).toFixed(1) + "m";
+    
+    if (waterTempMap && waterTempMap.details && waterTempMap.details[kmaKey]) {
+      const rObj = waterTempMap.details[kmaKey]; wtempVal = rObj.wtemp; crspVal = rObj.crsp;
+      if (rObj.crdir !== null) {
+        const d = rObj.crdir;
+        crdirVal = (d >= 337.5 || d < 22.5) ? "북" : (d < 67.5) ? "북동" : (d < 112.5) ? "동" : (d < 157.5) ? "남동" : (d < 202.5) ? "남" : (d < 247.5) ? "남서" : (d < 292.5) ? "서" : "북서";
+      }
+    } else if (waterTempMap && waterTempMap.details) {
+      const fk = Object.keys(waterTempMap.details).find(k => k.startsWith(kmaKey.substring(0, 8)));
+      if (fk && waterTempMap.details[fk]) {
+        const rObj = waterTempMap.details[fk]; wtempVal = rObj.wtemp; crspVal = rObj.crsp;
+        if (rObj.crdir !== null) {
+          const d = rObj.crdir;
+          crdirVal = (d >= 337.5 || d < 22.5) ? "북" : (d < 67.5) ? "북동" : (d < 112.5) ? "동" : (d < 157.5) ? "남동" : (d < 202.5) ? "남" : (d < 247.5) ? "남서" : (d < 292.5) ? "서" : "북서";
+        }
+      }
     }
-    window.allTidesSchedule = dummyContainer;
-    return dummyContainer;
+
+    const col = document.createElement('div'); col.className = 'timeline-hour-column';
+    col.innerHTML = `<div class="tl-cell cell-time">${String(futureHour.getHours()).padStart(2, '0')}</div><div class="tl-cell cell-icon" style="color: ${iconColor};">${skyIcon}</div><div class="tl-cell cell-temp">${tempVal}</div><div class="tl-cell cell-rain">${rainVal}</div><div class="tl-cell cell-wind">${windVal}</div><div class="tl-cell cell-dir">${dirVal}</div><div class="tl-cell cell-wave">${waveVal}</div><div class="tl-cell cell-wtemp">${wtempVal}</div><div class="tl-cell cell-crdir">${crdirVal}</div><div class="tl-cell cell-crsp">${crspVal}</div>`;
+    gridRow.appendChild(col);
   }
+  fragment.appendChild(gridRow);
+
+  if (realTides && Array.isArray(realTides) && realTides.length > 0) window.allTidesSchedule = realTides.map(t => { if (t.rawDt) t.hoursFromNow = (new Date(t.rawDt.replace(/-/g, '/')).getTime() - now.getTime()) / (1000 * 60 * 60); return t; });
+  else {
+    let k = 0; while (true) {
+      let xH = 112 * (Math.PI / 2 + 2 * k * Math.PI), xL = 112 * (3 * Math.PI / 2 + 2 * k * Math.PI); if (xH > 4032 && xL > 4032) break;
+      if (xH >= 0 && xH <= 4032) { let hH = xH / 56; let dH = new Date(now.getTime() + hH * 60 * 60 * 1000); window.allTidesSchedule.push({ type: '만조', color: '#ff3b30', time: `${String(dH.getHours()).padStart(2, '0')}:${String(dH.getMinutes()).padStart(2, '0')}`, hoursFromNow: hH, level: '270', diff: 220, rawDt: dH.toISOString() }); }
+      if (xL >= 0 && xL <= 4032) { let hL = xL / 56; let dL = new Date(now.getTime() + hL * 60 * 60 * 1000); window.allTidesSchedule.push({ type: '간조', color: '#007aff', time: `${String(dL.getHours()).padStart(2, '0')}:${String(dL.getMinutes()).padStart(2, '0')}`, hoursFromNow: hL, level: '50', diff: -220, rawDt: dL.toISOString() }); }
+      k++;
+    }
+  }
+  window.allTidesSchedule.sort((a, b) => a.hoursFromNow - b.hoursFromNow);
+
+  let curvePoints = window.allTidesSchedule.map(t => ({ x: t.hoursFromNow * 56, y: t.type === '만조' ? 55 : 115 }));
+  if (curvePoints.length > 0) { curvePoints.sort((a, b) => a.x - b.x); curvePoints.unshift({ x: curvePoints[0].x - 336, y: curvePoints[0].y === 55 ? 115 : 55 }); curvePoints.push({ x: curvePoints[curvePoints.length - 1].x + 336, y: curvePoints[curvePoints.length - 1].y === 55 ? 115 : 55 }); }
+  const getDynamicYForX = (x) => { if (curvePoints.length === 0) return 85; for (let idx = 0; idx < curvePoints.length - 1; idx++) { const p0 = curvePoints[idx], p1 = curvePoints[idx + 1]; if (x >= p0.x && x <= p1.x) return p0.y * (1 - (1 - Math.cos((x - p0.x) / (p1.x - p0.x) * Math.PI)) / 2) + p1.y * ((1 - Math.cos((x - p0.x) / (p1.x - p0.x) * Math.PI)) / 2); } return 85; };
+
+  let svgPoints = [], fillPolygonPoints = "0,160";
+  for (let x = 0; x <= 4032; x += 2) { const yVal = getDynamicYForX(x); const pStr = `${x},${yVal.toFixed(2)}`; svgPoints.push(pStr); fillPolygonPoints += ` ${pStr}`; }
+  fillPolygonPoints += " 4032,160";
+
+  window.allTidesSchedule.forEach(t => {
+    const xPos = t.hoursFromNow * 56; if (xPos >= 0 && xPos <= 4032) {
+      const yPos = getDynamicYForX(xPos);
+      svgHighlightsHtml += `<line x1="${xPos.toFixed(2)}" y1="${t.type === '만조' ? 0 : yPos.toFixed(2)}" x2="${xPos.toFixed(2)}" y2="${t.type === '만조' ? yPos.toFixed(2) : 160}" stroke="${t.color}" stroke-width="1" stroke-dasharray="2,2" opacity="0.35" /><circle cx="${xPos.toFixed(2)}" cy="${yPos.toFixed(2)}" r="4.5" fill="#ffffff" stroke="${t.color}" stroke-width="2.5"/><text x="${xPos.toFixed(2)}" y="${(yPos - 14).toFixed(2)}" fill="${t.color}" font-size="12" font-weight="600" text-anchor="middle">${t.level}${t.diff !== 0 ? ` (${t.diff > 0 ? '▲' : '▼'}${Math.abs(t.diff)})` : ''}</text>`;
+    }
+  });
+
+  const waveRow = document.createElement('div'); waveRow.className = 'timeline-wave-row-container';
+  waveRow.innerHTML = `<div class="tide-svg-wrapper"><svg class="tide-svg-canvas" width="4032" height="160"><defs><linearGradient id="deepSeaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${seaTopColor}" /><stop offset="100%" stop-color="${seaBottomColor}" /></linearGradient><radialGradient id="dayGradient" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="${dayBrightColor}" /><stop offset="100%" stop-color="${dayMainColor}" /></linearGradient></defs>${svgBackgroundsHtml}<polygon points="${fillPolygonPoints}" fill="url(#deepSeaGradient)" /><path d="M ${svgPoints.join(' L ')}" fill="none" stroke="transparent" stroke-width="1.2"/>${svgHighlightsHtml}</svg></div>`;
+  fragment.appendChild(waveRow);
+
+  const container = scroller?.closest('.timeline-viewport-container-native');
+  if (container) {
+    let labelCol = container.querySelector('.timeline-label-column'); if (!labelCol) { labelCol = document.createElement('div'); labelCol.className = 'timeline-label-column'; container.appendChild(labelCol); }
+    labelCol.innerHTML = `<div class="tl-cell">시간</div><div class="tl-cell">날씨</div><div class="tl-cell">기온</div><div class="tl-cell">강수</div><div class="tl-cell">풍속</div><div class="tl-cell">풍향</div><div class="tl-cell">파고</div><div class="tl-cell">수온</div><div class="tl-cell">유향</div><div class="tl-cell">유속</div><div class="tides-floating-text-area"></div>`;
+  }
+  
+  bridge.innerHTML = '';
+  bridge.appendChild(fragment);
+
+  if (scroller) scroller.scrollLeft = 0;
+  window.syncTimelineDateHeader(scroller);
 };
 
-// -------------------------------------------------------------------------
-// [GRAPHIC ENGINE] 실시간 연안 종합 타임라인 바텀시트 그래픽 제어 엔진
-// -------------------------------------------------------------------------
-window.loadTimelineWithOptimisticUI = async function (lat, lng) {
-  const container = document.getElementById('weatherTimelineContainer');
-  if (container) {
-    container.innerHTML = `
-      <div class="timeline-loading-skeleton" style="padding: 40px 0; text-align: center; color: var(--text-muted); font-size: 13px;">
-        <div class="skeleton-spinner" style="width: 24px; height: 24px; border: 2px solid var(--border-line); border-top-color: var(--primary-color); border-radius: 50%; animation: hc-spin-anim 0.8s linear infinite; margin: 0 auto 12px;"></div>
-        <div>실시간 해양 기상 파이프라인 분석 중...</div>
+window.syncTimelineDateHeader = function (scrollElement) {
+  if (!scrollElement || !window.timelineDatesArray || window.timelineDatesArray.length === 0) return;
+  const container = scrollElement.closest('.timeline-viewport-container-native'); if (!container) return;
+  const syncLine = container.querySelector('.timeline-sync-line'), syncBubble = container.querySelector('.timeline-sync-bubble');
+
+  let ratio = (scrollElement.scrollWidth - scrollElement.clientWidth) > 0 ? (scrollElement.scrollLeft / (scrollElement.scrollWidth - scrollElement.clientWidth)) : 0;
+  let viewWidth = container.clientWidth - 75; if (viewWidth <= 0) viewWidth = scrollElement.clientWidth;
+  let currentLineX = 75 + (ratio * viewWidth);
+
+  if (syncLine) syncLine.style.left = `${Math.min(currentLineX, container.clientWidth - 2)}px`;
+  if (syncBubble) syncBubble.style.left = `${Math.min(Math.max(currentLineX, 75 + 28), container.clientWidth - 38)}px`;
+
+  const hoursFromNow = (scrollElement.scrollLeft + (currentLineX - 75)) / 56;
+  const activeDate = new Date(new Date().getTime() + hoursFromNow * 60 * 60 * 1000);
+  const dateSticky = document.getElementById('lblDetailDate');
+
+  if (dateSticky) {
+    let lunarStr = '', lunarDay = activeDate.getDate();
+    try { const lr = new Intl.DateTimeFormat('ko-KR-u-ca-chinese').format(activeDate); const la = lr.split('.').map(s => s.trim()).filter(Boolean); if (la.length >= 3) { lunarStr = ` (음 ${la[1]}/${la[2]})`; lunarDay = parseInt(la[2], 10); } } catch (e) {}
+    const tideNames8 = ["조금", "1물", "2물", "3물", "4물", "5물", "6물", "7물", "8물", "9물", "10물", "11물", "12물", "13물", "14물"];
+    const phase = (((activeDate.getTime() - new Date(Date.UTC(2000, 0, 6, 18, 14, 0)).getTime()) / (1000 * 60 * 60 * 24)) % 29.530588853 + 29.530588853) % 29.530588853;
+    let moonSvgHtml = `<svg class="lunar-phase-svg-node" viewBox="0 0 28 28"><circle cx="14" cy="14" r="11" fill="var(--text-muted)"/><path d="M 14 3 A 11 11 0 0 ${phase < 14.7 ? 1 : 0} 14 25 A 5 11 0 0 ${phase < 14.7 ? 0 : 1} 14 3 Z" fill="#ffd700"/></svg>`;
+    const sunTimes = window.getSunTimesForDate(activeDate);
+
+    dateSticky.innerHTML = `
+      <div class="sun-moon-left-wrapper">${moonSvgHtml}<span class="sun-moon-tide-label">${tideNames8[(lunarDay + 7) % 15]}</span><span class="sun-moon-date-label">${activeDate.getMonth() + 1}월 ${activeDate.getDate()}일<span class="sun-moon-lunar-subtext">${lunarStr}</span></span></div>
+      <div class="sun-times-right-wrapper">
+        <span class="sun-time-item-flex sunrise-item"><svg class="sun-node-icon sunrise" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M5.22 7.22l2.83 2.83M18.78 7.22l-2.83 2.83M2 22h20M12 10a4 4 0 0 0-4 4h8a4 4 0 0 0-4-4z"/></svg><span class="sun-time-bold">일출</span>${sunTimes.sunrise}</span>
+        <span class="sun-time-item-flex sunset-item"><svg class="sun-node-icon sunset" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 22h20M16 16a4 4 0 0 0-8 0M12 2v4M5.22 7.22l2.83 2.83M18.78 7.22l-2.83 2.83"/></svg><span class="sun-time-bold">일몰</span>${sunTimes.sunset}</span>
       </div>
     `;
   }
-
-  try {
-    const now = new Date();
-    const dStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-    
-    const [sunTimes, weatherMap, seaWeatherMap, waterTempMap, tideData] = await Promise.all([
-      window.fetchSunriseSunsetForDatesPromise(lat, lng, [dStr]).catch(() => window.globalSunTimesCache),
-      window.fetchKMAWeatherPromise(lat, lng).catch(() => generateOptimisticWeatherMap(dStr)),
-      window.fetchKMAWeatherPromise(35.0975, 129.0369).catch(() => generateOptimisticWeatherMap(dStr)),
-      window.fetchRealWaterTempPromise(lat, lng, [dStr]).catch(() => ({})),
-      window.fetchTideData3DaysPromise(lat, lng).catch(() => [])
-    ]);
-
-    window.buildTimelineUI(lat, lng, container, weatherMap, waterTempMap);
-  } catch (err) {
-    console.error("타임라인 빌드 파이프라인 연산 실패:", err);
-    if (container) container.innerHTML = '<div class="pm-empty-msg">기상 데이터 로드 중 에러가 발생했습니다.</div>';
+  if (scrollElement && syncBubble) syncBubble.innerHTML = `${String(activeDate.getHours()).padStart(2, '0')}:${String(activeDate.getMinutes()).padStart(2, '0')}`;
+  const textTideArea = container.querySelector('.tides-floating-text-area');
+  if (textTideArea && window.allTidesSchedule && window.allTidesSchedule.length > 0) {
+    let activeTides = window.allTidesSchedule.filter(t => t.hoursFromNow >= hoursFromNow - 1);
+    activeTides = activeTides.length < 4 ? window.allTidesSchedule.slice(-4) : activeTides.slice(0, 4);
+    textTideArea.innerHTML = activeTides.map(t => `<div class="tide-floating-card-item" style="border-left: 4px solid ${t.color} !important;"><div class="tide-floating-card-symbol" style="color: ${t.color} !important;">${t.type === '만조' ? '▲' : '▼'}${t.type}</div><div class="tide-floating-card-time">${t.time}</div></div>`).join('');
   }
-};
-
-window.buildTimelineUI = function (lat, lng, targetContainer, weatherMap, waterTempMap) {
-  const container = targetContainer || document.getElementById('weatherTimelineContainer');
-  if (!container) return;
-  container.innerHTML = '';
-
-  const now = new Date();
-  const currentHour = now.getHours();
-  const todayStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-
-  const findLatestData = (map, tKey) => {
-    if (!map) return null;
-    if (map[tKey]) return map[tKey];
-    const keys = Object.keys(map).sort();
-    let best = null;
-    for (let k of keys) { if (k <= tKey) best = map[k]; }
-    return best || map[keys[0]]; 
-  };
-
-  let depthDisplayStr = "확인 불가";
-  if (typeof window.findNearestDepth === 'function') {
-    const depthVal = window.findNearestDepth(lat, lng);
-    if (depthVal !== null) depthDisplayStr = `${Math.abs(depthVal).toFixed(1)}m`;
-  }
-
-  const summaryBlock = document.createElement('div');
-  summaryBlock.className = 'timeline-environmental-header';
-  summaryBlock.style.cssText = 'display:flex; justify-content:space-between; padding:12px; background:var(--bg-card); border-radius:10px; margin-bottom:14px; font-size:12px; border:1px solid var(--border-line);';
-  
-  const currentKey = `${todayStr}${String(currentHour).padStart(2, '0')}00`;
-  const matchedW = findLatestData(weatherMap, currentKey);
-  const matchedT = findLatestData(waterTempMap, currentKey);
-
-  let tempVal = matchedW?.TMP ? `${matchedW.TMP}°C` : "--°C";
-  let waterTempVal = matchedT || "--.-°C";
-
-  summaryBlock.innerHTML = `
-    <div><strong>기온:</strong> <span>${tempVal}</span></div>
-    <div><strong>수온:</strong> <span>${waterTempVal}</span></div>
-    <div><strong>인근 수심:</strong> <span style="color:var(--primary-color); font-weight:bold;">${depthDisplayStr}</span></div>
-  `;
-  container.appendChild(summaryBlock);
-
-  const timelineScrollWrapper = document.createElement('div');
-  timelineScrollWrapper.className = 'timeline-scroll-axis';
-  timelineScrollWrapper.style.cssText = 'display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; scroll-behavior:smooth;';
-
-  for (let h = 0; h < 24; h++) {
-    const itemKey = `${todayStr}${String(h).padStart(2, '0')}00`;
-    const wData = findLatestData(weatherMap, itemKey);
-    
-    const slot = document.createElement('div');
-    slot.className = 'timeline-hour-slot' + (h === currentHour ? ' active-current' : '');
-    slot.style.cssText = `
-      flex: 0 0 64px; background: var(--bg-card); border: 1px solid var(--border-line);
-      border-radius: 8px; padding: 10px 4px; text-align: center; display: flex; flex-direction: column; gap: 6px; font-size: 11px;
-    `;
-    if (h === currentHour) {
-      slot.style.borderColor = 'var(--primary-color)';
-      slot.style.background = 'var(--bg-main)';
-    }
-
-    const timeLabel = document.createElement('div');
-    timeLabel.innerText = `${String(h).padStart(2, '0')}시`;
-    timeLabel.style.fontWeight = 'bold';
-    if (h === currentHour) timeLabel.style.color = 'var(--primary-color)';
-    slot.appendChild(timeLabel);
-
-    let skyText = "맑음";
-    if (wData) {
-      if (wData.PTY && wData.PTY !== "0") skyText = wData.PTY === "3" ? "눈" : "비";
-      else if (wData.SKY === "3") skyText = "구름많음";
-      else if (wData.SKY === "4") skyText = "흐림";
-    }
-    const skyLabel = document.createElement('div');
-    skyLabel.innerText = skyText;
-    skyLabel.style.color = 'var(--text-main)';
-    slot.appendChild(skyLabel);
-
-    const tempLabel = document.createElement('div');
-    tempLabel.innerText = wData?.TMP ? `${wData.TMP}°` : "--°";
-    tempLabel.style.cssText = 'font-size:12px; font-weight:600; color:var(--text-main);';
-    slot.appendChild(tempLabel);
-
-    let windSpeed = wData?.WSD ? `${parseFloat(wData.WSD).toFixed(1)}m` : "-m";
-    const windLabel = document.createElement('div');
-    windLabel.innerText = windSpeed;
-    windLabel.style.cssText = 'font-size:10px; color:var(--text-muted);';
-    slot.appendChild(windLabel);
-
-    timelineScrollWrapper.appendChild(slot);
-  }
-
-  container.appendChild(timelineScrollWrapper);
-
-  setTimeout(() => {
-    const targetSlot = timelineScrollWrapper.querySelector('.active-current');
-    if (targetSlot) {
-      timelineScrollWrapper.scrollLeft = targetSlot.offsetLeft - (timelineScrollWrapper.clientWidth / 2) + (targetSlot.clientWidth / 2);
-    }
-  }, 100);
 };
 
 console.log("[SYSTEM] 기상 모듈 스레드 파이프라인 마운트 완료");
