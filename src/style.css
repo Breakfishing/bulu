@@ -45,7 +45,7 @@ html {
     background-color: var(--bg-main);
     color: var(--text-main);
     -webkit-tap-highlight-color: transparent;
-    style="-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none"
+    -webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;
 }
 
 #app-container {
