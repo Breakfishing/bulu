@@ -25,6 +25,7 @@
     opacity: 0;
     transform: translateY(100%) !important;
     transition: transform 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94), opacity 0.3s, visibility 0.3s !important;
+    padding: 20px 0 0 0;
 }
 
 /* 기상 모달 및 백드롭 레이어 활성화 상태 구동 엔진 */
@@ -63,9 +64,6 @@
    SECTION 2: 모달 헤더, 스티키 타이틀 바 및 천체(일출/일몰/월령) 정보 레이어
    ========================================================================= */
 /* 기상 모달 상단 텍스트 정렬 헤더 컨테이너 */
-.weather-modal-overlay .bottom-sheet-handle-bar {
-    padding: 20px 20px 0 20px;
-}
 .weather-modal-header,
 .weather-header-container {
     display: block;
