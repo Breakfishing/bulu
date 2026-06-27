@@ -396,3 +396,157 @@
     flex: 1;
 }
 
+/* =========================================================================
+   [POINT MANAGEMENT] 카테고리 팔레트 및 관리 모달 요소
+   ========================================================================= */
+.color-palette-grid {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5px;
+    margin-top: 0;
+    flex: 1;
+}
+
+.color-palette-btn {
+    flex: 1;
+    max-width: 26px;
+    aspect-ratio: 1 / 1;
+    padding: 0;
+    position: relative;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 50%;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.color-palette-btn[data-color="#4f46e5"] { background-color: #4f46e5; }
+.color-palette-btn[data-color="#3f51b5"] { background-color: #3f51b5; }
+.color-palette-btn[data-color="#00a896"] { background-color: #00a896; }
+.color-palette-btn[data-color="#28a745"] { background-color: #28a745; }
+.color-palette-btn[data-color="#b45309"] { background-color: #b45309; }
+.color-palette-btn[data-color="#a16207"] { background-color: #a16207; }
+.color-palette-btn[data-color="#db2777"] { background-color: #db2777; }
+.color-palette-btn[data-color="#ff4d4d"] { background-color: #ff4d4d; }
+.color-palette-btn[data-color="#7c3aed"] { background-color: #7c3aed; }
+.color-palette-btn[data-color="#607d8b"] { background-color: #607d8b; }
+
+[data-theme='dark'] .color-palette-btn {
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.color-palette-btn:active {
+    transform: scale(0.85);
+}
+
+.color-palette-btn.active {
+    transform: scale(1.12);
+    box-shadow: inset 0 0 0 3px var(--bg-panel), 0 4px 10px rgba(0, 0, 0, 0.18);
+    border-color: var(--text-main);
+}
+
+[data-theme='dark'] .color-palette-btn.active {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.first-modal-grid-flex {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+.first-modal-btn-register {
+    background: #28a745;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex: 1;
+    padding: 12px 4px;
+    font-size: 13px;
+}
+
+.first-modal-btn-icon {
+    width: 14px;
+    height: 14px;
+    stroke: #fff;
+    fill: none;
+    stroke-width: 2;
+}
+
+.first-modal-btn-toilet {
+    background: #ff9500;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex: 1;
+    padding: 12px 4px;
+    font-size: 13px;
+}
+
+.first-modal-btn-cancel {
+    flex: 1;
+    padding: 12px 4px;
+    font-size: 13px;
+}
+
+.point-modal-title-flex {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 0;
+}
+
+.point-modal-title-icon {
+    width: 20px;
+    height: 20px;
+    stroke: var(--primary-color);
+    fill: none;
+    stroke-width: 2;
+}
+
+.cat-edit-row-flex {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+    width: 100%;
+}
+
+.cat-edit-preview-box {
+    width: 24px;
+    height: 28px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transform: none !important;
+}
+
+.delete-modal-text {
+    font-size: 14px;
+    color: var(--text-main);
+    margin: 0 0 16px 0;
+    text-align: left;
+}
+
+.delete-modal-grid-flex {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.delete-modal-btn-padding {
+    flex: 1;
+    padding: 12px;
+}
+
+.delete-modal-btn-red {
+    background: #ff4d4d !important;
+    color: #fff;
+}
