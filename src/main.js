@@ -140,13 +140,13 @@ window.switchTab = function (tabId, navItem) {
 // =========================================================================
 // 하위 컴포넌트 및 도메인 분리 유틸/서비스 모듈 스레드 가동
 // =========================================================================
+import './components/splash/splash.css';
 import './components/more/more.js';
 import './components/map/map.js';
 import './components/weather/weatherModal.js';
 import './components/pm/pointmanagement.js'; 
 import './components/home/home.js'; 
 import './style.css'; 
-import './components/splash/splash.css';
 import './components/navigation/navigation.css';
 import './components/modal/markerModal.css';
 import './utils/geoUtils.js'; 
