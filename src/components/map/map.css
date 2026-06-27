@@ -439,9 +439,9 @@
 
 /* 포인트 상세 주소 텍스트 양식 */
 .detail-address-subtext {
-    font-size: 14px;
+    font-size: 12px;
     color: var(--text-muted);
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     text-align: left;
     width: 100%;
 }
