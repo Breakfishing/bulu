@@ -220,7 +220,7 @@
 }
 
 .pm-action-btn:hover {
-    background: var(--grid-item-bg);
+    background: var(--grid-item);
 }
 
 .pm-action-btn.edit:hover { color: var(--primary-color); }

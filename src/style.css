@@ -4,7 +4,8 @@
 :root {
     --nav-height: 70px;
     --primary-color: #00a799;
-    --grid-item-bg: #ffffff;
+    --primary-gradient-color: linear-gradient(0deg,rgba(207, 242, 255, 1) 0%, rgba(255, 255, 255, 0.02) 41%, rgba(252, 235, 207, 1) 100%);
+    --grid-item: #ffffff;
     --bg-main: #f8f9fac0;
     --bg-panel: #ffffff;
     --text-main: #212529;
@@ -24,7 +25,7 @@
     --text-muted: #a0aec0;
     --border-color: #333333;
     --primary-color: #007aff;
-    --grid-item-bg: #2a2a2a;
+    --grid-item: #2a2a2a;
     --color-prohibited: #ff5252;
     --color-port: #ffd043;
     --color-no-entry: #9ca3af;
@@ -256,7 +257,7 @@ button, input, select, textarea, .modal, .detail-tag, .timeline-date-sticky {
 .hour-range-separator { margin: 0 6px; }
 
 .address-box, .form-static-text {
-    background: var(--grid-item-bg);
+    background: var(--grid-item);
     padding: 10px;
     border-radius: 8px;
     font-size: 13px;

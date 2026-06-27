@@ -56,11 +56,11 @@
 }
 
 .notice-item:active {
-    background: var(--grid-item-bg);
+    background: var(--grid-item);
 }
 
 .notice-item.pinned-item {
-    background: var(--grid-item-bg) !important;
+    background: var(--grid-item) !important;
 }
 
 .notice-item-num {
@@ -209,7 +209,7 @@
 
 .notice-header-write-btn:active,
 .manage-header-write-btn:active {
-    background-color: var(--grid-item-bg);
+    background-color: var(--grid-item);
 }
 
 .notice-write-title-text {
@@ -442,7 +442,7 @@ input[type="date"].modal-input-main {
     width: 96px;
     height: 96px;
     border-radius: 10px;
-    background-color: var(--grid-item-bg);
+    background-color: var(--grid-item);
     border: 1px solid var(--border-color);
     overflow: hidden;
     flex-shrink: 0;
@@ -578,7 +578,7 @@ input[type="date"].modal-input-main {
 }
 
 .pm-custom-table th {
-    background-color: var(--grid-item-bg);
+    background-color: var(--grid-item);
     color: var(--text-muted);
     font-weight: 700;
     padding: 10px 8px;
@@ -679,7 +679,7 @@ input[type="date"].modal-input-main {
 }
 
 .grid-item {
-    background-color: var(--grid-item-bg);
+    background-color: var(--grid-item);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 15px 5px;

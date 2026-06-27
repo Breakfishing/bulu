@@ -384,7 +384,7 @@
 }
 
 .icon-action-btn:hover {
-    background: var(--grid-item-bg);
+    background: var(--grid-item);
 }
 
 .icon-action-btn.delete {
@@ -412,7 +412,7 @@
 
 .detail-tag.sub-tag,
 .detail-tag-item {
-    background-color: var(--grid-item-bg);
+    background-color: var(--grid-item);
     color: var(--text-main);
     border: 1px solid var(--border-color);
     display: inline-flex;
@@ -447,7 +447,7 @@
 /* 포인트 커스텀 기술 메모 박스 영역 */
 .detail-memo,
 .detail-description-body-box {
-    background: var(--grid-item-bg);
+    background: var(--grid-item);
     padding: 12px;
     margin-bottom: 12px;
     border-radius: 10px;
