@@ -648,3 +648,51 @@ input[type="date"].modal-input-main {
 .switch input:checked+.slider::before {
     transform: translateX(22px);
 }
+
+.login-panel {
+    background-color: var(--bg-panel);
+    padding: 20px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.login-panel-title {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.login-panel-subtitle {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.grid-item {
+    background-color: var(--grid-item-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 15px 5px;
+    text-align: center;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid-item .app-icon {
+    stroke: var(--text-main);
+    margin-bottom: 8px;
+}
+
+.grid-label {
+    font-size: 11px;
+    font-weight: 500;
+}
