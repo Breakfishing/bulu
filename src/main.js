@@ -8,7 +8,7 @@ import { db } from './utils/firebase.js';
 import './components/more/more.js';
 import './components/map/map.js';
 import './components/weather/weatherModal.js';
-import './pointmanagement.js'; // 포인트 관리 총괄 모듈 엔진 주입
+import './components/pm/pointmanagement.js'; // 포인트 관리 총괄 모듈 엔진 주입
 
 // --- 전역 변수 및 상태 레이어 관리 ---
 window.cachedFishingPoints = [];
