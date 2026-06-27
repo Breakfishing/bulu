@@ -545,3 +545,58 @@ input[type="date"].modal-input-main {
     text-align: left;
     margin-top: 2px;
 }
+
+#limitMaxSize, #limitMinSize {
+    width: 15%;
+}
+
+#infoEditModal, #infoEditModal textarea {
+    font-family: inherit;
+}
+
+/* =========================================================================
+    신규 추가: 정보 및 라인 대시보드 전용 직각화 표(Table) 컴포넌트 시스템
+   ========================================================================= */
+.pm-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color);
+}
+
+.pm-custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+    font-size: 13px;
+    background-color: var(--bg-panel);
+    color: var(--text-main);
+}
+
+.pm-custom-table th {
+    background-color: var(--grid-item-bg);
+    color: var(--text-muted);
+    font-weight: 700;
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+}
+
+.pm-custom-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+}
+
+.pm-custom-table th:last-child,
+.pm-custom-table td:last-child {
+    border-right: none;
+}
+
+.pm-custom-table tr:last-child td {
+    border-bottom: none;
+}
+
+.pm-custom-table tr:nth-child(even) {
+    background-color: var(--bg-main);
+}
