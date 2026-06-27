@@ -103,7 +103,7 @@
 /* 실시간 날짜 확인 스티키 가로 바 레이아웃 */
 #lblDetailDate,
 .weather-date-sticky-bar {
-    padding: 0 12px !important;
+    padding: 0 20px !important;
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
