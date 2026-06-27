@@ -421,7 +421,7 @@ window.buildTimelineUI = function (lat, lng, weatherMap, realTides, waterTempMap
   const gridRow = document.createElement('div'); gridRow.className = 'timeline-grid-row';
   const now = new Date(); let svgHighlightsHtml = ''; const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
-  const dayBrightColor = '#e3f2fd', dayMainColor = '#b3e5fc', nightColor = '#1a263f', seaTopColor = '#6cb0f6', seaBottomColor = '#2d75c2d7';
+  const dayBrightColor = '#e3f2fd', dayMainColor = '#b3e5fc', nightColor = '#1a263f', seaTopColor = '#6cb0f6', seaBottomColor = '#3f86d1';
   let allSegments = []; let prevType = null; let segmentStartX = 0;
 
   for (let m = 0; m <= 72 * 60; m += 10) {
