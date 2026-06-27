@@ -196,7 +196,7 @@
                                 class="hc-lighthouse-fallback" />
                             <polygon points="201,168 206,162 211,168" fill="#475569" class="hc-lighthouse-fallback" />
 
-                            <g id="hc-moon-phase-group" transform="translate(186, 51)" class="hc-moon-node">
+                            <g fill-opacity="0.3" class="hc-moon-node">
                             </g>
 
                             <g transform="rotate(3, 200, 125)" class="hc-rain-layer">
@@ -251,32 +251,40 @@
                                     opacity="0.3" />
                             </g>
 
-                            <text x="20" y="38" class="hc-txt-white hc-txt-shadow hc-temp" font-size="26" font-weight="800">23°C</text>
-<text x="20" y="58" class="hc-txt-white hc-txt-shadow hc-weather" font-size="13" font-weight="700">맑음</text>
-<text x="20" y="76" class="hc-txt-muted hc-txt-shadow hc-rain" font-size="11">0% · 0mm</text>
-<text x="20" y="91" class="hc-txt-muted hc-txt-shadow hc-wind" font-size="11">북동풍 · 3.2m/s</text>
+                            <text x="20" y="38" class="hc-txt-white hc-txt-shadow hc-temp" font-size="26"
+                                font-weight="800">23°C</text>
+                            <text x="20" y="58" class="hc-txt-white hc-txt-shadow hc-weather" font-size="13"
+                                font-weight="700">맑음</text>
+                            <text x="20" y="76" class="hc-txt-muted hc-txt-shadow hc-rain" font-size="11">0% · 0mm</text>
+                            <text x="20" y="91" class="hc-txt-muted hc-txt-shadow hc-wind" font-size="11">북동풍 ·
+                                3.2m/s</text>
 
-<g class="hc-txt-white hc-txt-shadow hc-txt-data-upper-right" text-anchor="end" font-size="11" font-weight="700">
-    <text x="380" y="30" class="hc-sunrise">일출 --:--</text>
-    <text x="380" y="46" class="hc-sunset">일몰 --:--</text>
-    <text x="380" y="66" class="hc-tide-idx" font-size="13" font-weight="800" fill="#ffdd00">--물</text>
-</g>
+                            <g class="hc-txt-white hc-txt-shadow hc-txt-data-upper-right" text-anchor="end"
+                                font-size="11" font-weight="700">
+                                <text x="380" y="30" class="hc-sunrise">일출 --:--</text>
+                                <text x="380" y="46" class="hc-sunset">일몰 --:--</text>
+                                <text x="380" y="66" class="hc-tide-idx" font-size="13" font-weight="800"
+                                    fill="#ffdd00">--물</text>
+                            </g>
 
-<text x="20" y="174" class="hc-txt-white hc-txt-shadow hc-tide-status" font-size="13" font-weight="700">물때 계산중</text>
+                            <text x="20" y="174" class="hc-txt-white hc-txt-shadow hc-tide-status" font-size="13"
+                                font-weight="700">물때 계산중</text>
+                            <text x="20" y="194" class="hc-txt-white hc-txt-shadow hc-tide-low" font-size="11"
+                                font-weight="700">간조 --:-- ▼--cm</text>
+                            <text x="20" y="214" class="hc-txt-white hc-txt-shadow hc-tide-high" font-size="11"
+                                font-weight="700">만조 --:-- ▲--cm</text>
+                            <text x="20" y="234" class="hc-txt-white hc-txt-shadow hc-ocean-summary" font-size="11"
+                                font-weight="700">--.-°C · --.-m · -- · -.-m/s</text>
 
-<text x="20" y="194" class="hc-txt-white hc-txt-shadow hc-tide-low" font-size="11" font-weight="700">간조 --:-- ▼--cm</text>
-<text x="20" y="214" class="hc-txt-white hc-txt-shadow hc-tide-high" font-size="11" font-weight="700">만조 --:-- ▲--cm</text>
-<text x="20" y="214" class="hc-txt-white hc-txt-shadow hc-tide-high" font-size="11" font-weight="700">만조 --:-- ▲--cm</text>
-
-<text x="20" y="234" class="hc-txt-white hc-txt-shadow hc-ocean-summary" font-size="11" font-weight="700">수온 --.-°C · 파고 --.-m · 유향 -- · 유속 -.-m/s</text>
-
-<!-- [교정] 미려한 트랜지션 필터 및 완전히 폐합된 대칭형 새로고침 고정밀 아이콘 벡터 적용 -->
-<g class="hc-home-refresh-btn" transform="translate(365, 211)" style="transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);" cursor="pointer" onclick="window.refreshHomeLocation(this)">
-    <circle cx="10" cy="10" r="16" fill="transparent" transform="translate(-5, -5)" />
-    <g transform="scale(0.75)">
-        <path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 2v6h-6M21 12a9 9 0 0 1-15 6.7L3 16M3 22v-6h6" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-    </g>
-</g>
+                            <g class="hc-home-refresh-btn" transform="translate(362, 208)" style="transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);" cursor="pointer"
+                                onclick="window.refreshHomeLocation(this)">
+                                <circle cx="12" cy="12" r="16" fill="transparent" />
+                                <g class="hc-refresh-icon-g" style="transform-origin: 12px 12px;">
+                                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M20.49 15a9 9 0 0 1-14.85 3.36L1 14" fill="none"
+                                        stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </g>
+                            </g>
                         </svg>
                     </div>
                 </div>
