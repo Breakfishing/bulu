@@ -339,9 +339,9 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     return best || map[keys[0]]; 
   };
 
-  // 8방위 유향 연산 헬퍼 함수
+  // 8방위 유향 연산 동기화 헬퍼 함수
   const getBearingStr = (deg) => {
-    if (deg === undefined || deg === null) return "--";
+    if (deg === undefined || deg === null) return "---";
     const d = parseFloat(deg);
     if (d >= 337.5 || d < 22.5) return "북";
     if (d >= 22.5 && d < 67.5) return "북동";
@@ -351,7 +351,7 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     if (d >= 202.5 && d < 247.5) return "남서";
     if (d >= 247.5 && d < 292.5) return "서";
     if (d >= 292.5 && d < 337.5) return "북서";
-    return "--";
+    return "---";
   };
 
   let lunarDay = now.getDate();
@@ -375,7 +375,7 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     const res = await Promise.allSettled([
       window.fetchSunriseSunsetForDatesPromise(lat, lng, [dateStr]),
       window.fetchKMAWeatherPromise(lat, lng),
-      window.fetchKMAWeatherPromise(stationObj.lat, stationObj.lng !== undefined ? stationObj.lng : stationObj.mesh),
+      window.fetchKMAWeatherPromise(stationObj.lat, stationObj.lng !== undefined ? stationObj.lng : (stationObj.mesh !== undefined ? stationObj.mesh : lng)),
       window.fetchRealWaterTempPromise(lat, lng, [dateStr]),
       window.fetchTideData3DaysPromise(lat, lng)
     ]);
@@ -401,7 +401,7 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
   if (kma) {
     if (kma.TMP) currentTemp = `${kma.TMP}°C`;
     
-    // [개편 1] 강수확률(POP) 및 강수량(PCP) 조합 연산 처리
+    // 강수확률(POP) 및 1시간 강수량(PCP) 결합 연산
     let pop = kma.POP ? kma.POP : "0";
     let pcp = kma.PCP ? kma.PCP : "0mm";
     if (pcp === '강수없음') pcp = '0mm';
@@ -432,17 +432,23 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     currentWave = `${parseFloat(seaKma.WAV).toFixed(1)}m`;
   }
 
-  // [개편 2] ROMS 수온 및 유향/유속 원본 데이터 추출
-  const wTemp = findLatestData(waterTempMap, kmaKey);
-  let currentWaterTemp = "--.-°C", currentCrdir = "--", currentCrsp = "-.-m/s";
-
-  if (wTemp) {
-    if (typeof wTemp === 'object') {
-      currentWaterTemp = wTemp.wtemp ? (wTemp.wtemp.includes("°C") ? wTemp.wtemp : wTemp.wtemp + "°C") : "--.-°C";
-      currentCrdir = getBearingStr(wTemp.crdir);
-      currentCrsp = wTemp.crsp !== undefined ? `${parseFloat(wTemp.crsp).toFixed(1)}m/s` : "-.-m/s";
+  // [교정] weatherModal.js 모듈과 동일한 객체 주머니(details) 탐색 및 날짜 서브스트링 연동
+  let rObj = null;
+  if (waterTempMap && waterTempMap.details) {
+    if (waterTempMap.details[kmaKey]) {
+      rObj = waterTempMap.details[kmaKey];
     } else {
-      currentWaterTemp = wTemp.includes("°C") ? wTemp : wTemp + "°C";
+      const fk = Object.keys(waterTempMap.details).find(k => k.startsWith(kmaKey.substring(0, 8)));
+      if (fk) rObj = waterTempMap.details[fk];
+    }
+  }
+
+  let currentWaterTemp = "--.-°C", currentCrdir = "---", currentCrsp = "--m/s";
+  if (rObj) {
+    currentWaterTemp = rObj.wtemp ? (rObj.wtemp.includes("°C") ? rObj.wtemp : rObj.wtemp + "°C") : "--.-°C";
+    currentCrsp = rObj.crsp ? rObj.crsp : "--m/s";
+    if (rObj.crdir !== null && rObj.crdir !== undefined) {
+      currentCrdir = getBearingStr(rObj.crdir);
     }
   }
 
@@ -459,8 +465,8 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     targetTides = dummyTides;
   }
 
-  // [개편 3] 조석 타임 연산 기반 실시간 정밀 물때 상태 도출 로직
-  let currentDetailedTideStr = "정보 없음";
+  // 실시간 시차 연산을 통한 8대 정밀 물때 상태 도출
+  let currentDetailedTideStr = "물때 계산중";
   if (targetTides.length > 0) {
     const nowMs = now.getTime();
     let pastEvent = null;
@@ -516,7 +522,7 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     return timeA - timeB;
   });
 
-  // [개편 4] 구조적 innerHTML 맵핑 처리를 위한 가변 문자열 주입 엔진
+  // SVG 내 텍스트 뮤트 처리를 위한 tspan 래핑 바인딩 구조 수립
   let tideLowText = "간조 <tspan class=\"hc-txt-muted\">--:-- ▼--cm</tspan>";
   let tideHighText = "만조 <tspan class=\"hc-txt-muted\">--:-- ▲--cm</tspan>";
 
@@ -531,7 +537,7 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     tideHighText = ""; 
   }
 
-  // 통합 해양 환경 로우 생성
+  // 4대 해양 역학 요소 단일 로우 문자열 통합
   const oceanSummaryText = `수온 ${currentWaterTemp} · 파고 ${currentWave} · 유향 ${currentCrdir} · 유속 ${currentCrsp}`;
 
   return {
@@ -562,7 +568,7 @@ window.applyHomeCardDOM = function (payload) {
   setTxt(".hc-sunset", payload.sunset); 
   setTxt(".hc-tide-idx", payload.tideIdx); 
   
-  // 개편 컴포넌트 데이터 엘리먼트 바인딩
+  // 개편 데이터 마크업 동기화 주입
   setTxt(".hc-tide-status", payload.tideStatus);
   setTxt(".hc-ocean-summary", payload.oceanSummary);
   setHtml(".hc-tide-low", payload.tideLow); 
