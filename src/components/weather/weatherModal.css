@@ -316,7 +316,6 @@
     width: 75px;
     height: 100%;
     background: var(--bg-panel);
-    z-index: 15;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
