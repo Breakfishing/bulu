@@ -76,7 +76,6 @@ button, input, select, textarea, .modal, .detail-tag, .timeline-date-sticky {
 .app-icon {
     width: 24px;
     height: 24px;
-    stroke: var(--text-muted);
     fill: none;
     stroke-width: 2;
     stroke-linecap: round;
@@ -303,10 +302,6 @@ button, input, select, textarea, .modal, .detail-tag, .timeline-date-sticky {
     height: calc(100vh - var(--nav-height)) !important; background-color: rgba(0, 0, 0, 0.45); z-index: 1000 !important;
 }
 .modal-backdrop.active { display: block !important; }
-
-option {
-    border: 1px solid var(--border-color); 
-}
 
 /* =========================================================================
     GROUP 11: 홈 화면 프리미엄 웨더 대시보드 컴포넌트 시스템
