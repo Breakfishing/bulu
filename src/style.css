@@ -183,8 +183,8 @@ button, input, select, textarea, .modal, .detail-tag, .timeline-date-sticky {
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: var(--text-muted);
-    font-size: 11px;
+    color: var(--text-main);
+    font-size: 12px;
     cursor: pointer;
     flex: 1;
     height: 100%;
