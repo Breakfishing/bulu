@@ -63,6 +63,9 @@
    SECTION 2: 모달 헤더, 스티키 타이틀 바 및 천체(일출/일몰/월령) 정보 레이어
    ========================================================================= */
 /* 기상 모달 상단 텍스트 정렬 헤더 컨테이너 */
+.weather-modal-overlay .bottom-sheet-handle-bar {
+    padding: 20px 20px 0 20px;
+}
 .weather-modal-header,
 .weather-header-container {
     display: block;
