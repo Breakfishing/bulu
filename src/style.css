@@ -609,14 +609,14 @@ button, input, select, textarea, .modal, .detail-tag, .timeline-date-sticky {
 
 /* 마우스가 있는 기기에서만 호버 효과 적용 */
 @media (hover: hover) and (pointer: fine) {
-  .touch-effect:hover {
+  .nav-item:hover {
     background-color: #f0f0f0;
   }
 }
 
 /* 터치 전용 기기에서는 호버 효과 제거 */
 @media (hover: none) and (pointer: coarse) {
-  .touch-effect:hover {
+  .nav-item:hover {
     background-color: transparent;
   }
 }
