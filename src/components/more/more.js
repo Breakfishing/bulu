@@ -837,16 +837,56 @@ export function hideSettingsPage() { document.getElementById('settings-page')?.c
 export function openAdminModal() {
   window.closeModals(); document.getElementById('modalBackdrop')?.classList.add('active');
   const adminModal = document.getElementById('mdlAdminPanel');
-  if (adminModal) { adminModal.classList.add('active'); L.DomEvent.disableClickPropagation(adminModal); }
+  if (adminModal) { adminModal.classList.add('active'); window.L.DomEvent.disableClickPropagation(adminModal); }
 
   window.checkAdminCacheStatus(); window.logToAdminTerminal("관리자 제어 시스템 접속 완료");
   const syncBtn = document.getElementById('btnForceSync');
   if (syncBtn) {
     syncBtn.removeAttribute('disabled');
     syncBtn.style.setProperty('pointer-events', 'auto', 'important'); syncBtn.style.setProperty('cursor', 'pointer', 'important'); syncBtn.style.setProperty('z-index', '999999', 'important');
-    L.DomEvent.disableClickPropagation(syncBtn); syncBtn.onclick = null; L.DomEvent.off(syncBtn, 'click');
-    L.DomEvent.on(syncBtn, 'click', function (htmlEvent) { if (htmlEvent) { L.DomEvent.preventDefault(htmlEvent); L.DomEvent.stopPropagation(htmlEvent); } window.clearAdminCache(); });
+    window.L.DomEvent.disableClickPropagation(syncBtn); syncBtn.onclick = null; window.L.DomEvent.off(syncBtn, 'click');
+    window.L.DomEvent.on(syncBtn, 'click', function (htmlEvent) { if (htmlEvent) { window.L.DomEvent.preventDefault(htmlEvent); window.L.DomEvent.stopPropagation(htmlEvent); } window.clearAdminCache(); });
   }
+}
+
+export function checkAdminCacheStatus() {
+  let hasWeather = false, hasTide = false, hasSun = false;
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i); if (!key) continue;
+    if (key.startsWith('cc_weather_')) hasWeather = true; if (key.startsWith('cc_tide_')) hasTide = true; if (key.startsWith('cc_sun_')) hasSun = true;
+  }
+  const badge = (id, state, text) => { const el = document.getElementById(id); if (el) { el.className = 'chip-btn ' + (state ? 'cache-loaded' : 'cache-empty'); el.innerText = text + (state ? ' 적재 완료' : ' 비어있음'); } };
+  badge('adminWeatherCacheBadge', hasWeather, '기상'); badge('adminTideCacheBadge', hasTide, '조석'); badge('adminSunCacheBadge', hasSun, '일출물');
+}
+
+export function clearAdminCache() {
+  const keysToRemove = []; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key && key.startsWith('cc_')) keysToRemove.push(key); }
+  keysToRemove.forEach(key => localStorage.removeItem(key)); window.checkAdminCacheStatus(); window.logToAdminTerminal("공공데이터 로컬 캐시 메모리 강제 초기화 완료");
+}
+
+export function logToAdminTerminal(message) {
+  const terminal = document.getElementById('adminDebugConsole'); if (!terminal) return;
+  const now = new Date(); terminal.innerHTML += `<div>[${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}] ${message}</div>`;
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+// -------------------------------------------------------------------------
+// [INITIALIZATION 스레드] 최초 마운트 라이프사이클 처리 부트스트랩
+// -------------------------------------------------------------------------
+const initSettingsOnLoad = function () {
+  const savedApp = localStorage.getItem('navi-app') || 'naver';
+  window.applyNaviAppUI(savedApp);
+
+  const darkToggle = document.getElementById('darkModeToggle');
+  if (darkToggle) {
+    darkToggle.checked = localStorage.getItem('dark-mode') === 'true';
+  }
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initSettingsOnLoad);
+} else {
+  initSettingsOnLoad();
 }
 
 // =========================================================================
@@ -888,3 +928,6 @@ window.toggleNaviApp = toggleNaviApp;
 window.showSettingsPage = showSettingsPage;
 window.hideSettingsPage = hideSettingsPage;
 window.openAdminModal = openAdminModal;
+window.checkAdminCacheStatus = checkAdminCacheStatus;
+window.clearAdminCache = clearAdminCache;
+window.logToAdminTerminal = logToAdminTerminal;
