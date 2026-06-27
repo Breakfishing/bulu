@@ -280,7 +280,7 @@ window.updateHomeCardByLocation = async function (lat, lng) {
   }
 };
 
-// [교정] 클릭 즉시 값 리셋 및 카드 회색조 액션 유도 
+// [교정] 즉시 데이터 리셋(force 플래그 활용) 및 카드 회색 톤 디밍 가동 액션
 window.refreshHomeLocation = function (btnElement) {
   const selectEl = document.getElementById("hcHomeFavoriteSelect");
   if (!selectEl || !selectEl.value) return;
@@ -288,18 +288,18 @@ window.refreshHomeLocation = function (btnElement) {
   const mainCardEl = document.querySelector(".hc-main-card");
   if (mainCardEl) {
     mainCardEl.style.transition = "opacity 0.2s ease";
-    mainCardEl.style.opacity = "0.4"; // 로딩 대기 상태 동안 카드를 즉시 회색으로 조율
+    mainCardEl.style.opacity = "0.4"; 
   }
 
-  // [교정] 새로고침과 동시에 대시보드 내부 판넬 수치들을 완벽히 기본값(--) 상태로 즉각 리셋
-  window.fallbackHomeDataLoad();
+  // 강제 리셋 명령을 내려 즉시 화면의 수치를 초기 기본값(--)으로 리셋시킵니다.
+  window.fallbackHomeDataLoad(true);
 
   let targetIcon = btnElement;
   if (btnElement) {
     btnElement.style.pointerEvents = "none";
     const icon = btnElement.querySelector(".hc-refresh-icon-g");
     if (icon) {
-      icon.classList.add("hc-spin-anim"); // 정원 중심 기반 회전 가동
+      icon.classList.add("hc-spin-anim"); 
       targetIcon = icon;
     }
   }
@@ -604,9 +604,11 @@ window.applyHomeCardDOM = function (payload) {
   }
 };
 
-window.fallbackHomeDataLoad = function () {
+// [교정] 가드 로직을 무력화할 수 있는 force 매개변수 도입
+window.fallbackHomeDataLoad = function (force = false) {
   const existingTemp = document.querySelector(".hc-premium-card .hc-temp")?.textContent || "";
-  if (existingTemp !== "" && existingTemp !== "--°C") return;
+  if (!force && existingTemp !== "" && existingTemp !== "--°C") return;
+  
   window.applyHomeCardDOM({
     timeStr: window.getFormattedCurrentTime(), temp: "--°C", weather: "정보없음", rain: "0% · 0mm", wind: "--- · -.-m/s",
     sunrise: "일출 --:--", sunset: "일몰 --:--", tideIdx: "--물", 
