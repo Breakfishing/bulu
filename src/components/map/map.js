@@ -37,6 +37,10 @@ window.coastalDepthData = [];
 window.isFishingPointsLoaded = false;
 window.isPublicToiletsLoaded = false;
 
+// --- DB 스냅샷 언subscribe 함수 보관소 ---
+let unsubscribeFishingPoints = null;
+let unsubscribePublicToilets = null;
+
 // --- 모달 전역 변수 컴포넌트 스택 ---
 const parkingUnits = ['10분', '30분', '일'];
 let currentUnitIndex = 0;
@@ -85,7 +89,7 @@ clean2DLayer.addTo(map);
 
 let currentLayerMode = '2D';
 const svg2D = `<svg class="app-icon" viewBox="0 0 24 24" style="fill:none; stroke:none;"><text x="50%" y="70%" font-size="15" font-weight="900" fill="var(--text-main)" text-anchor="middle">2D</text></svg>`;
-const svg3D = `<svg class="app-icon" viewBox="0 0 24 24" style="fill:none; stroke:none;"><text x="50%" y="70%" font-size="15" font-weight="900" fill="currentColor" text-anchor="middle">3D</text></svg>`;
+const svg3D = `<svg class="app-icon" viewBox="0 0 24 24" style="fill:none; stroke:none;"><text x="50%" y="70%" font-size="15" font-weight="900" fill="#ffffff" text-anchor="middle">3D</text></svg>`;
 
 export function toggleMapLayer() {
   const btn = document.getElementById('btn-layer');
@@ -144,11 +148,22 @@ const CenterToMyLocationControl = L.Control.extend({
 });
 map.addControl(new CenterToMyLocationControl());
 
+// [교정 및 복원] 실시간 데이터베이스 재요청 바인딩을 포함한 새로고침 코어 구현
 export function refreshMapData() {
   const btn = document.querySelector('.top-center-ctrl'); if (!btn) return;
   const icon = btn.querySelector('.app-icon'); if (icon && icon.classList.contains('spinning')) return;
   if (icon) icon.classList.add('spinning');
-  setTimeout(() => { if (icon) icon.classList.remove('spinning'); console.log("지도 레이어 실시간 데이터 동기화 완료!"); }, 1500);
+  
+  if (typeof unsubscribeFishingPoints === 'function') unsubscribeFishingPoints();
+  if (typeof unsubscribePublicToilets === 'function') unsubscribePublicToilets();
+  
+  startFishingPointsObserver();
+  startPublicToiletsObserver();
+
+  setTimeout(() => { 
+    if (icon) icon.classList.remove('spinning'); 
+    console.log("지도 레이어 실시간 데이터 동기화 완료!"); 
+  }, 1500);
 }
 
 let showProhibited = false;
@@ -205,31 +220,38 @@ export function getFishingPointSvg(color) {
   </svg>`;
 }
 
-// --- DB 스냅샷 옵저버 리스너 ---
-db.collection('fishing_points').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
-  try {
-    window.cachedFishingPoints = []; snapshot.forEach(doc => window.cachedFishingPoints.push({ id: doc.id, ...doc.data() }));
-    window.updateVisibleMarkersOnMap(); 
-    if (typeof window.renderPointsManagementTab === 'function') window.renderPointsManagementTab(); 
-    if (typeof window.populateHomeFavoritesDropdown === 'function') window.populateHomeFavoritesDropdown();
-  } catch (err) {
-    console.error("낚시 포인트 데이터 렌더링 중 오류 발생:", err);
-  } finally {
-    window.isFishingPointsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
-  }
-}, () => { window.isFishingPointsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash(); });
+// --- DB 스냅샷 옵저버 리스너 정의부 ---
+function startFishingPointsObserver() {
+  unsubscribeFishingPoints = db.collection('fishing_points').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+    try {
+      window.cachedFishingPoints = []; snapshot.forEach(doc => window.cachedFishingPoints.push({ id: doc.id, ...doc.data() }));
+      window.updateVisibleMarkersOnMap(); 
+      if (typeof window.renderPointsManagementTab === 'function') window.renderPointsManagementTab(); 
+      if (typeof window.populateHomeFavoritesDropdown === 'function') window.populateHomeFavoritesDropdown();
+    } catch (err) {
+      console.error("낚시 포인트 데이터 렌더링 중 오류 발생:", err);
+    } finally {
+      window.isFishingPointsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
+    }
+  }, () => { window.isFishingPointsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash(); });
+}
 
-db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
-  try {
-    window.cachedPublicToilets = []; snapshot.forEach(doc => window.cachedPublicToilets.push({ id: doc.id, ...doc.data() }));
-    window.updateVisibleMarkersOnMap(); 
-    if (typeof window.renderPointsManagementTab === 'function') window.renderPointsManagementTab();
-  } catch (err) {
-    console.error("화장실 데이터 렌더링 중 오류 발생:", err);
-  } finally {
-    window.isPublicToiletsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
-  }
-}, () => { window.isPublicToiletsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash(); });
+function startPublicToiletsObserver() {
+  unsubscribePublicToilets = db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+    try {
+      window.cachedPublicToilets = []; snapshot.forEach(doc => window.cachedPublicToilets.push({ id: doc.id, ...doc.data() }));
+      window.updateVisibleMarkersOnMap(); 
+      if (typeof window.renderPointsManagementTab === 'function') window.renderPointsManagementTab();
+    } catch (err) {
+      console.error("화장실 데이터 렌더링 중 오류 발생:", err);
+    } finally {
+      window.isPublicToiletsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
+    }
+  }, () => { window.isPublicToiletsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash(); });
+}
+
+startFishingPointsObserver();
+startPublicToiletsObserver();
 
 // =========================================================================
 // 실시간 격자 연안 수심 데이터 오버레이 매핑
@@ -704,8 +726,19 @@ export function getNearestTideStation(lat, lng) {
 }
 
 // =========================================================================
-// [Vite 호환 가드] 기존 index.html 및 마크업 인라인 바인딩 전역 가드
+// [Vite 호환 가드] 생명주기 및 마크업 인라인 바인딩 스레드 초기화
 // =========================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  const layerBtn = document.getElementById('btn-layer');
+  if (layerBtn) {
+    layerBtn.addEventListener('click', toggleMapLayer);
+  }
+  const refreshBtn = document.querySelector('.top-center-ctrl');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', refreshMapData);
+  }
+});
+
 window.toggleMapLayer = toggleMapLayer;
 window.refreshMapData = refreshMapData;
 window.toggleProhibitedZones = toggleProhibitedZones;
