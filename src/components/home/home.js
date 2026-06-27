@@ -2,6 +2,7 @@
 // [COMPONENT] 홈 화면 프리미엄 웨더 대시보드 및 오픈 API 실시간 캐싱 엔진
 // =========================================================================
 import { TIDE_STATIONS } from '../../utils/constants.js';
+import './home.css';
 
 window.HOME_CARD_CACHE_KEY = "home_card_weather_tide_data";
 window.HOME_SELECTED_FAV_KEY = "home_selected_favorite_id";
