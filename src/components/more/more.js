@@ -488,29 +488,37 @@ export function renderInfoContentCards(filterKeyword = "") {
     const grid = document.createElement('div');
     grid.className = 'info-knot-grid';
     
-    // 'knot_guide' 분기 내부 수정 예시
-filtered.forEach(item => {
-  const knotCard = document.createElement('div');
-  knotCard.className = 'info-knot-card';
-  
-  let youtubeId = InfoBoardSystem.extractYoutubeId(item.videoUrl);
-  const thumbUrl = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50" viewBox="0 0 100 50"></svg>';
-  const formattedTags = InfoBoardSystem.parseHashTags(item.tags || item.recommend || '');
-  
-  // 💡 수정된 부분: item.channelTitle(혹은 item.source) 속성이 있으면 채널명을 출력하고, 없으면 기본 텍스트 출력
-  const channelName = item.channelTitle || item.source || '';
-  const sourceText = (channelName.trim() !== "") ? `${channelName.trim()} · 유튜브` : '유튜브 동영상';
+    filtered.forEach(item => {
+      const knotCard = document.createElement('div');
+      knotCard.className = 'info-knot-card';
+      
+      let youtubeId = InfoBoardSystem.extractYoutubeId(item.videoUrl);
+      const thumbUrl = youtubeId ? `https://img.youtube.com/vi/${youtubeId}/maxresdefault.jpg` : 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50" viewBox="0 0 100 50"></svg>';
+      const formattedTags = InfoBoardSystem.parseHashTags(item.tags || item.recommend || '');
+      
+      const sourceText = (item.source && item.source.trim() !== "") ? `${item.source.trim()} · 유튜브` : '유튜브 동영상';
 
-  knotCard.innerHTML = `
-    <div class="info-knot-info-area">
-      <div style="display: flex; align-items: center; justify-content: space-between; width:100%;">
-        <span class="info-knot-title">${item.title || '매듭법'}</span>
+      knotCard.innerHTML = `
+        <div class="info-knot-thumb-wrapper" onclick="if('${item.videoUrl}') window.open('${item.videoUrl}', '_blank');">
+          <img src="${thumbUrl}" alt="${item.title}" onerror="this.src='https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg'">
+          <div class="info-knot-play-overlay">
+            <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
         </div>
-      <div class="info-knot-tags">${formattedTags}</div>
-      <div class="info-knot-source">${sourceText}</div> </div>
-  `;
-  grid.appendChild(knotCard);
-});
+        <div class="info-knot-info-area">
+          <div style="display: flex; align-items: center; justify-content: space-between; width:100%;">
+            <span class="info-knot-title">${item.title || '매듭법'}</span>
+            <div style="display:flex; gap:2px; flex-shrink:0;">
+              <button class="pm-action-btn edit" style="width:22px; height:22px; padding:0;" onclick="window.openInfoEditFormModal('knot_guide', '${item.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px; height:11px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+              <button class="pm-action-btn delete" style="width:22px; height:22px; padding:0;" onclick="window.deleteInfoData('knot_guide', '${item.id}', '${item.title}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px; height:11px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+            </div>
+          </div>
+          <div class="info-knot-tags">${formattedTags}</div>
+          <div class="info-knot-source">${sourceText}</div>
+        </div>
+      `;
+      grid.appendChild(knotCard);
+    });
     container.appendChild(grid);
   }
 }
