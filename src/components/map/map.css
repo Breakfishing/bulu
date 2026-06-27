@@ -359,6 +359,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-align: center;
 }
 
 /* 우측 액션 기능 버튼 컨트롤 구조 체계 */
