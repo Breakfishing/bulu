@@ -21,6 +21,9 @@ window.globalSunTimesCache = {};
 window.isFishingPointsLoaded = false;
 window.isPublicToiletsLoaded = false;
 
+// [교정] API 무한 중복 요청을 방지하기 위한 전역 네트워킹 락 상태 변수
+window.isFetchingAPI = false;
+
 // 오픈 API 키 컴포넌트
 const PUBLIC_PORTAL_KEY = "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
 window.DATA_GO_KR_SERVICE_KEY = PUBLIC_PORTAL_KEY;
@@ -51,7 +54,7 @@ window.toggleMapLayer = function(layerType) {
     }
 };
 
-// [초기 부팅 시점 자동 실행]
+// [초기 부팅 시점 자동 실행 - 단일 정의로 통합]
 window.loadCoastalDepthData = async function() {
   try {
     const response = await fetch('coastal_depth_compact.json');
@@ -254,7 +257,14 @@ window.handleHomeFavoriteChange = function (selectEl) {
   }
 };
 
+// [교정] 네트워크 중복 호출 가드 및 락 메커니즘 수립
 window.updateHomeCardByLocation = async function (lat, lng) {
+  if (window.isFetchingAPI) {
+    console.warn("[SYSTEM] 이전 API 파이프라인이 가동 중이므로 중복 호출을 차단합니다.");
+    return;
+  }
+
+  window.isFetchingAPI = true;
   const selectEl = document.getElementById("hcHomeFavoriteSelect");
   const currentVal = selectEl ? selectEl.value : `${lat},${lng}`;
 
@@ -267,6 +277,7 @@ window.updateHomeCardByLocation = async function (lat, lng) {
     console.error("위치 기반 공공데이터 연동 갱신 실패:", err);
     window.fallbackHomeDataLoad();
   } finally {
+    window.isFetchingAPI = false;
     window.isHomeCardLoaded = true;
     if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
     const mainCardEl = document.querySelector(".hc-main-card");
@@ -922,18 +933,6 @@ window.getFishingPointSvg = getFishingPointSvg;
 // =========================================================================
 // [BACKEND AREA] 백엔드 데이터베이스 실시간 트래킹 모델 및 오버레이 렌더러
 // =========================================================================
-window.coastalDepthData = [];
-
-window.loadCoastalDepthData = async function() {
-  try {
-    const response = await fetch('coastal_depth_compact.json');
-    if (response.ok) {
-      window.coastalDepthData = await response.json();
-      console.log(`[수심 데이터 로드 완료] 총 ${window.coastalDepthData.length} 격자 확보`);
-    }
-  } catch (err) { console.error("수심 데이터 로드 중 에러 발생:", err); }
-};
-
 window.findNearestDepth = function(lat, lng) {
   if (!window.coastalDepthData || window.coastalDepthData.length === 0) return null;
   let minDstSquare = Infinity; let nearestDepth = null;
