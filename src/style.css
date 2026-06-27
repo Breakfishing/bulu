@@ -100,7 +100,7 @@ button, input, select, textarea, .modal, .detail-tag, .timeline-date-sticky {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999 !important;
+    z-index: 9998 !important;
 }
 
 #splash-screen.fade-out {
@@ -176,7 +176,6 @@ button, input, select, textarea, .modal, .detail-tag, .timeline-date-sticky {
     justify-content: space-around;
     align-items: center;
     padding-bottom: env(safe-area-inset-bottom);
-    z-index: 2000 !important;
     position: relative;
 }
 
