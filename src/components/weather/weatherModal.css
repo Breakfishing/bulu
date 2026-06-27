@@ -454,7 +454,7 @@
 .timeline-sync-line::after {
     content: '';
     position: absolute;
-    left:-8px;
+    left:0;
     border-width: 6px 6px 0;
     transform: translateX(-50%);
     border-style: solid;
