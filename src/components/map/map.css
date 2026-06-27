@@ -364,3 +364,210 @@
     flex-direction: column !important;
     overflow-y: auto !important;
 }
+
+
+/* =========================================================================
+   [MAP] 지도 마커 상세 정보 바텀시트
+   ========================================================================= */
+.detail-popup-wrapper,
+.modal-backdrop-for-sheet {
+    display: none !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.45);
+    z-index: 1000 !important;
+}
+
+.detail-popup-wrapper.active,
+.modal-backdrop-for-sheet.active {
+    display: block !important;
+}
+
+.bottom-sheet {
+    position: fixed;
+    bottom: var(--nav-height) !important;
+    left: 0;
+    width: 100%;
+    height: auto !important;
+    background: var(--bg-panel);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.2);
+    z-index: 1002 !important;
+    overflow: hidden !important;
+    padding: 0 20px 20px;
+    box-sizing: border-box;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94);
+}
+
+.detail-popup-wrapper.active .bottom-sheet,
+.detail-popup-wrapper.active .bottom-sheet-modal-native {
+    transform: translateY(0);
+}
+
+.bottom-sheet-handle-bar {
+    width: 40px;
+    height: 5px;
+    background-color: var(--border-color);
+    border-radius: 2.5px;
+    margin: 10px auto 15px auto;
+    cursor: pointer;
+}
+
+.detail-header,
+.detail-modal-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.header-left-title-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+
+.header-left-title-box h2 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--text-main);
+    font-weight: 700;
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.header-right-action-group {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.icon-action-btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+.icon-action-btn:hover {
+    background: var(--grid-item-bg);
+}
+
+.icon-action-btn.delete {
+    color: #ff3b30;
+}
+
+.icon-action-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    flex-shrink: 0;
+}
+
+.detail-tag,
+.badge-category-dynamic {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    color: white;
+}
+
+.detail-tag.sub-tag,
+.detail-tag-item {
+    background-color: var(--grid-item-bg);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.detail-tags-scroll-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    width: 100%;
+}
+
+.detail-tags-scroll-row::-webkit-scrollbar {
+    display: none;
+}
+
+.detail-address-subtext {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    text-align: left;
+    width: 100%;
+}
+
+.detail-memo,
+.detail-description-body-box {
+    background: var(--grid-item-bg);
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    border-left: 4px solid var(--text-muted);
+    color: var(--text-main);
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.detail-memo-content-text {
+    color: var(--text-main);
+    word-break: break-all;
+}
+
+.detail-toilet-hours-hidden,
+.detail-facilities-hidden {
+    display: none !important;
+}
+
+.detail-facilities-flex {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.detail-action-full-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    width: 100%;
+}
+
+.detail-navi-btn-color {
+    background-color: #ff9500;
+    color: #ffffff;
+    flex: 1;
+}
+
+.detail-weather-btn-reset {
+    flex: 1;
+}
