@@ -2,6 +2,7 @@
 // [COMPONENT] 마커 신규 등록/수정 모달 및 상세 정보 바텀시트 핸들러 엔진 (src/components/modal/markerModal.js)
 // =========================================================================
 import { db } from '../../utils/firebase.js';
+import './makerModal.css';
 
 // 모달 컴포넌트 내부 상태 관리 상태 변수 셋
 const parkingUnits = ['10분', '30분', '일'];
