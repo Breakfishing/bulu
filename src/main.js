@@ -280,7 +280,7 @@ window.updateHomeCardByLocation = async function (lat, lng) {
   }
 };
 
-// [교정] 새로고침 실행 시 좌측 상단 모서리 공간(15, 15)으로 글라이딩 비행 및 복귀 동선 설계
+// [교정] 좌측 상단(15, 15) 비행 애니메이션 연동 및 원래 위치(362, 208) 자율 복귀 제어 시스템
 window.refreshHomeLocation = function (btnElement) {
   const selectEl = document.getElementById("hcHomeFavoriteSelect");
   if (!selectEl || !selectEl.value) return;
@@ -288,9 +288,9 @@ window.refreshHomeLocation = function (btnElement) {
   let targetIcon = btnElement;
   if (btnElement) {
     btnElement.style.pointerEvents = "none";
-    btnElement.setAttribute("transform", "translate(15, 15)"); // 좌측 상단 타겟 비행 이동
+    btnElement.setAttribute("transform", "translate(15, 15)"); 
     
-    const icon = btnElement.querySelector("g");
+    const icon = btnElement.querySelector(".hc-refresh-icon-g");
     if (icon) {
       icon.classList.add("hc-spin-anim");
       targetIcon = icon;
@@ -309,7 +309,7 @@ window.refreshHomeLocation = function (btnElement) {
     } else {
       if (btnElement) {
         btnElement.style.pointerEvents = "auto"; 
-        btnElement.setAttribute("transform", "translate(365, 211)"); // 즉시 복귀 가드
+        btnElement.setAttribute("transform", "translate(362, 208)"); 
         if (targetIcon) targetIcon.classList.remove("hc-spin-anim");
       }
       if (mainCardEl) mainCardEl.style.opacity = "1";
@@ -323,7 +323,7 @@ window.refreshHomeLocation = function (btnElement) {
   setTimeout(() => {
     if (btnElement) {
       btnElement.style.pointerEvents = "auto"; 
-      btnElement.setAttribute("transform", "translate(365, 211)"); // 원래 우측 하단 좌표로 복귀
+      btnElement.setAttribute("transform", "translate(362, 208)"); 
       if (targetIcon) targetIcon.classList.remove("hc-spin-anim");
     }
   }, 2000);
@@ -453,6 +453,20 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     }
   }
 
+  // [교정] ReferenceError 타파를 위한 데이터 동기화 어레이 바인딩 최상단 조율 선언
+  let targetTides = realTides || [];
+  if (targetTides.length === 0) {
+    let dummyTides = [];
+    for (let k = 0; k < 4; k++) {
+      let xHigh = 112 * (Math.PI / 2 + 2 * k * Math.PI); let xLow = 112 * (3 * Math.PI / 2 + 2 * k * Math.PI);
+      let hH = xHigh / 56; let dH = new Date(now.getTime() + hH * 60 * 60 * 1000);
+      let hL = xLow / 56; let dL = new Date(now.getTime() + hL * 60 * 60 * 1000);
+      dummyTides.push({ type: '만조', time: `${String(dH.getHours()).padStart(2, '0')}:${String(dH.getMinutes()).padStart(2, '0')}`, level: '270', hoursFromNow: hH, rawDt: dH.toISOString() });
+      dummyTides.push({ type: '간조', time: `${String(dL.getHours()).padStart(2, '0')}:${String(dL.getMinutes()).padStart(2, '0')}`, level: '50', hoursFromNow: hL, rawDt: dL.toISOString() });
+    }
+    targetTides = dummyTides;
+  }
+
   let currentDetailedTideStr = "물때 계산중";
   if (targetTides.length > 0) {
     const nowMs = now.getTime();
@@ -509,7 +523,7 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     return timeA - timeB;
   });
 
-  // [교정] 데이터 수치 파트에 font-weight="normal" 프로퍼티 결합 주입
+  // [교정] tspan 내부에 font-weight="normal" 속성을 명시적으로 적용하여 수치 부분의 볼드 완전 해제
   let tideLowText = "간조 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--:-- ▼--cm</tspan>";
   let tideHighText = "만조 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--:-- ▲--cm</tspan>";
 
@@ -524,8 +538,8 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     tideHighText = ""; 
   }
 
-  // [교정] 순수 텍스트 헤더 문자열을 보존하고 가변 수치에만 볼드 해제 및 무드 컬러 주입
-  const oceanSummaryText = `수온 <tspan class="hc-txt-muted" font-weight="normal">${currentWaterTemp}</tspan> · 파고 <tspan class="hc-txt-muted" font-weight="normal">${currentWave}</tspan> · 유향 <tspan class="hc-txt-muted" font-weight="normal">${currentCrdir}</tspan> · 유속 <tspan class="hc-txt-muted" font-weight="normal">${currentCrsp}</tspan>`;
+  // [교정] "수온, 파고, 유향, 유속" 한글 식별 단어를 완전히 탈락시키고 순수 수치만 엮어 표출 처리
+  const oceanSummaryText = `<tspan class="hc-txt-muted" font-weight="normal">${currentWaterTemp} · ${currentWave} · ${currentCrdir} · ${currentCrsp}</tspan>`;
 
   return {
     timeStr: window.getFormattedCurrentTime(), temp: currentTemp, weather: currentWeather, rain: currentRain, wind: currentWind,
@@ -556,7 +570,6 @@ window.applyHomeCardDOM = function (payload) {
   setTxt(".hc-tide-idx", payload.tideIdx); 
   setTxt(".hc-tide-status", payload.tideStatus);
   
-  // [교정] 텍스트가 아닌 내장 구조적 tspan 마운트를 위해 setHtml 파이프라인으로 일괄 변경
   setHtml(".hc-ocean-summary", payload.oceanSummary);
   setHtml(".hc-tide-low", payload.tideLow); 
   setHtml(".hc-tide-high", payload.tideHigh);
@@ -602,7 +615,7 @@ window.fallbackHomeDataLoad = function () {
     timeStr: window.getFormattedCurrentTime(), temp: "--°C", weather: "정보없음", rain: "0% · 0mm", wind: "--- · -.-m/s",
     sunrise: "일출 --:--", sunset: "일몰 --:--", tideIdx: "--물", 
     tideStatus: "정보 없음", 
-    oceanSummary: "수온 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--.-°C</tspan> · 파고 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--.-m</tspan> · 유향 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--</tspan> · 유속 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">-.-m/s</tspan>",
+    oceanSummary: "<tspan class=\"hc-txt-muted\" font-weight=\"normal\">--.-°C · --.-m · -- · -.-m/s</tspan>",
     tideLow: "간조 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--:-- ▼--cm</tspan>", tideHigh: "만조 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--:-- ▲--cm</tspan>"
   });
 };
