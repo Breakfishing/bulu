@@ -112,7 +112,6 @@
     white-space: nowrap !important;
     flex-wrap: nowrap !important;
     box-sizing: border-box;
-    min-height: 52px !important;
     font-size: 13px;
     color: var(--text-main);
 }
