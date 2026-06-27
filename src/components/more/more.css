@@ -367,6 +367,8 @@ input[type="date"].modal-input-main {
     gap: 16px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     align-items: center;
+    min-height: 120px;
+    max-height: 120px;
 }
 
 .info-card-content-box {
