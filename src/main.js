@@ -280,26 +280,28 @@ window.updateHomeCardByLocation = async function (lat, lng) {
   }
 };
 
-// [교정] 좌측 상단(15, 15) 비행 애니메이션 연동 및 원래 위치(362, 208) 자율 복귀 제어 시스템
+// [교정] 클릭 즉시 값 리셋 및 카드 회색조 액션 유도 
 window.refreshHomeLocation = function (btnElement) {
   const selectEl = document.getElementById("hcHomeFavoriteSelect");
   if (!selectEl || !selectEl.value) return;
 
-  let targetIcon = btnElement;
-  if (btnElement) {
-    btnElement.style.pointerEvents = "none";
-    
-    const icon = btnElement.querySelector(".hc-refresh-icon-g");
-    if (icon) {
-      icon.classList.add("hc-spin-anim");
-      targetIcon = icon;
-    }
-  }
-
   const mainCardEl = document.querySelector(".hc-main-card");
   if (mainCardEl) {
     mainCardEl.style.transition = "opacity 0.2s ease";
-    mainCardEl.style.opacity = "0.4";
+    mainCardEl.style.opacity = "0.4"; // 로딩 대기 상태 동안 카드를 즉시 회색으로 조율
+  }
+
+  // [교정] 새로고침과 동시에 대시보드 내부 판넬 수치들을 완벽히 기본값(--) 상태로 즉각 리셋
+  window.fallbackHomeDataLoad();
+
+  let targetIcon = btnElement;
+  if (btnElement) {
+    btnElement.style.pointerEvents = "none";
+    const icon = btnElement.querySelector(".hc-refresh-icon-g");
+    if (icon) {
+      icon.classList.add("hc-spin-anim"); // 정원 중심 기반 회전 가동
+      targetIcon = icon;
+    }
   }
 
   if (selectEl.value === "my_location") {
@@ -308,7 +310,6 @@ window.refreshHomeLocation = function (btnElement) {
     } else {
       if (btnElement) {
         btnElement.style.pointerEvents = "auto"; 
-        btnElement.setAttribute("transform", "translate(362, 208)"); 
         if (targetIcon) targetIcon.classList.remove("hc-spin-anim");
       }
       if (mainCardEl) mainCardEl.style.opacity = "1";
@@ -322,7 +323,6 @@ window.refreshHomeLocation = function (btnElement) {
   setTimeout(() => {
     if (btnElement) {
       btnElement.style.pointerEvents = "auto"; 
-      btnElement.setAttribute("transform", "translate(362, 208)"); 
       if (targetIcon) targetIcon.classList.remove("hc-spin-anim");
     }
   }, 2000);
@@ -452,7 +452,6 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     }
   }
 
-  // [교정] ReferenceError 타파를 위한 데이터 동기화 어레이 바인딩 최상단 조율 선언
   let targetTides = realTides || [];
   if (targetTides.length === 0) {
     let dummyTides = [];
@@ -522,7 +521,6 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     return timeA - timeB;
   });
 
-  // [교정] tspan 내부에 font-weight="normal" 속성을 명시적으로 적용하여 수치 부분의 볼드 완전 해제
   let tideLowText = "간조 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--:-- ▼--cm</tspan>";
   let tideHighText = "만조 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--:-- ▲--cm</tspan>";
 
@@ -537,7 +535,6 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     tideHighText = ""; 
   }
 
-  // [교정] "수온, 파고, 유향, 유속" 한글 식별 단어를 완전히 탈락시키고 순수 수치만 엮어 표출 처리
   const oceanSummaryText = `<tspan class="hc-txt-muted" font-weight="normal">${currentWaterTemp} · ${currentWave} · ${currentCrdir} · ${currentCrsp}</tspan>`;
 
   return {
