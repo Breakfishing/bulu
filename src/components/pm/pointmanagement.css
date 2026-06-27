@@ -550,3 +550,31 @@
     background: #ff4d4d !important;
     color: #fff;
 }
+
+#editPointCategory, #editPointParkingPrice, #limitMinSize, #limitMaxSize {
+    text-align: center;
+}
+
+/* =========================================================================
+   [POINT MANAGEMENT] 포인트/화장실 마커 등록 및 수정 모달 전용 속성
+   ========================================================================= */
+#editPointCategory, #editPointParkingPrice, #limitMinSize, #limitMaxSize {
+    text-align: center;
+}
+
+#pointModal .chip-btn,
+#toiletModal .chip-btn,
+#toiletEditModal .chip-btn,
+#pointEditModal .chip-btn,
+#sizeLimitModal .chip-btn,
+#fishingBanModal .chip-btn {
+    flex: 1;
+    border-radius: 8px;
+}
+
+#parkingDetailRow.active,
+#editPointParkingDetailRow.active,
+#newToiletHoursDetailRow.active,
+#editToiletHoursDetailRow.active {
+    display: flex !important;
+}
