@@ -146,7 +146,7 @@ import './components/weather/weatherModal.js';
 import './components/pm/pointmanagement.js'; 
 import './components/home/home.js'; 
 import './utils/geoUtils.js'; 
-import './services/dbListener.js'; 
+import './utils/dbListener.js'; 
 import { TIDE_STATIONS } from './utils/constants.js';
 
 // =========================================================================
