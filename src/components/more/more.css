@@ -439,8 +439,8 @@ input[type="date"].modal-input-main {
 }
 
 .info-card-img-box {
-    width: 84px;
-    height: 84px;
+    width: 96px;
+    height: 96px;
     border-radius: 10px;
     background-color: var(--grid-item-bg);
     border: 1px solid var(--border-color);
