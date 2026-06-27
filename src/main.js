@@ -288,7 +288,6 @@ window.refreshHomeLocation = function (btnElement) {
   let targetIcon = btnElement;
   if (btnElement) {
     btnElement.style.pointerEvents = "none";
-    btnElement.setAttribute("transform", "translate(15, 15)"); 
     
     const icon = btnElement.querySelector(".hc-refresh-icon-g");
     if (icon) {
