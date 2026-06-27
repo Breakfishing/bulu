@@ -624,6 +624,7 @@
     top: -30px; /* 시트 상단 바깥쪽으로 위치 */
     left: 0;
     pointer-events: none;
+    z-index: 2;
 }
 
 .sheet-wave-top svg {
