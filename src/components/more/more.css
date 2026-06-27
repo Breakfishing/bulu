@@ -393,9 +393,9 @@ input[type="date"].modal-input-main {
 }
 
 .info-card-badge {
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 11px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 12px;
     font-weight: 700;
     color: #ffffff;
 }
