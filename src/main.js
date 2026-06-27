@@ -280,6 +280,7 @@ window.updateHomeCardByLocation = async function (lat, lng) {
   }
 };
 
+// [교정] 새로고침 실행 시 좌측 상단 모서리 공간(15, 15)으로 글라이딩 비행 및 복귀 동선 설계
 window.refreshHomeLocation = function (btnElement) {
   const selectEl = document.getElementById("hcHomeFavoriteSelect");
   if (!selectEl || !selectEl.value) return;
@@ -287,8 +288,9 @@ window.refreshHomeLocation = function (btnElement) {
   let targetIcon = btnElement;
   if (btnElement) {
     btnElement.style.pointerEvents = "none";
-    btnElement.style.opacity = "0.5";
-    const icon = btnElement.querySelector("svg") || btnElement.querySelector("i") || btnElement;
+    btnElement.setAttribute("transform", "translate(15, 15)"); // 좌측 상단 타겟 비행 이동
+    
+    const icon = btnElement.querySelector("g");
     if (icon) {
       icon.classList.add("hc-spin-anim");
       targetIcon = icon;
@@ -306,7 +308,8 @@ window.refreshHomeLocation = function (btnElement) {
       window.updateHomeCardByLocation(window.userLatLng.lat, window.userLatLng.lng);
     } else {
       if (btnElement) {
-        btnElement.style.pointerEvents = "auto"; btnElement.style.opacity = "1";
+        btnElement.style.pointerEvents = "auto"; 
+        btnElement.setAttribute("transform", "translate(365, 211)"); // 즉시 복귀 가드
         if (targetIcon) targetIcon.classList.remove("hc-spin-anim");
       }
       if (mainCardEl) mainCardEl.style.opacity = "1";
@@ -319,7 +322,8 @@ window.refreshHomeLocation = function (btnElement) {
 
   setTimeout(() => {
     if (btnElement) {
-      btnElement.style.pointerEvents = "auto"; btnElement.style.opacity = "1";
+      btnElement.style.pointerEvents = "auto"; 
+      btnElement.setAttribute("transform", "translate(365, 211)"); // 원래 우측 하단 좌표로 복귀
       if (targetIcon) targetIcon.classList.remove("hc-spin-anim");
     }
   }, 2000);
@@ -339,7 +343,6 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     return best || map[keys[0]]; 
   };
 
-  // 8방위 유향 연산 동기화 헬퍼 함수
   const getBearingStr = (deg) => {
     if (deg === undefined || deg === null) return "---";
     const d = parseFloat(deg);
@@ -401,7 +404,6 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
   if (kma) {
     if (kma.TMP) currentTemp = `${kma.TMP}°C`;
     
-    // 강수확률(POP) 및 1시간 강수량(PCP) 결합 연산
     let pop = kma.POP ? kma.POP : "0";
     let pcp = kma.PCP ? kma.PCP : "0mm";
     if (pcp === '강수없음') pcp = '0mm';
@@ -432,7 +434,6 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     currentWave = `${parseFloat(seaKma.WAV).toFixed(1)}m`;
   }
 
-  // [교정] weatherModal.js 모듈과 동일한 객체 주머니(details) 탐색 및 날짜 서브스트링 연동
   let rObj = null;
   if (waterTempMap && waterTempMap.details) {
     if (waterTempMap.details[kmaKey]) {
@@ -452,20 +453,6 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     }
   }
 
-  let targetTides = realTides || [];
-  if (targetTides.length === 0) {
-    let dummyTides = [];
-    for (let k = 0; k < 4; k++) {
-      let xHigh = 112 * (Math.PI / 2 + 2 * k * Math.PI); let xLow = 112 * (3 * Math.PI / 2 + 2 * k * Math.PI);
-      let hH = xHigh / 56; let dH = new Date(now.getTime() + hH * 60 * 60 * 1000);
-      let hL = xLow / 56; let dL = new Date(now.getTime() + hL * 60 * 60 * 1000);
-      dummyTides.push({ type: '만조', time: `${String(dH.getHours()).padStart(2, '0')}:${String(dH.getMinutes()).padStart(2, '0')}`, level: '270', hoursFromNow: hH, rawDt: dH.toISOString() });
-      dummyTides.push({ type: '간조', time: `${String(dL.getHours()).padStart(2, '0')}:${String(dL.getMinutes()).padStart(2, '0')}`, level: '50', hoursFromNow: hL, rawDt: dL.toISOString() });
-    }
-    targetTides = dummyTides;
-  }
-
-  // 실시간 시차 연산을 통한 8대 정밀 물때 상태 도출
   let currentDetailedTideStr = "물때 계산중";
   if (targetTides.length > 0) {
     const nowMs = now.getTime();
@@ -522,23 +509,23 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     return timeA - timeB;
   });
 
-  // SVG 내 텍스트 뮤트 처리를 위한 tspan 래핑 바인딩 구조 수립
-  let tideLowText = "간조 <tspan class=\"hc-txt-muted\">--:-- ▼--cm</tspan>";
-  let tideHighText = "만조 <tspan class=\"hc-txt-muted\">--:-- ▲--cm</tspan>";
+  // [교정] 데이터 수치 파트에 font-weight="normal" 프로퍼티 결합 주입
+  let tideLowText = "간조 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--:-- ▼--cm</tspan>";
+  let tideHighText = "만조 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--:-- ▲--cm</tspan>";
 
   if (futureEvents.length >= 1) { 
     const ev1 = futureEvents[0]; 
-    tideLowText = `${ev1.type} <tspan class="hc-txt-muted">${ev1.time} ${ev1.type === "만조" ? "▲" : "▼"}${ev1.level || ev1.value || "--"}cm</tspan>`; 
+    tideLowText = `${ev1.type} <tspan class="hc-txt-muted" font-weight="normal">${ev1.time} ${ev1.type === "만조" ? "▲" : "▼"}${ev1.level || ev1.value || "--"}cm</tspan>`; 
   }
   if (futureEvents.length >= 2) { 
     const ev2 = futureEvents[1]; 
-    tideHighText = `${ev2.type} <tspan class="hc-txt-muted">${ev2.time} ${ev2.type === "만조" ? "▲" : "▼"}${ev2.level || ev2.value || "--"}cm</tspan>`; 
+    tideHighText = `${ev2.type} <tspan class="hc-txt-muted" font-weight="normal">${ev2.time} ${ev2.type === "만조" ? "▲" : "▼"}${ev2.level || ev2.value || "--"}cm</tspan>`; 
   } else { 
     tideHighText = ""; 
   }
 
-  // 4대 해양 역학 요소 단일 로우 문자열 통합
-  const oceanSummaryText = `수온 ${currentWaterTemp} · 파고 ${currentWave} · 유향 ${currentCrdir} · 유속 ${currentCrsp}`;
+  // [교정] 순수 텍스트 헤더 문자열을 보존하고 가변 수치에만 볼드 해제 및 무드 컬러 주입
+  const oceanSummaryText = `수온 <tspan class="hc-txt-muted" font-weight="normal">${currentWaterTemp}</tspan> · 파고 <tspan class="hc-txt-muted" font-weight="normal">${currentWave}</tspan> · 유향 <tspan class="hc-txt-muted" font-weight="normal">${currentCrdir}</tspan> · 유속 <tspan class="hc-txt-muted" font-weight="normal">${currentCrsp}</tspan>`;
 
   return {
     timeStr: window.getFormattedCurrentTime(), temp: currentTemp, weather: currentWeather, rain: currentRain, wind: currentWind,
@@ -567,10 +554,10 @@ window.applyHomeCardDOM = function (payload) {
   setTxt(".hc-sunrise", payload.sunrise); 
   setTxt(".hc-sunset", payload.sunset); 
   setTxt(".hc-tide-idx", payload.tideIdx); 
-  
-  // 개편 데이터 마크업 동기화 주입
   setTxt(".hc-tide-status", payload.tideStatus);
-  setTxt(".hc-ocean-summary", payload.oceanSummary);
+  
+  // [교정] 텍스트가 아닌 내장 구조적 tspan 마운트를 위해 setHtml 파이프라인으로 일괄 변경
+  setHtml(".hc-ocean-summary", payload.oceanSummary);
   setHtml(".hc-tide-low", payload.tideLow); 
   setHtml(".hc-tide-high", payload.tideHigh);
 
@@ -614,8 +601,9 @@ window.fallbackHomeDataLoad = function () {
   window.applyHomeCardDOM({
     timeStr: window.getFormattedCurrentTime(), temp: "--°C", weather: "정보없음", rain: "0% · 0mm", wind: "--- · -.-m/s",
     sunrise: "일출 --:--", sunset: "일몰 --:--", tideIdx: "--물", 
-    tideStatus: "정보 없음", oceanSummary: "수온 --.-°C · 파고 --.-m · 유향 -- · 유속 -.-m/s",
-    tideLow: "간조 <tspan class=\"hc-txt-muted\">--:-- ▼--cm</tspan>", tideHigh: "만조 <tspan class=\"hc-txt-muted\">--:-- ▲--cm</tspan>"
+    tideStatus: "정보 없음", 
+    oceanSummary: "수온 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--.-°C</tspan> · 파고 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--.-m</tspan> · 유향 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--</tspan> · 유속 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">-.-m/s</tspan>",
+    tideLow: "간조 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--:-- ▼--cm</tspan>", tideHigh: "만조 <tspan class=\"hc-txt-muted\" font-weight=\"normal\">--:-- ▲--cm</tspan>"
   });
 };
 
