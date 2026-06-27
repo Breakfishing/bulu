@@ -458,7 +458,7 @@
     bottom: -6px;
     left: 50%;
     transform: translateX(-50%);
-    border-width: 5px 5px 0;
+    border-width: 6px 6px 0;
     border-style: solid;
     border-color: var(--primary-color) transparent;
     display: block;
