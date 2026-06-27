@@ -1,8 +1,7 @@
 // =========================================================================
 // [MODULE] 더보기 탭 통합 제어 엔진 (게시판 / 정보망 / 라인 정보 / 앱 설정)
 // =========================================================================
-import { db } from '../../utils/firebase.js'; 
-import { TIDE_STATIONS } from '../../utils/constants.js';
+import { db } from '../../utils/firebase.js';
 import firebase from 'firebase/compat/app'; // Timestamp 및 FieldValue 처리를 위한 코어 바인딩
 import './more.css'; 
 
