@@ -509,7 +509,6 @@
 
 #bottom-nav {
     z-index: 9999 !important;
-    position: relative;
 }
 
 /* 모달 컴포넌트 업 슬라이드 팝 애니메이션 제어 */
