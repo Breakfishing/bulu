@@ -140,7 +140,6 @@ window.switchTab = function (tabId, navItem) {
 // =========================================================================
 // 하위 컴포넌트 및 도메인 분리 유틸/서비스 모듈 스레드 가동
 // =========================================================================
-import './components/splash/splash.css';
 import './components/more/more.js';
 import './components/map/map.js';
 import './components/weather/weatherModal.js';
