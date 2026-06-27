@@ -610,7 +610,7 @@ button, input, select, textarea, .modal, .detail-tag, .timeline-date-sticky {
 /* 마우스가 있는 기기에서만 호버 효과 적용 */
 @media (hover: hover) and (pointer: fine) {
   .nav-item:hover {
-    background-color: #f0f0f0;
+    background-color: #4b4949;
   }
 }
 
