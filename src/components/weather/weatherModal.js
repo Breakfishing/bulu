@@ -9,6 +9,9 @@ window.globalSunTimesCache = window.globalSunTimesCache || {};
 window.allTidesSchedule = window.allTidesSchedule || [];
 window.timelineDatesArray = window.timelineDatesArray || [];
 
+// 네트워크 중복 호출 방지를 위한 인플라이트 프로미스 레지스트리
+window.weatherInFlightPromises = window.weatherInFlightPromises || {};
+
 // 백업본 코어 인증키 상수 선언 및 바인딩
 const PUBLIC_PORTAL_KEY = "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b2b192383803";
 window.DATA_GO_KR_SERVICE_KEY = PUBLIC_PORTAL_KEY;
@@ -155,21 +158,37 @@ window.fetchKMAWeatherPromise = function (lat, lng) {
   }
 
   const base = window.getKMABaseDateTime();
-  return fetch(`/api-hub/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?pageNo=1&numOfRows=2000&dataType=JSON&base_date=${base.baseDate}&base_time=${base.baseTime}&nx=${grid.nx}&ny=${grid.ny}&authKey=${safeAuthKey}`).then(res => res.json()).then(json => {
-    const wm = {}; 
-    const node = json?.response?.body?.items?.item;
-    if (!node) {
-      safeLogger("KMA_WEATHER", "실패 (데이터 없음)", { code: json?.response?.header?.resultCode });
+  const flightKey = `kma_${grid.nx}_${grid.ny}_${base.baseDate}_${base.baseTime}`;
+
+  if (window.weatherInFlightPromises[flightKey]) {
+    safeLogger("KMA_WEATHER", "동일 격자 In-Flight 결합 처리");
+    return window.weatherInFlightPromises[flightKey];
+  }
+
+  const weatherPromise = fetch(`/api-hub/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst?pageNo=1&numOfRows=2000&dataType=JSON&base_date=${base.baseDate}&base_time=${base.baseTime}&nx=${grid.nx}&ny=${grid.ny}&authKey=${safeAuthKey}`)
+    .then(res => res.json())
+    .then(json => {
+      const wm = {}; 
+      const node = json?.response?.body?.items?.item;
+      if (!node) {
+        safeLogger("KMA_WEATHER", "실패 (데이터 없음)", { code: json?.response?.header?.resultCode });
+        return null;
+      }
+      node.forEach(item => { if (item?.fcstDate && item?.fcstTime) { const k = item.fcstDate + item.fcstTime; if (!wm[k]) wm[k] = {}; wm[k][item.category] = item.fcstValue; } });
+      localStorage.setItem(cacheKey, JSON.stringify({ data: wm, timestamp: Date.now() })); 
+      safeLogger("KMA_WEATHER", "성공");
+      return wm;
+    })
+    .catch(err => {
+      safeLogger("KMA_WEATHER", "에러 발생", { error: err.message });
       return null;
-    }
-    node.forEach(item => { if (item?.fcstDate && item?.fcstTime) { const k = item.fcstDate + item.fcstTime; if (!wm[k]) wm[k] = {}; wm[k][item.category] = item.fcstValue; } });
-    localStorage.setItem(cacheKey, JSON.stringify({ data: wm, timestamp: Date.now() })); 
-    safeLogger("KMA_WEATHER", "성공");
-    return wm;
-  }).catch(err => {
-    safeLogger("KMA_WEATHER", "에러 발생", { error: err.message });
-    return null;
-  });
+    })
+    .finally(() => {
+      delete window.weatherInFlightPromises[flightKey];
+    });
+
+  window.weatherInFlightPromises[flightKey] = weatherPromise;
+  return weatherPromise;
 };
 
 window.fetchTideData3DaysPromise = function (lat, lng) {
@@ -194,24 +213,43 @@ window.fetchTideData3DaysPromise = function (lat, lng) {
     localStorage.removeItem(cacheKey);
   }
 
+  if (window.weatherInFlightPromises[`tide_${obsCode}`]) {
+    safeLogger("TIDE_API", "In-Flight 결합 처리");
+    return window.weatherInFlightPromises[`tide_${obsCode}`];
+  }
+
   const dates = []; 
   for (let d = 0; d < 5; d++) { 
     const td = new Date(new Date().getTime() + d * 24 * 60 * 60 * 1000); 
     dates.push(`${td.getFullYear()}${String(td.getMonth() + 1).padStart(2, '0')}${String(td.getDate()).padStart(2, '0')}`); 
   }
-  return (async () => {
+
+  const tidePromise = (async () => {
     let items = []; 
-    for (const sd of dates) { 
-      try { 
+    
+    // 루프 대기를 제거하고 5일치 조석 스케줄을 동시 병렬 요청(Promise.all)하도록 고속화 정립
+    const requests = dates.map(async (sd) => {
+      try {
         let res = await fetch(`/api-tide/1192136/tideFcstHghLw/GetTideFcstHghLwApiService?serviceKey=${safeKhoaKey}&type=json&pageNo=1&numOfRows=10&obsCode=${obsCode}&reqDate=${sd}`); 
         if (!res.ok) {
           res = await fetch(`https://apis.data.go.kr/1192136/tideFcstHghLw/GetTideFcstHghLwApiService?serviceKey=${safeKhoaKey}&type=json&pageNo=1&numOfRows=10&obsCode=${obsCode}&reqDate=${sd}`);
         }
         const json = await res.json(); 
         const node = (json?.body || json?.response?.body)?.items?.item; 
-        if (node) items.push(...(Array.isArray(node) ? node : [node])); 
-      } catch {} 
-    }
+        if (node) {
+          return Array.isArray(node) ? node : [node];
+        }
+      } catch (err) {
+        console.error(`[TIDE_API] 날짜별 요청 실패 (${sd}):`, err.message);
+      }
+      return [];
+    });
+
+    const responses = await Promise.all(requests);
+    responses.forEach(dayItems => {
+      items.push(...dayItems);
+    });
+
     if (items.length === 0) {
       safeLogger("TIDE_API", "실패 (데이터 없음)");
       return [];
@@ -233,7 +271,12 @@ window.fetchTideData3DaysPromise = function (lat, lng) {
       safeLogger("TIDE_API", "실패 (조건 부적합)");
     }
     return schedule;
-  })();
+  })().finally(() => {
+    delete window.weatherInFlightPromises[`tide_${obsCode}`];
+  });
+
+  window.weatherInFlightPromises[`tide_${obsCode}`] = tidePromise;
+  return tidePromise;
 };
 
 window.fetchRealWaterTempPromise = function (lat, lng, dateStrings) {
@@ -255,11 +298,17 @@ window.fetchRealWaterTempPromise = function (lat, lng, dateStrings) {
   } catch (e) {
     localStorage.removeItem(cacheKey);
   }
+
+  const flightKey = `roms_${lat.toFixed(2)}_${lng.toFixed(2)}`;
+  if (window.weatherInFlightPromises[flightKey]) {
+    safeLogger("ROMS_WATER_TEMP", "In-Flight 결합 처리");
+    return window.weatherInFlightPromises[flightKey];
+  }
   
   const offset = 0.15; 
   const targetPath = `/1192136/roms/GetRomsApiService?serviceKey=${safePortalKey}&type=json&ymin=${(lat - offset).toFixed(4)}&ymax=${(lat + offset).toFixed(4)}&xmin=${(lng - offset).toFixed(4)}&xmax=${(lng + offset).toFixed(4)}&pageNo=1&numOfRows=300`;
 
-  return fetch(`/api-tide${targetPath}`).then(async res => {
+  const romsPromise = fetch(`/api-tide${targetPath}`).then(async res => {
     if (!res.ok) return fetch(`https://apis.data.go.kr${targetPath}`);
     return res;
   }).then(async res => { 
@@ -308,7 +357,12 @@ window.fetchRealWaterTempPromise = function (lat, lng, dateStrings) {
   }).catch(err => {
     safeLogger("ROMS_WATER_TEMP", "에러 발생", { error: err.message });
     return { details: {} };
+  }).finally(() => {
+    delete window.weatherInFlightPromises[flightKey];
   });
+
+  window.weatherInFlightPromises[flightKey] = romsPromise;
+  return romsPromise;
 };
 
 // -------------------------------------------------------------------------
