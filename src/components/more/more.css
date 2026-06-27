@@ -654,7 +654,7 @@ input[type="date"].modal-input-main {
 }
 
 .login-panel {
-    background-color: linear-gradient(0deg,rgba(207, 242, 255, 1) 0%, rgba(255, 255, 255, 0.02) 41%, rgba(252, 235, 207, 1) 100%);
+    background: linear-gradient(0deg,rgba(207, 242, 255, 1) 0%, rgba(255, 255, 255, 0.02) 41%, rgba(252, 235, 207, 1) 100%);
     padding: 20px;
     border-radius: 15px;
     margin-bottom: 20px;
