@@ -282,25 +282,19 @@ window.updateHomeCardByLocation = async function (lat, lng) {
   }
 };
 
-// [교정] 제자리 정원 회전, 즉시 데이터 강제 휘발 및 인위적 800ms 디밍 대기 스레드 통합
 window.refreshHomeLocation = async function (btnElement) {
   const selectEl = document.getElementById("hcHomeFavoriteSelect");
   if (!selectEl || !selectEl.value) return;
 
-  // 1. 기존 캐시 즉시 폭파 (적중 방지)
   localStorage.removeItem(window.HOME_CARD_CACHE_KEY);
-
-  // 2. 대시보드 데이터 즉시 기본값(--) 리셋 처리
   window.fallbackHomeDataLoad(true);
 
-  // 3. 카드 레이어 즉시 회색조 디밍
   const mainCardEl = document.querySelector(".hc-main-card");
   if (mainCardEl) {
     mainCardEl.style.transition = "opacity 0.2s ease";
     mainCardEl.style.opacity = "0.4"; 
   }
 
-  // 4. 제자리 축 고정 회전 애니메이션 가동
   let targetIcon = btnElement;
   if (btnElement) {
     btnElement.style.pointerEvents = "none";
@@ -311,7 +305,6 @@ window.refreshHomeLocation = async function (btnElement) {
     }
   }
 
-  // 5. 디밍 상태를 인지할 수 있도록 800ms 최소 대기선 유지
   await new Promise(resolve => setTimeout(resolve, 800));
 
   if (selectEl.value === "my_location") {
