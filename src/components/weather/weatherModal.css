@@ -437,7 +437,7 @@
 .timeline-sync-bubble {
     position: absolute !important;
     top: -22px !important;
-    width:80px;
+    width:90px;
     transform: translateX(-50%) !important;
     background: var(--primary-color) !important;
     color: #ffffff !important;
