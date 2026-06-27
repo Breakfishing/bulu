@@ -453,6 +453,7 @@
 }
 .timeline-sync-line::after {
     content: '';
+    position: absolute;
     bottom: -6px;
     left: 50%;
     transform: translateX(-50%);
