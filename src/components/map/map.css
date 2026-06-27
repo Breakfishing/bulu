@@ -450,6 +450,7 @@
 .detail-description-body-box {
     background: var(--grid-item-bg);
     padding: 12px;
+    margin-bottom: 12px;
     border-radius: 10px;
     font-size: 13px;
     border-left: 4px solid var(--text-muted);
