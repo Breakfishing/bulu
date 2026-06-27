@@ -50,6 +50,7 @@
             justify-content: center !important;
         }
 
+        /* [교정] opacity 0 고정 강제 명령(!important)을 제거하여 키프레임 애니메이션 작동 보장 */
         .splash-wave {
             position: absolute !important;
             width: 140px !important;
@@ -57,9 +58,9 @@
             bottom: 20px !important;
             left: 50% !important;
             margin-left: -70px !important;
-            border: 1.5px solid #00a799 !important; /* var 변수 대신 생상 값 하드코딩 주입 */
+            border: 1.5px solid #00a799 !important; /* var 변수 대신 테마 색상 값 다이렉트 주입 */
             border-radius: 50% !important;
-            opacity: 0 !important;
+            opacity: 0;
             animation: splashPulseEffect 2.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) infinite !important;
         }
 
@@ -85,8 +86,6 @@
             50% { transform: translateY(-8px); }
         }
     </style>
-    <script
-        src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=9698fb632fa0dfcf26667bdb0e31dbb4&libraries=services&autoload=false"></script>
 </head>
 
 <body>
@@ -101,14 +100,14 @@
             <div class="splash-logo-wrapper">
                 <svg width="120" height="180" viewBox="0 0 36 54" xmlns="http://www.w3.org/2000/svg"
                     class="splash-svg-element">
-                    <path stroke-miterlimit="4" stroke-width="2" stroke="var(--primary-color)"
-                        fill="var(--primary-color)"
+                    <path stroke-miterlimit="4" stroke-width="2" stroke="#00a799"
+                        fill="#00a799"
                         d="m17.92332,2.23007c10.56135,0 17.35337,7.23988 17.35337,16.73988c0,6.3 -3.7,12.3 -7,18l-4.7767,7.06625l-10.82147,-14.71349l9.9681,6.32147l5.03742,-9.40184c3.34356,-5.96319 1.81902,-13.27301 -2.79755,-16.35276c-4.61656,-3.07976 -9.56595,-2.69938 -13.69325,0.6227c-4.1273,3.32208 -5.29064,10.78758 -3.27837,15.73735c2.01227,4.94977 1.37193,3.3194 2.89187,6.0878l10.53198,15.06992l-3.26204,5.3626l-11.47546,-16.21472c-3,-4.57669 -6.02454,-7.93865 -5.7454,-17.57975c0.27914,-9.6411 6.50613,-16.7454 17.06748,-16.7454z" />
-                    <path stroke="var(--primary-color)" fill="#ffffff"
+                    <path stroke="#00a799" fill="#ffffff"
                         d="m18.38343,27.7546c-3.94028,0 -7.1319,-3.53481 -7.1319,-7.89877c0,-4.36396 3.19162,-7.89877 7.1319,-7.89877c3.94028,0 7.1319,3.53481 7.1319,7.89877c0,4.36396 -3.19162,7.89877 -7.1319,7.89877z"
                         stroke-width="2" />
                     <text x="18.5" y="21.5" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="5"
-                        font-weight="900" fill="var(--primary-color)" text-anchor="middle"
+                        font-weight="900" fill="#00a799" text-anchor="middle"
                         letter-spacing="0.2">부루</text>
                 </svg>
             </div>
@@ -351,12 +350,12 @@
                             <text x="20" y="234" class="hc-txt-white hc-txt-shadow hc-ocean-summary" font-size="11"
                                 font-weight="700">--.-°C · --.-m · -- · -.-m/s</text>
 
-                            <g class="hc-home-refresh-btn" transform="translate(362, 208)" cursor="pointer"
+                            <g class="hc-premium-card .hc-home-refresh-btn" transform="translate(362, 208)" cursor="pointer"
                                 onclick="window.refreshHomeLocation(this)">
                                 <circle cx="12" cy="12" r="16" fill="transparent" />
                                 <g class="hc-refresh-icon-g" style="transform-origin: 12px 12px;">
                                     <rect x="0" y="0" width="24" height="24" fill="none" pointer-events="none" />
-                                    <path d="M 7 11 L 7 6 M 12 4 a 8 8 0 1 1 -5 2 L 3 9 L 7 6" fill="none"
+                                    <path d="M12 4a8 8 0 1 1-5.66 2.34M12 4H16M12 4V8" fill="none"
                                         stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"
                                         stroke-linejoin="round" />
                                 </g>
@@ -519,7 +518,6 @@
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="3"></circle>
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-
                         </svg>
                         <span class="grid-label">앱 설정</span>
                     </div>
@@ -650,7 +648,6 @@
                         <span id="lblInfoBoardHeaderTitle">금어기 정보</span>
                         <button id="btnInfoBoardAction" class="notice-header-write-btn" title="글 등록">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -1385,6 +1382,7 @@
         </div>
     </div>
 
+    <script defer src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=9698fb632fa0dfcf26667bdb0e31dbb4&libraries=services&autoload=false"></script>
     <script type="module" src="/src/main.js"></script>
 </body>
 
