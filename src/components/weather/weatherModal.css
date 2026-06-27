@@ -436,7 +436,7 @@
 /* 동기화 세로선 상단에 고정 추적되는 실시간 KST 현재 시각 말풍선 */
 .timeline-sync-bubble {
     position: absolute !important;
-    top: -28px !important;
+    top: -22px !important;
     transform: translateX(-50%) !important;
     background: var(--primary-color) !important;
     color: #ffffff !important;
