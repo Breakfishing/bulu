@@ -35,7 +35,6 @@
     border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
-    z-index: 1;
 }
 
 .pm-category-scroll-outer {
