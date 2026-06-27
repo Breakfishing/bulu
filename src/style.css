@@ -614,8 +614,4 @@ button, input, select, textarea, .modal, .detail-tag, .timeline-date-sticky {
   }
 }
 
-/* 터치 전용 기기에서는 호버 효과 제거 */
-@media (hover: none) and (pointer: coarse) {
-  .nav-item:hover {
-  }
 }
