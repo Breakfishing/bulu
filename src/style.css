@@ -185,6 +185,7 @@ button, input, select, textarea, .modal, .detail-tag, .timeline-date-sticky {
     align-items: center;
     color: var(--text-main);
     font-size: 12px;
+    font-weight: 700;
     cursor: pointer;
     flex: 1;
     height: 100%;
