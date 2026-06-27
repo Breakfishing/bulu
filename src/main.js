@@ -224,7 +224,7 @@ window.populateHomeFavoritesDropdown = async function () {
   }
 };
 
-window.handleHomeFavoriteChange = function (selectEl) {
+window.handleHomeFavoriteChange = async function (selectEl) {
   if (!selectEl) return;
   
   const mainCardEl = document.querySelector(".hc-main-card");
@@ -233,13 +233,15 @@ window.handleHomeFavoriteChange = function (selectEl) {
     mainCardEl.style.opacity = "0.4";
   }
 
+  window.fallbackHomeDataLoad(true);
+  await new Promise(resolve => setTimeout(resolve, 800));
+
   if (selectEl.value === "my_location") {
     localStorage.setItem(window.HOME_SELECTED_FAV_KEY, "my_location");
     if (window.userLatLng) {
-      window.updateHomeCardByLocation(window.userLatLng.lat, window.userLatLng.lng);
+      await window.updateHomeCardByLocation(window.userLatLng.lat, window.userLatLng.lng);
     } else {
       if (mainCardEl) mainCardEl.style.opacity = "1";
-      console.log("GPS 신호를 추적하는 중입니다. 신호가 수신되면 데이터가 자동 반전됩니다.");
     }
   } else {
     const [lat, lng] = selectEl.value.split(",").map(Number);
@@ -247,7 +249,7 @@ window.handleHomeFavoriteChange = function (selectEl) {
     const favId = selectedOption?.getAttribute("data-id");
 
     if (favId) localStorage.setItem(window.HOME_SELECTED_FAV_KEY, favId);
-    if (lat && lng) window.updateHomeCardByLocation(lat, lng);
+    if (lat && lng) await window.updateHomeCardByLocation(lat, lng);
   }
 };
 
@@ -280,20 +282,25 @@ window.updateHomeCardByLocation = async function (lat, lng) {
   }
 };
 
-// [교정] 즉시 데이터 리셋(force 플래그 활용) 및 카드 회색 톤 디밍 가동 액션
-window.refreshHomeLocation = function (btnElement) {
+// [교정] 제자리 정원 회전, 즉시 데이터 강제 휘발 및 인위적 800ms 디밍 대기 스레드 통합
+window.refreshHomeLocation = async function (btnElement) {
   const selectEl = document.getElementById("hcHomeFavoriteSelect");
   if (!selectEl || !selectEl.value) return;
 
+  // 1. 기존 캐시 즉시 폭파 (적중 방지)
+  localStorage.removeItem(window.HOME_CARD_CACHE_KEY);
+
+  // 2. 대시보드 데이터 즉시 기본값(--) 리셋 처리
+  window.fallbackHomeDataLoad(true);
+
+  // 3. 카드 레이어 즉시 회색조 디밍
   const mainCardEl = document.querySelector(".hc-main-card");
   if (mainCardEl) {
     mainCardEl.style.transition = "opacity 0.2s ease";
     mainCardEl.style.opacity = "0.4"; 
   }
 
-  // 강제 리셋 명령을 내려 즉시 화면의 수치를 초기 기본값(--)으로 리셋시킵니다.
-  window.fallbackHomeDataLoad(true);
-
+  // 4. 제자리 축 고정 회전 애니메이션 가동
   let targetIcon = btnElement;
   if (btnElement) {
     btnElement.style.pointerEvents = "none";
@@ -304,9 +311,12 @@ window.refreshHomeLocation = function (btnElement) {
     }
   }
 
+  // 5. 디밍 상태를 인지할 수 있도록 800ms 최소 대기선 유지
+  await new Promise(resolve => setTimeout(resolve, 800));
+
   if (selectEl.value === "my_location") {
     if (window.userLatLng) {
-      window.updateHomeCardByLocation(window.userLatLng.lat, window.userLatLng.lng);
+      await window.updateHomeCardByLocation(window.userLatLng.lat, window.userLatLng.lng);
     } else {
       if (btnElement) {
         btnElement.style.pointerEvents = "auto"; 
@@ -317,15 +327,13 @@ window.refreshHomeLocation = function (btnElement) {
     }
   } else {
     const [lat, lng] = selectEl.value.split(",").map(Number);
-    window.updateHomeCardByLocation(lat, lng);
+    await window.updateHomeCardByLocation(lat, lng);
   }
 
-  setTimeout(() => {
-    if (btnElement) {
-      btnElement.style.pointerEvents = "auto"; 
-      if (targetIcon) targetIcon.classList.remove("hc-spin-anim");
-    }
-  }, 2000);
+  if (btnElement) {
+    btnElement.style.pointerEvents = "auto"; 
+    if (targetIcon) targetIcon.classList.remove("hc-spin-anim");
+  }
 };
 
 window.fetchAllPublicOpenAPI = async function (lat, lng) {
@@ -604,7 +612,6 @@ window.applyHomeCardDOM = function (payload) {
   }
 };
 
-// [교정] 가드 로직을 무력화할 수 있는 force 매개변수 도입
 window.fallbackHomeDataLoad = function (force = false) {
   const existingTemp = document.querySelector(".hc-premium-card .hc-temp")?.textContent || "";
   if (!force && existingTemp !== "" && existingTemp !== "--°C") return;
