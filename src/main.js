@@ -675,7 +675,7 @@ window.savePointMarker = function () {
   if (category === '미분류') color = '#868e96';
 
   db.collection('fishing_points').add({
-    name, category, color, memo: document.getElementById('pointMemo')?.value.trim() || '등록된 메모가 없습니다.',
+    name, category, color, memo: document.getElementById('pointMemo')?.value.trim() || '',
     parkingType: selectedParkingType, parkingUnit: parkingUnits[currentUnitIndex], parkingPrice: document.getElementById('parkingPrice').value || '0',
     hasStore: document.getElementById('btnNewFacStore')?.classList.contains('active') || false,
     hasCafe: document.getElementById('btnNewFacCafe')?.classList.contains('active') || false,
@@ -928,7 +928,7 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
       favBtn.onclick = function (e) { e.stopPropagation(); isFavorite = !isFavorite; renderFav(isFavorite); db.collection('fishing_points').doc(docId).update({ isFavorite, favoritedAt: isFavorite ? Date.now() : firebase.firestore.FieldValue.delete() }); };
     }
     if (categoryBadge) { categoryBadge.innerText = category; categoryBadge.style.backgroundColor = color || 'var(--primary-color)'; }
-    document.getElementById('lblDetailMemo').innerText = memo || '등록된 메모가 없습니다.';
+    document.getElementById('lblDetailMemo').innerText = memo || '';
     if (lblDetailParking) { const ts = lblDetailParking.querySelector('.tag-txt'); if (ts) ts.innerText = pType === 'none' ? '주차 불가' : pType === 'free' ? '무료 주차' : `${pUnit} ${Number(pPrice).toLocaleString()}원`; }
 
     if (facContainer) {
