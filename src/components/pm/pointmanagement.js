@@ -1,5 +1,5 @@
 import { db } from '../../utils/firebase.js';
-import './pointmanagement.js';
+import './pointmanagement.css';
 
 window.currentActiveCategory = null;
 
