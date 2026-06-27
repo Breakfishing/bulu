@@ -4,12 +4,6 @@
 import './style.css'; 
 import { db } from './utils/firebase.js'; 
 
-// 하위 컴포넌트 모듈 스레드 가동
-import './components/more/more.js';
-import './components/map/map.js';
-import './components/weather/weatherModal.js';
-import './components/pm/pointmanagement.js'; // 포인트 관리 총괄 모듈 엔진 주입
-
 // --- 전역 변수 및 상태 레이어 관리 ---
 window.cachedFishingPoints = [];
 window.cachedPublicToilets = [];
@@ -34,7 +28,7 @@ const KHOA_API_KEY = PUBLIC_PORTAL_KEY;
 const KMA_AUTH_KEY = "RAp21103R7OKdtddNwezzw";
 
 // =========================================================================
-// [COMMON UI] 라이프사이클 및 네비게이션 공통 UI 제어 영역
+// [COMMON UI] 라이프사이클 및 네비게이션 공통 UI 제어 영역 (모듈 임포트 전 배치)
 // =========================================================================
 // [카토 레이어 제어 엔진 추가]
 window.toggleMapLayer = function(layerType) {
@@ -70,7 +64,6 @@ window.loadCoastalDepthData = async function() {
     }
   } catch (err) { console.error("수심 데이터 로드 중 에러 발생:", err); }
 };
-
 
 window.checkAndHideSplash = function () {
   const splashEl = document.getElementById('splash-screen');
@@ -146,6 +139,14 @@ window.switchTab = function (tabId, navItem) {
     window.renderPointsManagementTab();
   }
 };
+
+// =========================================================================
+// 하위 컴포넌트 모듈 스레드 가동 (공통 UI 함수 선언 완료 후 실행)
+// =========================================================================
+import './components/more/more.js';
+import './components/map/map.js';
+import './components/weather/weatherModal.js';
+import './pointmanagement.js'; 
 
 // =========================================================================
 // [RESTORED AREA] 홈 레이어 연동용 조석 관측소 데이터 스택
