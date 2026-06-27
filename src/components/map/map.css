@@ -354,7 +354,6 @@
 .header-left-title-box h2 {
     margin: 0;
     font-size: 22px;
-    line-height: 1.5;
     color: var(--text-main);
     font-weight: 700;
     white-space: nowrap;
