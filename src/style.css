@@ -441,14 +441,14 @@ button, input, select, textarea, .modal, .detail-tag, .timeline-date-sticky {
     display: block !important;
 }
 
-.hc-main-card.sunset .hc-sun-node circle:first-child {
+.hc-sunset .hc-sun-node circle:first-child {
     fill: #ffffff !important;
     opacity: 0.9 !important;
     cy: 205 !important;
     r: 10 !important;
 }
 
-.hc-main-card.sunset .hc-sun-node circle:last-child {
+.hc-sunset .hc-sun-node circle:last-child {
     fill: #a6382e !important;
     opacity: 0.25 !important;
     cy: 205 !important;
