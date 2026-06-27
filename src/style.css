@@ -304,7 +304,7 @@ button, input, select, textarea, .modal, .detail-tag, .timeline-date-sticky {
 }
 .modal-backdrop.active { display: block !important; }
 
-.modal option {
+option {
     border: 1px solid var(--border-color); 
 }
 
