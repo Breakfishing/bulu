@@ -9,7 +9,82 @@
     <link rel="stylesheet" as="style" crossorigin
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
     <link rel="stylesheet" href="/src/style.css">
+    <style>
+        /* 1. 메인 CSS 로드 전 브라우저 기본 마진 및 스크롤바 강제 리셋 */
+        html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            overflow: hidden !important;
+            background-color: #ffffff !important;
+        }
 
+        /* 2. 자바스크립트 변수 의존성 제거 및 최상위 레이어 고정 */
+        #splash-screen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background-color: #ffffff !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            z-index: 99999 !important; /* 다른 어떤 레이어보다 상위에 배치 */
+        }
+
+        #splash-screen.fade-out {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            transition: opacity 0.35s ease-out !important;
+        }
+
+        .splash-container {
+            position: relative !important;
+            width: 320px !important;
+            height: 320px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .splash-wave {
+            position: absolute !important;
+            width: 140px !important;
+            height: 35px !important;
+            bottom: 20px !important;
+            left: 50% !important;
+            margin-left: -70px !important;
+            border: 1.5px solid #00a799 !important; /* var 변수 대신 생상 값 하드코딩 주입 */
+            border-radius: 50% !important;
+            opacity: 0 !important;
+            animation: splashPulseEffect 2.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) infinite !important;
+        }
+
+        .splash-wave.wave-2 { animation-delay: 0.9s !important; }
+        .splash-wave.wave-3 { animation-delay: 1.8s !important; }
+
+        .splash-logo-wrapper {
+            position: relative !important;
+            margin-top: -30px !important;
+            animation: splashLogoFloat 3s ease-in-out infinite !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        @keyframes splashPulseEffect {
+            0% { transform: scale(0.6); opacity: 0.8; }
+            30% { opacity: 0.4; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+        @keyframes splashLogoFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+    </style>
     <script
         src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=9698fb632fa0dfcf26667bdb0e31dbb4&libraries=services&autoload=false"></script>
 </head>
