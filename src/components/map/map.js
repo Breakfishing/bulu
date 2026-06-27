@@ -6,6 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import 'leaflet-edgebuffer';
 import firebase from 'firebase/compat/app';
 import { db } from '../../utils/firebase.js';
+import { TIDE_STATIONS } from '../../utils/constants.js';
 import './map.css';
 
 // 지도 기본 마커 에셋 자원 바인딩
@@ -44,16 +45,6 @@ let selectedEditPointParkingType = 'none';
 const editPointParkingUnits = ['10분', '30분', '일'];
 let currentEditPointUnitIndex = 0;
 let selectedToiletHoursValue = '모름';
-
-const TIDE_STATIONS = [
-  { code: 'DT_0005', name: '부산', lat: 35.0975, lng: 129.0369 },
-  { code: 'DT_0023', name: '통영', lat: 34.8286, lng: 128.4328 },
-  { code: 'DT_0026', name: '삼천포', lat: 34.9258, lng: 128.0336 },
-  { code: 'DT_0004', name: '마산', lat: 35.2044, lng: 128.5786 },
-  { code: 'DT_0016', name: '가덕도', lat: 35.0233, mesh: 128.8322 },
-  { code: 'DT_0013', name: '울산', lat: 35.5033, lng: 129.3853 },
-  { code: 'DT_0012', name: '포항', lat: 36.0442, lng: 129.3839 }
-];
 
 // =========================================================================
 // 지도 메인 캔버스 맵 바인딩 영역
