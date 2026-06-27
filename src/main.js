@@ -138,13 +138,15 @@ window.switchTab = function (tabId, navItem) {
 };
 
 // =========================================================================
-// 하위 컴포넌트 모듈 스레드 가동 (공통 UI 함수 선언 완료 후 실행)
+// 하위 컴포넌트 및 도메인 분리 유틸/서비스 모듈 스레드 가동
 // =========================================================================
 import './components/more/more.js';
 import './components/map/map.js';
 import './components/weather/weatherModal.js';
 import './components/pm/pointmanagement.js'; 
 import './components/home/home.js'; 
+import './utils/geoUtils.js'; 
+import './services/dbListener.js'; 
 import { TIDE_STATIONS } from './utils/constants.js';
 
 // =========================================================================
@@ -475,7 +477,7 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
         if (category === 'toilet') {
           wIcon.innerHTML = `<svg width="20" height="30" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#ff9500"/><circle cx="12" cy="12" r="4" fill="#ffffff"/></svg>`;
         } else {
-          wIcon.innerHTML = getFishingPointSvg(color).replace('width="26" height="39"', 'width="20" height="30"');
+          wIcon.innerHTML = window.getFishingPointSvg(color).replace('width="26" height="39"', 'width="20" height="30"');
         }
       }
       document.getElementById('weatherModal')?.classList.add('active'); window.loadTimelineWithOptimisticUI(lat, lng);
@@ -528,83 +530,6 @@ window.openPointDetailFromList = function (pt) {
     window.renderPointDetailBottomSheet(pt.id, pt.name, pt.category, pt.color, pt.memo, pt.parkingType || 'none', pt.parkingUnit || '', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, pt.lat, pt.lng, pt.isFavorite || false, pt.address || "주소 정보 없음");
   }
 };
-
-window.fetchAddressForModal = function (lat, lng, elementId) {
-  const el = document.getElementById(elementId); if (el) el.innerText = "주소 변환 중...";
-  if (typeof kakao !== 'undefined' && kakao.maps) {
-    kakao.maps.load(() => {
-      new kakao.maps.services.Geocoder().coord2Address(lng, lat, (result, status) => {
-        if (status === kakao.maps.services.Status.OK && result[0]) {
-          const finalAddr = result[0].road_address?.address_name || result[0].address?.address_name || "주소 정보 없음";
-          if (finalAddr === "주소 정보 없음") window.searchNearestCoastalLandmark(lat, lng, n => { if (el) el.innerText = n; }, () => { if (el) el.innerText = "주소 정보 없음"; });
-          else { if (el) el.innerText = finalAddr; if (elementId === 'pointAddress') window.cachedActiveAddressStr = finalAddr; }
-        } else { window.searchNearestCoastalLandmark(lat, lng, n => { if (el) el.innerText = n; }, () => { if (el) el.innerText = "주소 정보 없음"; }); }
-      });
-    });
-  }
-};
-
-window.searchNearestCoastalLandmark = function (lat, lng, successCallback, errorCallback) {
-  if (typeof kakao === 'undefined' || !kakao.maps?.services?.Places) { if (errorCallback) errorCallback(); return; }
-  const ps = new kakao.maps.services.Places(); const keywords = ['방파제', '해수욕장', '항구', '선착장', '해안', '갯바위']; let idx = 0;
-  const tryNext = () => {
-    if (idx >= keywords.length) { if (errorCallback) errorCallback(); return; }
-    ps.keywordSearch(keywords[idx], (data, status) => {
-      if (status === kakao.maps.services.Status.OK && data?.[0]) { successCallback(`${data[0].place_name} 인근 ${(parseFloat(data[0].distance)/1000).toFixed(1)}km`); }
-      else { idx++; tryNext(); }
-    }, { location: new kakao.maps.LatLng(lat, lng), radius: 20000, sort: kakao.maps.services.SortBy.DISTANCE });
-  }; tryNext();
-};
-
-function getFishingPointSvg(color) {
-  return `<svg width="26" height="39" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg" class="fishing-marker-svg-anchor">
-    <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="${color}"/>
-    <circle cx="12" cy="12" r="4" fill="#ffffff"/>
-  </svg>`;
-}
-window.getFishingPointSvg = getFishingPointSvg;
-
-// =========================================================================
-// [BACKEND AREA] 백엔드 데이터베이스 실시간 트래킹 모델 및 오버레이 렌더러
-// =========================================================================
-window.findNearestDepth = function(lat, lng) {
-  if (!window.coastalDepthData || window.coastalDepthData.length === 0) return null;
-  let minDstSquare = Infinity; let nearestDepth = null;
-  const latToMeters = 111000; const lngToMeters = 91000; const maxSearchRadiusMeters = 150;
-  
-  for (let i = 0; i < window.coastalDepthData.length; i++) {
-    const pt = window.coastalDepthData[i];
-    const dLatMeters = (pt[0] - lat) * latToMeters; const dLngMeters = (pt[1] - lng) * lngToMeters;
-    const dstSquare = dLatMeters * dLatMeters + dLngMeters * dLngMeters;
-    if (dstSquare < minDstSquare) { minDstSquare = dstSquare; nearestDepth = pt[2]; }
-  }
-  if (Math.sqrt(minDstSquare) > maxSearchRadiusMeters) return null;
-  return nearestDepth;
-};
-
-db.collection('fishing_points').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
-  try {
-    window.cachedFishingPoints = []; snapshot.forEach(doc => window.cachedFishingPoints.push({ id: doc.id, ...doc.data() }));
-    if (typeof window.updateVisibleMarkersOnMap === 'function') window.updateVisibleMarkersOnMap();
-    window.renderPointsManagementTab(); window.populateHomeFavoritesDropdown();
-  } catch (err) {
-    console.error("낚시 포인트 데이터 렌더링 중 오류 발생:", err);
-  } finally {
-    window.isFishingPointsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
-  }
-}, () => { window.isFishingPointsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash(); });
-
-db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
-  try {
-    window.cachedPublicToilets = []; snapshot.forEach(doc => window.cachedPublicToilets.push({ id: doc.id, ...doc.data() }));
-    if (typeof window.updateVisibleMarkersOnMap === 'function') window.updateVisibleMarkersOnMap();
-    window.renderPointsManagementTab();
-  } catch (err) {
-    console.error("화장실 데이터 렌더링 중 오류 발생:", err);
-  } finally {
-    window.isPublicToiletsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
-  }
-}, () => { window.isPublicToiletsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash(); });
 
 // =========================================================================
 // 전역 초기 부팅 실행 시퀀스
