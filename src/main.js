@@ -146,7 +146,7 @@ window.switchTab = function (tabId, navItem) {
 import './components/more/more.js';
 import './components/map/map.js';
 import './components/weather/weatherModal.js';
-import './pointmanagement.js'; 
+import './components/pm/pointmanagement.js'; 
 
 // =========================================================================
 // [RESTORED AREA] 홈 레이어 연동용 조석 관측소 데이터 스택
