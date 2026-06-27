@@ -4,7 +4,8 @@
 :root {
     --nav-height: 70px;
     --primary-color: #00a799;
-    --bg-main: #e6e6e6;
+    --grid-item-bg: #868e9618;
+    --bg-main: #f8f9fac0;
     --bg-panel: #ffffff;
     --text-main: #212529;
     --text-muted: #6c757d;
