@@ -258,7 +258,7 @@ window.renderPointsManagementTab = function () {
       displayPoints = window.cachedFishingPoints.filter(p => String(p.category || '미분류').trim() === String(window.currentActiveCategory).trim());
     }
 
-    if (displayPoints.length === 0) { listContainer.innerHTML = `<div class="pm-empty-msg">[${window.currentActiveCategory}] 카테고리에 등록된 포인트가 없습니다.</div>`; return; }
+    if (displayPoints.length === 0) { listContainer.innerHTML = `<div class="pm-empty-msg">카테고리에 등록된 포인트가 없습니다.</div>`; return; }
     displayPoints.forEach(item => { listContainer.appendChild(createPointRowComponent(item, window.currentActiveCategory === '전체' || window.currentActiveCategory === '즐겨찾기')); });
 
     if (window.currentActiveCategory === '즐겨찾기') window.bindDragAndDropEvents(listContainer, true);
