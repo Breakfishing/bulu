@@ -258,3 +258,109 @@
     padding: 4px 8px !important;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
 }
+
+/* =========================================================================
+    GROUP 10: 바텀시트, 애니메이션 스택 및 예외 레이어 가드 최종 선언
+   ========================================================================= */
+#detailModalWrapper,
+#detailModal {
+    z-index: 1002 !important;
+}
+
+#weatherModal {
+    z-index: 1005 !important;
+}
+
+#bottom-nav {
+    z-index: 9999 !important;
+    position: relative;
+}
+
+.modal.active,
+.custom-modal-native.active {
+    animation: patchSlideUpCenter 0.32s cubic-bezier(0.1, 0.76, 0.55, 0.94) forwards;
+}
+
+.bottom-sheet-modal-native.active {
+    animation: patchSlideUpBottom 0.32s cubic-bezier(0.1, 0.76, 0.55, 0.94) forwards;
+}
+
+.modal-backdrop.active {
+    display: block !important;
+    animation: patchFadeIn 0.25s ease-out forwards;
+}
+
+@keyframes patchSlideUpCenter {
+    0% {
+        transform: translateY(100vh);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes patchSlideUpBottom {
+    0% { transform: translateY(100%); }
+    100% { transform: translateY(0); }
+}
+
+@keyframes patchFadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+#noticeWriteModal,
+#fishingBanModal,
+#sizeLimitModal,
+#knotGuideModal,
+#categoryManageModal {
+    display: none !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    z-index: 1020 !important;
+}
+
+#noticeWriteModal.active,
+#fishingBanModal.active,
+#sizeLimitModal.active,
+#knotGuideModal.active,
+#categoryManageModal.active {
+    display: flex !important;
+}
+
+#categoryEditMarkerIcon {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    width: 26px !important;
+    height: 39px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    overflow: visible !important;
+}
+
+#categoryEditMarkerIcon svg {
+    width: 26px !important;
+    height: 39px !important;
+}
+
+.modal.weather-modal.active,
+.weather-modal-overlay.active,
+#weatherModal.active {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    z-index: 1020 !important;
+}
+
+#weatherModal.active .weather-modal-body {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
+}
