@@ -65,7 +65,7 @@ const myLocationIcon = L.divIcon({
   html: `
     <div class="my-location-marker-inner-wrapper">
       <div class="radar-wave"></div><div class="radar-wave wave-delay-1"></div><div class="radar-wave wave-delay-2"></div>
-      <svg width="80" height="80" class="user-heading-cone-bg"><circle cx="40" cy="40" r="40" fill="var(--primary-color)" fill-opacity="0.03" /></svg>
+      <svg width="80" height="80" class="user-heading-cone-bg"><circle cx="40" cy="40" r="40" fill="var(--primary-color)" fill-opacity="0.3" /></svg>
       <svg viewBox="0 0 80 80" class="user-heading-cone-svg">
         <path id="user-heading-cone" d="M 40 40 L 11.72 11.72 A 40 40 0 0 1 68.28 11.72 Z" fill="var(--primary-color)" fill-opacity="0.13" stroke="var(--primary-color)" stroke-opacity="0.25" stroke-width="1" style="transform-origin: 40px 40px; transform: rotate(0deg); transition: transform 0.1s ease-out;"/>
       </svg>
