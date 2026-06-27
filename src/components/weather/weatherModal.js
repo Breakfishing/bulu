@@ -365,7 +365,10 @@ window.loadTimelineWithOptimisticUI = async function (lat, lng) {
   if (modalBody && !document.getElementById('miniSplashBodyBlock')) {
     const splashBlock = document.createElement('div'); splashBlock.id = 'miniSplashBodyBlock';
     splashBlock.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; min-height: 430px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--text-muted); background: var(--modal-bg, #ffffff); z-index: 100;';
-    splashBlock.innerHTML = `<div class="mini-splash-spinner spinning" style="width: 36px; height: 36px; border: 4px solid var(--border-color); border-top-color: var(--primary-color); border-radius: 50%;"></div><div class="mini-splash-text" style="font-size: 13.5px; font-weight: 700;">실시간 데이터 분석 중...</div>`;
+    
+    // [교정] 회전 애니메이션(hc-spin-anim) 속성을 인라인 스타일에 직접 주입하여 정상 작동 보장
+    splashBlock.innerHTML = `<div class="mini-splash-spinner spinning" style="width: 36px; height: 36px; border: 4px solid var(--border-color); border-top-color: var(--primary-color); border-radius: 50%; animation: hc-spin-anim 0.8s linear infinite;"></div><div class="mini-splash-text" style="font-size: 13.5px; font-weight: 700;">실시간 데이터 분석 중...</div>`;
+    
     modalBody.style.position = 'relative'; modalBody.style.minHeight = '430px'; modalBody.appendChild(splashBlock);
     if (dateSticky) dateSticky.style.visibility = 'hidden'; if (bridge) bridge.style.visibility = 'hidden';
   }
