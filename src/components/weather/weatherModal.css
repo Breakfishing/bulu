@@ -455,6 +455,8 @@
     content: '▼';
     position: absolute;
     left: 50%;
+    
+    transform: translateX(-50%);
     border-width: 6px 0;
     border-style: solid;
     border-color: var(--primary-color) transparent;
