@@ -1,8 +1,6 @@
 import { db } from '../../utils/firebase.js';
 import './pointmanagement.js';
-// =========================================================================
-// [TAB AREA 3] 포인트 관리 대시보드 시스템, 드래그 소팅 및 카테고리 관리 총괄 엔진
-// =========================================================================
+
 window.currentActiveCategory = null;
 
 window.openCategoryManageModal = function () {
