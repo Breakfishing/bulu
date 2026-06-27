@@ -5,18 +5,15 @@
     --nav-height: 70px;
     --primary-color: #00a799;
     --grid-item-bg: #f8f9fa;
-
     --bg-main: #f8f9fac0;
     --bg-panel: #ffffff;
     --text-main: #212529;
     --text-muted: #6c757d;
     --border-color: #dee2e6;
-
     --color-prohibited: #ff4d4d;
     --color-port: #ffc107;
     --color-no-entry: #868e96;
     --color-allowed: #28a745;
-
     --timeline-sea-fill: #d2e4ff;
 }
 
@@ -26,15 +23,12 @@
     --text-main: #f8f9fa;
     --text-muted: #a0aec0;
     --border-color: #333333;
-
     --primary-color: #007aff;
     --grid-item-bg: #2a2a2a;
-
     --color-prohibited: #ff5252;
     --color-port: #ffd043;
     --color-no-entry: #9ca3af;
     --color-allowed: #34d399;
-
     --timeline-sea-fill: #1b2d4a;
 }
 
@@ -58,9 +52,6 @@ html {
     flex-direction: column;
     height: 100vh;
     width: 100%;
-    z-index: auto !important;
-    transform: none !important;
-    filter: none !important;
 }
 
 #content-area {
@@ -76,13 +67,7 @@ html {
     -moz-osx-font-smoothing: grayscale;
 }
 
-button,
-input,
-select,
-textarea,
-.modal,
-.detail-tag,
-.timeline-date-sticky {
+button, input, select, textarea, .modal, .detail-tag, .timeline-date-sticky {
     font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif !important;
     letter-spacing: -0.3px;
 }
@@ -98,16 +83,11 @@ textarea,
     transition: stroke 0.2s, fill 0.2s;
 }
 
-.splash-svg-element {
-    overflow: visible;
-}
-
-.close-btn-margin {
-    margin-left: 8px;
-}
+.splash-svg-element { overflow: visible; }
+.close-btn-margin { margin-left: 8px; }
 
 /* =========================================================================
-    GROUP 3: 스플래시 로딩 스크린 (다크모드 우회 순수 화이트 고정 규격)
+    GROUP 3: 스플래시 로딩 스크린
    ========================================================================= */
 #splash-screen {
     position: fixed !important;
@@ -147,19 +127,11 @@ textarea,
     border: 1.5px solid var(--primary-color);
     border-radius: 50%;
     opacity: 0;
-    transform-origin: center center;
     animation: splashPulseEffect 2.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) infinite;
-    pointer-events: none;
 }
 
-.splash-wave.wave-2 {
-    animation-delay: 0.9s;
-}
-
-.splash-wave.wave-3 {
-    animation-delay: 1.8s;
-}
-
+.splash-wave.wave-2 { animation-delay: 0.9s; }
+.splash-wave.wave-3 { animation-delay: 1.8s; }
 .splash-logo-wrapper {
     position: relative;
     margin-top: -30px;
@@ -170,30 +142,13 @@ textarea,
 }
 
 @keyframes splashPulseEffect {
-    0% {
-        transform: scale(0.6);
-        opacity: 0.8;
-    }
-
-    30% {
-        opacity: 0.4;
-    }
-
-    100% {
-        transform: scale(2.2);
-        opacity: 0;
-    }
+    0% { transform: scale(0.6); opacity: 0.8; }
+    30% { opacity: 0.4; }
+    100% { transform: scale(2.2); opacity: 0; }
 }
-
 @keyframes splashLogoFloat {
-    0%,
-    100% {
-        transform: translateY(0);
-    }
-
-    50% {
-        transform: translateY(-8px);
-    }
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
 }
 
 /* =========================================================================
@@ -207,13 +162,10 @@ textarea,
     overflow-y: auto;
     position: relative;
 }
-
-.tab-content.active {
-    display: block;
-}
+.tab-content.active { display: block; }
 
 /* =========================================================================
-    GROUP 5: 하단 내비게이션 탭바 및 공통 메뉴 그리드 허브
+    GROUP 5: 하단 내비게이션 탭바
    ========================================================================= */
 #bottom-nav {
     height: var(--nav-height);
@@ -238,83 +190,19 @@ textarea,
     height: 100%;
     justify-content: center;
 }
-
-.nav-item.active {
-    color: var(--primary-color);
-    font-weight: bold;
-}
-
-.nav-item.active .app-icon {
-    stroke: var(--primary-color);
-}
-
-.nav-label {
-    margin-top: 4px;
-}
-
-.padded-tab {
-    padding: 20px;
-}
-
-.login-panel {
-    background-color: var(--bg-panel);
-    padding: 20px;
-    border-radius: 15px;
-    margin-bottom: 20px;
-    border: 1px solid var(--border-color);
-}
-
-.login-panel-title {
-    font-weight: bold;
-    font-size: 18px;
-}
-
-.login-panel-subtitle {
-    color: var(--text-muted);
-    font-size: 13px;
-    margin-top: 4px;
-}
-
-.grid-container {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-}
-
-.grid-item {
-    background-color: var(--grid-item-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 15px 5px;
-    text-align: center;
-    cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.grid-item .app-icon {
-    stroke: var(--text-main);
-    margin-bottom: 8px;
-}
-
-.grid-label {
-    font-size: 11px;
-    font-weight: 500;
-}
+.nav-item.active { color: var(--primary-color); font-weight: bold; }
+.nav-item.active .app-icon { stroke: var(--primary-color); }
+.nav-label { margin-top: 4px; }
+.padded-tab { padding: 20px; }
 
 /* =========================================================================
-    GROUP 6: 입력 양식 및 하위 팝업 모달 프레임 구조
+    GROUP 6: 범용 입력 양식 및 하위 팝업 모달 범용 프레임 구조
    ========================================================================= */
-.form-group,
-.modal-form-group {
+.form-group, .modal-form-group {
     margin-bottom: 10px;
     width: 100%;
 }
-
-.form-group label,
-.modal-form-group label {
+.form-group label, .modal-form-group label {
     display: block;
     font-size: 13px;
     font-weight: bold;
@@ -323,12 +211,8 @@ textarea,
     text-align: left;
 }
 
-.form-input,
-.form-select,
-.form-textarea,
-.modal-form-group input[type="text"],
-.modal-form-group select,
-.modal-form-group textarea {
+.form-input, .form-select, .form-textarea,
+.modal-form-group input[type="text"], .modal-form-group select, .modal-form-group textarea, .modal-form-group input[type="number"] {
     width: 100%;
     padding: 10px;
     border-radius: 8px;
@@ -339,34 +223,9 @@ textarea,
     font-size: 14px;
     outline: none;
 }
-.modal-form-group input[type="number"] {
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-main);
-    color: var(--text-main);
-    box-sizing: border-box;
-    font-size: 14px;
-    outline: none;
-}
 
-#editPointCategory, #editPointParkingPrice, #limitMinSize, #limitMaxSize {
-    text-align: center;
-}
-
-.form-textarea,
-.modal-form-group textarea {
-    resize: none;
-    height: 70px;
-}
-
-.chip-group,
-.chip-group-row {
-    display: flex;
-    gap: 8px;
-    width: 100%;
-}
-
+.form-textarea, .modal-form-group textarea { resize: none; height: 70px; }
+.chip-group, .chip-group-row { display: flex; gap: 8px; width: 100%; }
 .chip-btn {
     padding: 8px 12px;
     text-align: center;
@@ -378,29 +237,9 @@ textarea,
     font-weight: 500;
     cursor: pointer;
 }
+.chip-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
 
-#pointModal .chip-btn,
-#toiletModal .chip-btn,
-#toiletEditModal .chip-btn,
-#pointEditModal .chip-btn,
-#sizeLimitModal .chip-btn,
-#fishingBanModal .chip-btn {
-    flex: 1;
-    border-radius: 8px;
-}
-
-.chip-btn.active {
-    background: var(--primary-color);
-    color: white;
-    border-color: var(--primary-color);
-}
-
-.parking-detail-row,
-#parkingDetailRow,
-#editPointParkingDetailRow,
-#newToiletHoursDetailRow,
-#editToiletHoursDetailRow,
-.parking-detail-row-flex {
+.parking-detail-row, .parking-detail-row-flex {
     display: none;
     align-items: center;
     gap: 8px;
@@ -408,47 +247,14 @@ textarea,
     width: 100%;
 }
 
-#parkingDetailRow.active,
-#editPointParkingDetailRow.active,
-#newToiletHoursDetailRow.active,
-#editToiletHoursDetailRow.active {
-    display: flex !important;
-}
+.parking-unit-btn-reset, .parking-price-input-reset, .hour-input-center, .modal-btn-group g button { margin: 0; }
+.parking-unit-btn-reset { flex: none; width: auto; padding: 11px 12px; }
+.parking-price-input-reset { width: 70%; }
+.parking-currency-label { color: var(--text-main); font-size: 14px; font-weight: 500; }
+.hour-input-center { width: 50px; text-align: center; }
+.hour-range-separator { margin: 0 6px; }
 
-.parking-unit-btn-reset,
-.parking-price-input-reset,
-.hour-input-center,
-.modal-btn-group button {
-    margin: 0;
-}
-
-.parking-unit-btn-reset {
-    flex: none;
-    width: auto;
-    padding: 11px 12px;
-}
-
-.parking-price-input-reset {
-    width: 70%;
-}
-
-.parking-currency-label {
-    color: var(--text-main);
-    font-size: 14px;
-    font-weight: 500;
-}
-
-.hour-input-center {
-    width: 50px;
-    text-align: center;
-}
-
-.hour-range-separator {
-    margin: 0 6px;
-}
-
-.address-box,
-.form-static-text {
+.address-box, .form-static-text {
     background: var(--grid-item-bg);
     padding: 10px;
     border-radius: 8px;
@@ -461,44 +267,17 @@ textarea,
     box-sizing: border-box;
 }
 
-.modal-btn-group,
-.modal-action-row-grid {
-    display: flex;
-    gap: 10px;
-    width: 100%;
-    box-sizing: border-box;
+.modal-btn-group, .modal-action-row-grid { display: flex; gap: 10px; width: 100%; box-sizing: border-box; }
+.btn-main, .modal-btn.save {
+    flex: 2; padding: 12px; border-radius: 8px; border: none;
+    background: var(--primary-color); color: white; font-weight: bold; cursor: pointer; text-align: center; font-size: 14px;
+}
+.btn-sub, .modal-btn.cancel {
+    flex: 1; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);
+    background: var(--bg-panel); color: var(--text-main); cursor: pointer; text-align: center; font-size: 14px;
 }
 
-.btn-main,
-.modal-btn.save {
-    flex: 2;
-    padding: 12px;
-    border-radius: 8px;
-    border: none;
-    background: var(--primary-color);
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    text-align: center;
-    font-size: 14px;
-}
-
-.btn-sub,
-.modal-btn.cancel {
-    flex: 1;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    background: var(--bg-panel);
-    color: var(--text-main);
-    cursor: pointer;
-    text-align: center;
-    font-size: 14px;
-}
-
-.modal,
-.custom-modal-native,
-.bottom-sheet-modal-native {
+.modal, .custom-modal-native, .bottom-sheet-modal-native {
     display: none !important;
     position: fixed;
     bottom: var(--nav-height) !important;
@@ -512,41 +291,17 @@ textarea,
     box-sizing: border-box;
     max-height: calc(92vh - var(--nav-height));
     overflow-y: auto;
-    overflow-x: hidden !important;
 }
-
-.modal.active,
-.custom-modal-native.active,
-.bottom-sheet-modal-native.active {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    justify-content: flex-start !important;
+.modal.active, .custom-modal-native.active, .bottom-sheet-modal-native.active {
+    display: flex !important; flex-direction: column !important; align-items: stretch !important; justify-content: flex-start !important;
 }
-
-.modal h3,
-.custom-modal-native h3 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 18px;
-    color: var(--text-main);
-    text-align: left;
-}
+.modal h3, .custom-modal-native h3 { margin-top: 0; margin-bottom: 15px; font-size: 18px; color: var(--text-main); text-align: left; }
 
 .modal-backdrop {
-    display: none !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: calc(100vh - var(--nav-height)) !important;
-    background-color: rgba(0, 0, 0, 0.45);
-    z-index: 1000 !important;
+    display: none !important; position: fixed; top: 0; left: 0; width: 100vw;
+    height: calc(100vh - var(--nav-height)) !important; background-color: rgba(0, 0, 0, 0.45); z-index: 1000 !important;
 }
-
-.modal-backdrop.active {
-    display: block !important;
-}
+.modal-backdrop.active { display: block !important; }
 
 /* =========================================================================
     GROUP 11: 홈 화면 프리미엄 웨더 대시보드 컴포넌트 시스템
