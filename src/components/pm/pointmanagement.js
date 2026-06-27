@@ -40,7 +40,7 @@ window.openCategoryManageModal = function () {
   let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
 
   if (finalCatOrder.length === 0) {
-    listContainer.innerHTML = '<div class="pm-empty-msg">등록된 커스텀 카테고리가 없습니다.</div>';
+    listContainer.innerHTML = '<div class="pm-empty-msg">등록된 카테고리가 없습니다.</div>';
   } else {
     finalCatOrder.forEach(catName => {
       const row = document.createElement('div');
