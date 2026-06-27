@@ -457,6 +457,7 @@
     color: var(--text-main);
     text-align: left;
     width: 100%;
+    min-height: 39px;
     box-sizing: border-box;
 }
 
