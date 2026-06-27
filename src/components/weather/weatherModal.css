@@ -455,7 +455,7 @@
 .timeline-sync-bubble::after {
     content: '';
     position: absolute;
-    bottom: -4px;
+    bottom: -6px;
     left: 50%;
     transform: translateX(-50%);
     border-width: 5px 5px 0;
