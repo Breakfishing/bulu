@@ -455,7 +455,7 @@
     content: '▼';
     position: absolute;
     left: 50%;
-    
+    left:0;
     transform: translateX(-50%);
     border-style: solid;
     border-color: var(--primary-color) transparent;
