@@ -1,10 +1,12 @@
 /* =========================================================================
-   지도 레이어, Leaflet 코어 컴포넌트 및 오버레이 플로팅 패널 (map.css)
+   SECTION 1: 지도 기본 컨테이너 및 Leaflet 코어 엔진 설정
    ========================================================================= */
+/* 지도 탭 영역 내부의 불필요한 스크롤 방지 */
 #tab-map {
     overflow: hidden !important;
 }
 
+/* Leaflet 지도 프레임 전체 화면 정의 */
 #map {
     width: 100%;
     height: 100%;
@@ -12,6 +14,7 @@
     position: relative;
 }
 
+/* 지도 위에 올라가는 기본 마커 인스턴스 배경 초기화 */
 .custom-marker-wrapper,
 .custom-marker-wrapper-toilet {
     background: none !important;
@@ -19,6 +22,22 @@
     box-shadow: none !important;
 }
 
+/* 지도 타일 애니메이션 제거 및 최적화 (버벅임 방지) */
+.leaflet-tile {
+    transition: none !important;
+    animation: none !important;
+    opacity: 1 !important;
+}
+
+.leaflet-fade-anim .leaflet-tile {
+    transition: none !important;
+}
+
+
+/* =========================================================================
+   SECTION 2: 지도 플로팅 컨트롤 및 제어 버튼 스택
+   ========================================================================= */
+/* 지도 상단 중앙 레이아웃 컨트롤 버튼 */
 .top-center-ctrl {
     position: absolute;
     top: 15px;
@@ -45,6 +64,7 @@
     height: 20px;
 }
 
+/* 지도 상단 우측 기능별 플로팅 버튼 그룹 */
 .top-right-ctrl-group {
     position: absolute;
     top: 15px;
@@ -55,6 +75,7 @@
     gap: 10px;
 }
 
+/* 범용 플로팅 서클 버튼 */
 .floating-btn {
     width: 44px;
     height: 44px;
@@ -69,6 +90,7 @@
     transition: background 0.2s, border-color 0.2s;
 }
 
+/* 플로팅 버튼 활성화 상태 상태 처리 */
 .floating-btn.active {
     background: var(--primary-color);
     border-color: var(--primary-color);
@@ -83,6 +105,7 @@
     fill: #ffffff;
 }
 
+/* 낚시 금지 구역 레이어 버튼 전용 스타일 */
 #btn-prohibited .app-icon {
     stroke: var(--color-prohibited);
 }
@@ -96,6 +119,7 @@
     stroke: #ffffff;
 }
 
+/* 지도 타일 레이어 전환 버튼 전용 타이포그래피 */
 #btn-layer .app-icon text {
     font-size: 15px !important;
     font-weight: 900;
@@ -107,6 +131,7 @@
     stroke: none !important;
 }
 
+/* 공중화장실 레이어 버튼 활성화 상태 처리 */
 #btn-toilet.active {
     background: #ff9500;
     border-color: #ff9500;
@@ -116,20 +141,20 @@
     stroke: #ffffff;
 }
 
-.leaflet-tile {
-    transition: none !important;
-    animation: none !important;
-    opacity: 1 !important;
-}
 
-.leaflet-fade-anim .leaflet-tile {
-    transition: none !important;
-}
-
+/* =========================================================================
+   SECTION 3: 사용자 위치 마커 및 GPS 지향각 그래픽
+   ========================================================================= */
+/* 실시간 내 위치 GPS 정확도 반경 링 */
 .user-accuracy-ring {
     stroke: var(--primary-color) !important;
     fill: var(--primary-color) !important;
     transition: stroke 0.3s, fill 0.3s;
+}
+
+/* 내 위치 마커 컨테이너 및 내부 래퍼 */
+.my-location-marker-container {
+    overflow: visible !important;
 }
 
 .my-location-marker-inner-wrapper {
@@ -141,6 +166,7 @@
     justify-content: center;
 }
 
+/* 사용자 스마트폰 방향 역방향 콘 빔 이펙트 (시선 방향 빔) */
 .user-heading-cone-bg,
 .user-heading-cone-svg {
     position: absolute !important;
@@ -153,6 +179,7 @@
     z-index: 2;
 }
 
+/* 실시간 중심점 GPS 코어 도트 */
 .user-location-dot-svg {
     position: absolute !important;
     width: 18px !important;
@@ -163,10 +190,7 @@
     z-index: 3;
 }
 
-.my-location-marker-container {
-    overflow: visible !important;
-}
-
+/* Leaflet 순정 기본 축척 바 리셋 스타일 */
 .leaflet-control-scale {
     margin-bottom: 24px !important;
     margin-left: 16px !important;
@@ -182,6 +206,7 @@
     text-shadow: none !important;
 }
 
+/* GPS 추적 트리거 및 2D 모드 전용 인스턴스 스타일 */
 .mode-2d-icon text {
     font-size: 15px;
     font-weight: 900;
@@ -211,9 +236,11 @@
     height: 20px;
 }
 
+
 /* =========================================================================
-   수심 팝업 스타일 (Custom Depth Popup)
+   SECTION 4: 지도 전용 커스텀 팝업 및 툴팁 스타일
    ========================================================================= */
+/* 실시간 지도 클릭 격자 수심 노출 팝업 (Custom Depth Popup) */
 .custom-depth-popup .leaflet-popup-content-wrapper {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 12px;
@@ -234,7 +261,7 @@
     background: rgba(255, 255, 255, 0.95);
 }
 
-/* 다크모드 대응 */
+/* 수심 팝업 다크모드 대응 레이어 가드 */
 [data-theme='dark'] .custom-depth-popup .leaflet-popup-content-wrapper {
     background: rgba(30, 30, 30, 0.95);
     border: 1px solid rgba(255, 255, 255, 0.2);
@@ -248,6 +275,7 @@
     color: #4da3ff !important;
 }
 
+/* 지도 위에 떠있는 포인트 명칭용 툴팁 팝업 스타일 */
 .leaflet-tooltip {
     background: rgba(30, 30, 30, 0.85) !important;
     border: 1px solid rgba(255, 255, 255, 0.2) !important;
@@ -259,116 +287,11 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
 }
 
-/* =========================================================================
-    GROUP 10: 바텀시트, 애니메이션 스택 및 예외 레이어 가드 최종 선언
-   ========================================================================= */
-#detailModalWrapper,
-#detailModal {
-    z-index: 1002 !important;
-}
-
-#weatherModal {
-    z-index: 1005 !important;
-}
-
-#bottom-nav {
-    z-index: 9999 !important;
-    position: relative;
-}
-
-.modal.active,
-.custom-modal-native.active {
-    animation: patchSlideUpCenter 0.32s cubic-bezier(0.1, 0.76, 0.55, 0.94) forwards;
-}
-
-.bottom-sheet-modal-native.active {
-    animation: patchSlideUpBottom 0.32s cubic-bezier(0.1, 0.76, 0.55, 0.94) forwards;
-}
-
-.modal-backdrop.active {
-    display: block !important;
-    animation: patchFadeIn 0.25s ease-out forwards;
-}
-
-@keyframes patchSlideUpCenter {
-    0% {
-        transform: translateY(100vh);
-        opacity: 0;
-    }
-    100% {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-@keyframes patchSlideUpBottom {
-    0% { transform: translateY(100%); }
-    100% { transform: translateY(0); }
-}
-
-@keyframes patchFadeIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
-}
-
-#noticeWriteModal,
-#fishingBanModal,
-#sizeLimitModal,
-#knotGuideModal,
-#categoryManageModal {
-    display: none !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    justify-content: flex-start !important;
-    z-index: 1020 !important;
-}
-
-#noticeWriteModal.active,
-#fishingBanModal.active,
-#sizeLimitModal.active,
-#knotGuideModal.active,
-#categoryManageModal.active {
-    display: flex !important;
-}
-
-#categoryEditMarkerIcon {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    width: 26px !important;
-    height: 39px !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    flex-shrink: 0 !important;
-    overflow: visible !important;
-}
-
-#categoryEditMarkerIcon svg {
-    width: 26px !important;
-    height: 39px !important;
-}
-
-.modal.weather-modal.active,
-.weather-modal-overlay.active,
-#weatherModal.active {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    transform: translateY(0) !important;
-    z-index: 1020 !important;
-}
-
-#weatherModal.active .weather-modal-body {
-    display: flex !important;
-    flex-direction: column !important;
-    overflow-y: auto !important;
-}
-
 
 /* =========================================================================
-   [MAP] 지도 마커 상세 정보 바텀시트
+   SECTION 5: 마커 상세 정보 바텀시트 UI 컴포넌트
    ========================================================================= */
+/* 바텀시트 배경 암전 가혹화 처리 배경 레이어 */
 .detail-popup-wrapper,
 .modal-backdrop-for-sheet {
     display: none !important;
@@ -386,6 +309,7 @@
     display: block !important;
 }
 
+/* 하단 마운트 컴포넌트 바텀시트 구조 정의 */
 .bottom-sheet {
     position: fixed;
     bottom: var(--nav-height) !important;
@@ -408,6 +332,7 @@
     transform: translateY(0);
 }
 
+/* 바텀시트 상단 상하 스크롤 핸들바 디자인 */
 .bottom-sheet-handle-bar {
     width: 40px;
     height: 5px;
@@ -417,6 +342,7 @@
     cursor: pointer;
 }
 
+/* 바텀시트 내부 타이틀 텍스트 구조 헤더 영역 */
 .detail-header,
 .detail-modal-header-flex {
     display: flex;
@@ -447,6 +373,7 @@
     text-overflow: ellipsis;
 }
 
+/* 우측 액션 기능 버튼 컨트롤 구조 체계 */
 .header-right-action-group {
     display: flex;
     gap: 6px;
@@ -484,6 +411,7 @@
     flex-shrink: 0;
 }
 
+/* 상세 정보 데이터 뱃지 태그 및 서브 스크롤 행 */
 .detail-tag,
 .badge-category-dynamic {
     display: inline-block;
@@ -519,6 +447,7 @@
     display: none;
 }
 
+/* 포인트 상세 주소 텍스트 양식 */
 .detail-address-subtext {
     font-size: 12px;
     color: var(--text-muted);
@@ -527,6 +456,7 @@
     width: 100%;
 }
 
+/* 포인트 커스텀 기술 메모 박스 영역 */
 .detail-memo,
 .detail-description-body-box {
     background: var(--grid-item-bg);
@@ -545,6 +475,7 @@
     word-break: break-all;
 }
 
+/* 화장실 전용 히든 제어 예외 복합 레이어 */
 .detail-toilet-hours-hidden,
 .detail-facilities-hidden {
     display: none !important;
@@ -555,6 +486,7 @@
     gap: 6px;
 }
 
+/* 바텀시트 하단 주요 액션 전체 너비 실행 영역 */
 .detail-action-full-row {
     display: flex;
     gap: 8px;
@@ -570,4 +502,116 @@
 
 .detail-weather-btn-reset {
     flex: 1;
+}
+
+
+/* =========================================================================
+   SECTION 6: 공통 모달/바텀시트 애니메이션 및 예외 가드 레이어 최종 선언
+   ========================================================================= */
+/* 우선순위 스택 제어를 위한 전역 z-index 우선 할당 스택 선언 */
+#detailModalWrapper,
+#detailModal {
+    z-index: 1002 !important;
+}
+
+#weatherModal {
+    z-index: 1005 !important;
+}
+
+#bottom-nav {
+    z-index: 9999 !important;
+    position: relative;
+}
+
+/* 모달 컴포넌트 업 슬라이드 팝 애니메이션 제어 */
+.modal.active,
+.custom-modal-native.active {
+    animation: patchSlideUpCenter 0.32s cubic-bezier(0.1, 0.76, 0.55, 0.94) forwards;
+}
+
+.bottom-sheet-modal-native.active {
+    animation: patchSlideUpBottom 0.32s cubic-bezier(0.1, 0.76, 0.55, 0.94) forwards;
+}
+
+.modal-backdrop.active {
+    display: block !important;
+    animation: patchFadeIn 0.25s ease-out forwards;
+}
+
+@keyframes patchSlideUpCenter {
+    0% {
+        transform: translateY(100vh);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes patchSlideUpBottom {
+    0% { transform: translateY(100%); }
+    100% { transform: translateY(0); }
+}
+
+@keyframes patchFadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+/* 세부 서브 모달 팝업 인스턴스 초기 표시 양식 규정 */
+#noticeWriteModal,
+#fishingBanModal,
+#sizeLimitModal,
+#knotGuideModal,
+#categoryManageModal {
+    display: none !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    z-index: 1020 !important;
+}
+
+#noticeWriteModal.active,
+#fishingBanModal.active,
+#sizeLimitModal.active,
+#knotGuideModal.active,
+#categoryManageModal.active {
+    display: flex !important;
+}
+
+/* 카테고리 관리 내부 마커 아이콘 편집 전용 박스 스타일 */
+#categoryEditMarkerIcon {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    width: 26px !important;
+    height: 39px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    overflow: visible !important;
+}
+
+#categoryEditMarkerIcon svg {
+    width: 26px !important;
+    height: 39px !important;
+}
+
+/* 기상 정보 확장 모달 및 내부 스크롤 가치가 반전 바인딩 스택 */
+.modal.weather-modal.active,
+.weather-modal-overlay.active,
+#weatherModal.active {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    z-index: 1020 !important;
+}
+
+#weatherModal.active .weather-modal-body {
+    display: flex !important;
+    flex-direction: column !important;
+    overflow-y: auto !important;
 }
