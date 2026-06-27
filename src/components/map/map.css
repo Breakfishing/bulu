@@ -345,7 +345,7 @@
 
 .header-left-title-box {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 4px;
     flex: 1;
     min-width: 0;
