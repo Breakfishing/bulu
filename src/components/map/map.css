@@ -441,7 +441,7 @@
 .detail-address-subtext {
     font-size: 14px;
     color: var(--text-muted);
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     text-align: left;
     width: 100%;
 }
