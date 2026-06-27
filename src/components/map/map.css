@@ -60,8 +60,6 @@
 
 .top-center-ctrl .app-icon {
     stroke: var(--text-main);
-    width: 20px;
-    height: 20px;
 }
 
 /* 지도 상단 우측 기능별 플로팅 버튼 그룹 */
