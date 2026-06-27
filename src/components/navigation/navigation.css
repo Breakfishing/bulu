@@ -1,0 +1,43 @@
+/* =========================================================================
+    GROUP 5: 하단 내비게이션 탭바
+   ========================================================================= */
+#bottom-nav {
+    height: var(--nav-height);
+    background-color: var(--bg-panel);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding-bottom: env(safe-area-inset-bottom);
+    position: relative;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--text-main);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    flex: 1;
+    height: 100%;
+    justify-content: center;
+}
+
+.nav-item.active {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+.nav-item.active .app-icon {
+    stroke: var(--primary-color);
+}
+
+.nav-label {
+    margin-top: 4px;
+}
+
+.padded-tab {
+    padding: 20px;
+}
