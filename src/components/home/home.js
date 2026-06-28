@@ -139,31 +139,21 @@ window.refreshHomeLocation = function (btnElement) {
   const selectEl = document.getElementById("hcHomeFavoriteSelect");
   if (!selectEl || !selectEl.value) return;
 
-  // SVG 내장 애니메이션 엘리먼트 직접 조준
-  const spinAni = document.getElementById("hcHomeSpinAction");
-  if (spinAni && typeof spinAni.beginElement === 'function') {
-    if (btnElement) {
-      btnElement.style.pointerEvents = "none";
-      btnElement.style.opacity = "0.5";
-    }
-    // 정중앙 축 회전 시작
-    spinAni.beginElement();
+  const icon = btnElement.querySelector(".hc-refresh-icon");
+  if (icon) {
+    btnElement.style.pointerEvents = "none";
+    icon.classList.add("hc-spin-anim");
   }
 
   const mainCardEl = document.querySelector(".hc-main-card");
-  if (mainCardEl) {
-    mainCardEl.style.transition = "opacity 0.2s ease";
-    mainCardEl.style.opacity = "0.4";
-  }
+  if (mainCardEl) mainCardEl.style.opacity = "0.4";
 
   if (selectEl.value === "my_location") {
     if (window.userLatLng) {
       window.updateHomeCardByLocation(window.userLatLng.lat, window.userLatLng.lng);
     } else {
-      if (btnElement) {
-        btnElement.style.pointerEvents = "auto"; btnElement.style.opacity = "1";
-        if (spinAni && typeof spinAni.endElement === 'function') spinAni.endElement();
-      }
+      if (icon) icon.classList.remove("hc-spin-anim");
+      btnElement.style.pointerEvents = "auto";
       if (mainCardEl) mainCardEl.style.opacity = "1";
       return;
     }
@@ -173,11 +163,8 @@ window.refreshHomeLocation = function (btnElement) {
   }
 
   setTimeout(() => {
-    if (btnElement) {
-      btnElement.style.pointerEvents = "auto"; btnElement.style.opacity = "1";
-      // 2초 뒤 정지
-      if (spinAni && typeof spinAni.endElement === 'function') spinAni.endElement();
-    }
+    if (icon) icon.classList.remove("hc-spin-anim");
+    btnElement.style.pointerEvents = "auto";
   }, 2000);
 };
 
