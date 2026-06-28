@@ -272,24 +272,11 @@
                             <text x="20" y="214" class="hc-txt-muted hc-txt-shadow hc-ocean-summary"
                                 font-size="11">--.-°C · --.-m · -- · -.-m/s</text>
 
-                            <g class="hc-home-refresh-btn" transform="translate(365, 211)" cursor="pointer"
-    onclick="window.refreshHomeLocation(this)">
+                            <g class="hc-home-refresh-btn" transform="translate(365, 211)" cursor="pointer" onclick="window.refreshHomeLocation(this)">
     <circle cx="10" cy="10" r="16" fill="transparent" />
-    
-    <g class="hc-refresh-icon-target">
-        <path d="M 10,2.5 A 7.5,7.5 0 1,1 2.9,4.7" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
-        <polygon points="10,0 14,3 10,6" fill="#ffffff" transform="translate(0, -0.5)" />
-        
-        <animateTransform 
-            attributeName="transform" 
-            type="rotate" 
-            from="0 10 10" 
-            to="360 10 10" 
-            dur="1s" 
-            repeatCount="indefinite" 
-            begin="indefinite" 
-            id="hcHomeSpinAction" />
-    </g>
+    <path class="hc-refresh-icon" 
+          d="M 10,2.5 A 7.5,7.5 0 1,1 3,5 L 6,2 M 6,5 L 3,5 L 3,2" 
+          fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
 </g>
                         </svg>
                     </div>
