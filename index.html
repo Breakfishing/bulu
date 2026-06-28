@@ -196,7 +196,7 @@
                                 class="hc-lighthouse-fallback" />
                             <polygon points="201,168 206,162 211,168" fill="#475569" class="hc-lighthouse-fallback" />
 
-                            <g id="hc-moon-phase-group" transform="translate(186, 51)" class="hc-moon-node">
+                            <g fill="none" stroke="none" id="hc-moon-phase-group" transform="translate(186, 51)" class="hc-moon-node">
                             </g>
 
                             <g transform="rotate(3, 200, 125)" class="hc-rain-layer">
@@ -268,14 +268,13 @@
                                     fill="#ffdd00">--물</text>
                             </g>
 
-                            <text x="20" y="174" class="hc-txt-white hc-txt-shadow hc-wave" font-size="11"
-                                font-weight="700">파고 --.-m</text>
-                            <text x="20" y="194" class="hc-txt-white hc-txt-shadow hc-water-temp" font-size="11"
-                                font-weight="700">수온 --.-°C</text>
-                            <text x="20" y="214" class="hc-txt-white hc-txt-shadow hc-tide-low" font-size="11"
+                            <text x="20" y="174" class="hc-txt-white hc-txt-shadow hc-tide-status" font-size="11"
+                                font-weight="700">물때 계산중</text>
+                            <text x="20" y="194" class="hc-txt-white hc-txt-shadow hc-tide-low" font-size="11"
                                 font-weight="700">간조 --:-- ▼--cm</text>
                             <text x="20" y="234" class="hc-txt-white hc-txt-shadow hc-tide-high" font-size="11"
                                 font-weight="700">만조 --:-- ▲--cm</text>
+                            <text x="20" y="214" class="hc-txt-muted hc-txt-shadow hc-ocean-summary" font-size="11">--.-°C · --.-m · --- · -.-m/s</text>
 
                             <g class="hc-home-refresh-btn" transform="translate(365, 211)" cursor="pointer"
                                 onclick="window.refreshHomeLocation(this)">
@@ -1018,7 +1017,7 @@
                 </div>
             </div>
         </div>
-        <div class="modal-action-row-grid">
+        <div class="modal-form-group">
             <button type="button" class="modal-btn cancel" onclick="window.closeModals()">취소</button>
             <button type="button" class="modal-btn save" onclick="window.saveCategoryEditData()">수정 완료</button>
         </div>
