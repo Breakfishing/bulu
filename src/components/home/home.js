@@ -326,24 +326,24 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     return timeA - timeB;
   });
 
-  let tideLowText = "간조 --:-- ▼--cm", tideHighText = "만조 --:-- ▲--cm";
+  let tideLowText = "간조 --:-- ▼--", tideHighText = "만조 --:-- ▲--";
   let firstEvType = "간조";
 
   if (futureEvents.length >= 1) {
     const ev1 = futureEvents[0];
     firstEvType = ev1.type;
-    const restStr = `${ev1.time} ${ev1.type === "만조" ? "▲" : "▼"}${ev1.level || ev1.value || "--"}cm`;
+    const restStr = `${ev1.time} ${ev1.type === "만조" ? "▲" : "▼"}${ev1.level || ev1.value || "--"}`;
     if (ev1.type === '간조') tideLowText = `간조 ${restStr}`;
     else tideHighText = `만조 ${restStr}`;
   }
   if (futureEvents.length >= 2) {
     const ev2 = futureEvents[1];
-    const restStr = `${ev2.time} ${ev2.type === "만조" ? "▲" : "▼"}${ev2.level || ev2.value || "--"}cm`;
+    const restStr = `${ev2.time} ${ev2.type === "만조" ? "▲" : "▼"}${ev2.level || ev2.value || "--"}`;
     if (ev2.type === '간조') tideLowText = `간조 ${restStr}`;
     else tideHighText = `만조 ${restStr}`;
   }
 
-  let detailedTideStatus = "---";
+  let detailedTideStatus = "--";
   if (targetTides && targetTides.length > 0) {
     const getEventTime = (ev) => ev.rawDt ? new Date(ev.rawDt.replace(/-/g, '/')).getTime() : (nowMs + ev.hoursFromNow * 60 * 60 * 1000);
     const sortedTides = [...targetTides].sort((a, b) => getEventTime(a) - getEventTime(b));
@@ -481,8 +481,8 @@ window.fallbackHomeDataLoad = function () {
   if (existingTemp !== "" && existingTemp !== "--°C") return;
   window.applyHomeCardDOM({
     timeStr: window.getFormattedCurrentTime(), temp: "--°C", weather: "정보없음", rain: "강수 0mm (0%)", wind: "--- · -.-m/s",
-    sunrise: "일출 --:--", sunset: "일몰 --:--", tideIdx: "--물", wave: "파고 --.-m", waterTemp: "수온 --.-°C", tideLow: "간조 --:-- ▼--cm", tideHigh: "만조 --:-- ▲--cm",
-    detailedTide: "---", oceanSummary: "--.-°C · --.-m · - · -.-m/s", firstEvType: "간조"
+    sunrise: "일출 --:--", sunset: "일몰 --:--", tideIdx: "--물", wave: "파고 --.-m", waterTemp: "수온 --.-°C", tideLow: "간조 --:-- ▼--", tideHigh: "만조 --:-- ▲--",
+    detailedTide: "--", oceanSummary: "--.-°C · --.-m · - · -.-m/s", firstEvType: "간조"
   });
 };
 
