@@ -242,7 +242,7 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
   const currentSunrise = sunTimes.sunrise ? `일출 ${sunTimes.sunrise}` : "일출 --:--";
   const currentSunset = sunTimes.sunset ? `일몰 ${sunTimes.sunset}` : "일몰 --:--";
 
-  let currentTemp = "--°C", currentWeather = "맑음", currentRain = "강수 0mm(0%)", currentWind = "--- · -.-m/s";
+  let currentTemp = "--°C", currentWeather = "맑음", currentRain = "강수 0mm (0%)", currentWind = "--- · -.-m/s";
   let wtVal = "--.-°C", wvVal = "--.-m", dirVal = "-", spVal = "-.-m/s";
 
   let kma = getWeatherData(weatherMap, kmaKey);
@@ -255,7 +255,7 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     let popVal = kma.POP ? `${kma.POP}%` : "0%";
     let pcpVal = kma.PCP === '강수없음' ? '0mm' : (kma.PCP || '0mm');
     if (pcpVal !== '0mm' && !pcpVal.includes('mm')) { pcpVal = pcpVal + 'mm'; }
-    currentRain = `강수 ${pcpVal}(${popVal})`;
+    currentRain = `강수 ${pcpVal} (${popVal})`;
     
     if (kma.WAV) { wvVal = `${parseFloat(kma.WAV).toFixed(1)}m`; } else if (seaKma && seaKma.WAV) { wvVal = `${parseFloat(seaKma.WAV).toFixed(1)}m`; }
     
@@ -480,7 +480,7 @@ window.fallbackHomeDataLoad = function () {
   const existingTemp = document.querySelector(".hc-premium-card .hc-temp")?.textContent || "";
   if (existingTemp !== "" && existingTemp !== "--°C") return;
   window.applyHomeCardDOM({
-    timeStr: window.getFormattedCurrentTime(), temp: "--°C", weather: "정보없음", rain: "강수 0mm(0%)", wind: "--- · -.-m/s",
+    timeStr: window.getFormattedCurrentTime(), temp: "--°C", weather: "정보없음", rain: "강수 0mm (0%)", wind: "--- · -.-m/s",
     sunrise: "일출 --:--", sunset: "일몰 --:--", tideIdx: "--물", wave: "파고 --.-m", waterTemp: "수온 --.-°C", tideLow: "간조 --:-- ▼--cm", tideHigh: "만조 --:-- ▲--cm",
     detailedTide: "---", oceanSummary: "--.-°C · --.-m · - · -.-m/s", firstEvType: "간조"
   });
