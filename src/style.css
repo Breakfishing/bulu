@@ -2172,7 +2172,6 @@ textarea,
     GROUP 12: 새로고침 버튼 실시간 회전 애니메이션 및 기상 수정 레이어 셋
    ========================================================================= */
 .hc-refresh-icon {
-    transform-origin: 10px 10px;
     transform-box: fill-box;
     transition: opacity 0.2s;
 }
