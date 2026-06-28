@@ -143,14 +143,15 @@ window.refreshHomeLocation = function (btnElement) {
   if (btnElement) {
     btnElement.style.pointerEvents = "none";
     btnElement.style.opacity = "0.5";
-    // 회전 화살표가 그려진 순수 path 엘리먼트만 정확히 조준
-    const pathIcon = btnElement.querySelector("path");
-    if (pathIcon) {
-      pathIcon.classList.add("hc-spin-anim");
-      // SVG 내부 path가 제자리에서 회전하도록 중심 축 강제 바인딩
-      pathIcon.style.transformOrigin = "center";
-      pathIcon.style.transformBox = "fill-box";
-      targetIcon = pathIcon;
+    
+    // 정밀 축이 설정된 내부 g 태그 타겟팅
+    const iconGroup = btnElement.querySelector(".hc-refresh-icon-target");
+    if (iconGroup) {
+      iconGroup.classList.add("hc-spin-anim");
+      // SVG 내에서 제자리 회전이 가능하도록 중심축 명시적 강제 선언
+      iconGroup.style.transformOrigin = "10px 10px";
+      iconGroup.style.transformBox = "fill-box";
+      targetIcon = iconGroup;
     }
   }
 
