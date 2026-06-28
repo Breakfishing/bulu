@@ -1,9 +1,5 @@
 // =========================================================================
-// [MODULE] 홈 화면 프리미엄 웨더 대시보드 및 오픈 API 실시간 캐싱 엔진 (src/components/home/home.js)
-// =========================================================================
-
-// =========================================================================
-// [RESTORED AREA] 홈 레이어 연동용 조석 관측소 데이터 스택
+// [TAB AREA 1] 홈 화면 프리미엄 웨더 대시보드 및 오픈 API 실시간 캐싱 엔진
 // =========================================================================
 const TIDE_STATIONS = [
   { code: 'DT_0005', name: '부산', lat: 35.0975, lng: 129.0369 },
@@ -15,9 +11,6 @@ const TIDE_STATIONS = [
   { code: 'DT_0012', name: '포항', lat: 36.0442, lng: 129.3839 }
 ];
 
-// =========================================================================
-// [TAB AREA 1] 홈 화면 프리미엄 웨더 대시보드 및 오픈 API 실시간 캐싱 엔진
-// =========================================================================
 window.HOME_CARD_CACHE_KEY = "home_card_weather_tide_data";
 window.HOME_SELECTED_FAV_KEY = "home_selected_favorite_id";
 window.CACHE_EXPIRE_TIME = 60 * 60 * 1000;
@@ -240,6 +233,7 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
   const currentSunset = sunTimes.sunset ? `일몰 ${sunTimes.sunset}` : "일몰 --:--";
 
   let currentTemp = "--°C", currentWeather = "맑음", currentRain = "강수 --mm (--%)", currentWind = "--- · -.-m/s", currentWave = "파고 --.-m", currentWaterTemp = "수온 --.-°C";
+  let currentCrdir = "유향 ---", currentCrsp = "유속 --m/s";
 
   let kma = findLatestData(weatherMap, kmaKey);
   let seaKma = findLatestData(seaWeatherMap, kmaKey);
@@ -273,24 +267,36 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     currentWave = `파고 ${parseFloat(seaKma.WAV).toFixed(1)}m`;
   }
 
-  const wTemp = findLatestData(waterTempMap, kmaKey);
-  if (wTemp) currentWaterTemp = `수온 ${wTemp}`;
+  const wTempObj = findLatestData(waterTempMap?.details, kmaKey);
+  if (wTempObj) {
+    currentWaterTemp = `수온 ${wTempObj.wtemp || "--.-°C"}`;
+    if (wTempObj.crdir !== null && wTempObj.crdir !== undefined) {
+      const d = wTempObj.crdir;
+      const crdirVal = (d >= 337.5 || d < 22.5) ? "북" : (d < 67.5) ? "북동" : (d < 112.5) ? "동" : (d < 157.5) ? "남동" : (d < 202.5) ? "남" : (d < 247.5) ? "남서" : (d < 292.5) ? "서" : "북서";
+      currentCrdir = `유향 ${crdirVal}`;
+    }
+    if (wTempObj.crsp) currentCrsp = `유속 ${wTempObj.crsp}`;
+  } else {
+    const wTempSimple = findLatestData(waterTempMap, kmaKey);
+    if (wTempSimple) currentWaterTemp = `수온 ${wTempSimple}`;
+  }
 
   let tideLowText = "조석 정보 대기중", tideHighText = "조석 정보 대기중";
   let targetTides = realTides || [];
+  const nowMs = now.getTime();
+
   if (targetTides.length === 0) {
     let dummyTides = [];
     for (let k = 0; k < 4; k++) {
       let xHigh = 112 * (Math.PI / 2 + 2 * k * Math.PI); let xLow = 112 * (3 * Math.PI / 2 + 2 * k * Math.PI);
-      let hH = xHigh / 56; let dH = new Date(now.getTime() + hH * 60 * 60 * 1000);
-      let hL = xLow / 56; let dL = new Date(now.getTime() + hL * 60 * 60 * 1000);
+      let hH = xHigh / 56; let dH = new Date(nowMs + hH * 60 * 60 * 1000);
+      let hL = xLow / 56; let dL = new Date(nowMs + hL * 60 * 60 * 1000);
       dummyTides.push({ type: '만조', time: `${String(dH.getHours()).padStart(2, '0')}:${String(dH.getMinutes()).padStart(2, '0')}`, level: '270', hoursFromNow: hH, rawDt: dH.toISOString() });
       dummyTides.push({ type: '간조', time: `${String(dL.getHours()).padStart(2, '0')}:${String(dL.getMinutes()).padStart(2, '0')}`, level: '50', hoursFromNow: hL, rawDt: dL.toISOString() });
     }
     targetTides = dummyTides;
   }
 
-  const nowMs = now.getTime();
   let futureEvents = targetTides.filter(ev => {
     const evTime = ev.rawDt ? new Date(ev.rawDt.replace(/-/g, '/')).getTime() : (nowMs + ev.hoursFromNow * 60 * 60 * 1000);
     return evTime >= nowMs;
@@ -304,7 +310,6 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
   if (futureEvents.length >= 1) { const ev1 = futureEvents[0]; tideLowText = `${ev1.type} ${ev1.time} ${ev1.type === "만조" ? "▲" : "▼"}${ev1.level || ev1.value || "--"}cm`; }
   if (futureEvents.length >= 2) { const ev2 = futureEvents[1]; tideHighText = `${ev2.type} ${ev2.time} ${ev2.type === "만조" ? "▲" : "▼"}${ev2.level || ev2.value || "--"}cm`; } else { tideHighText = ""; }
 
-  // 상세 실시간 변동 물때 흐름 분석 엔진 (초들물, 중들물, 끝들물 / 초썰물, 중썰물, 끝썰물)
   let detailedTideStatus = "---";
   if (targetTides && targetTides.length > 0) {
     const getEventTime = (ev) => ev.rawDt ? new Date(ev.rawDt.replace(/-/g, '/')).getTime() : (nowMs + ev.hoursFromNow * 60 * 60 * 1000);
@@ -360,8 +365,8 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
 
   return {
     timeStr: window.getFormattedCurrentTime(), temp: currentTemp, weather: currentWeather, rain: currentRain, wind: currentWind,
-    sunrise: currentSunrise, sunset: currentSunset, tideIdx: `${currentTideIdx} (${detailedTideStatus})`, wave: currentWave, waterTemp: currentWaterTemp, tideLow: tideLowText, tideHigh: tideHighText,
-    detailedTide: detailedTideStatus
+    sunrise: currentSunrise, sunset: currentSunset, tideIdx: currentTideIdx, wave: currentWave, waterTemp: currentWaterTemp, tideLow: tideLowText, tideHigh: tideHighText,
+    detailedTide: detailedTideStatus, crdir: currentCrdir, crsp: currentCrsp
   };
 };
 
@@ -371,8 +376,34 @@ window.applyHomeCardDOM = function (payload) {
 
   setTxt(".hc-temp", payload.temp); setTxt(".hc-weather", payload.weather); setTxt(".hc-rain", payload.rain); setTxt(".hc-wind", payload.wind);
   setTxt(".hc-sunrise", payload.sunrise); setTxt(".hc-sunset", payload.sunset); setTxt(".hc-tide-idx", payload.tideIdx); setTxt(".hc-wave", payload.wave);
-  setTxt(".hc-water-temp", payload.waterTemp); setTxt(".hc-tide-low", payload.tideLow); setTxt(".hc-tide-high", payload.tideHigh);
-  setTxt(".hc-tide-status", payload.detailedTide);
+  setTxt(".hc-water-temp", payload.waterTemp); setTxt(".hc-tide-status", payload.detailedTide);
+  setTxt(".hc-crdir", payload.crdir); setTxt(".hc-crsp", payload.crsp);
+
+  const setTideTxt = (className, val) => {
+    const el = document.querySelector(`.hc-premium-card ${className}`);
+    if (!el) return;
+    if (!val) { el.textContent = ""; return; }
+    const parts = val.split(" ");
+    if (parts.length > 1) {
+      const label = parts[0];
+      const rest = parts.slice(1).join(" ");
+      el.innerHTML = `${label} <span class="hc-txt-muted">${rest}</span>`;
+    } else {
+      el.textContent = val;
+    }
+  };
+  setTideTxt(".hc-tide-low", payload.tideLow);
+  setTideTxt(".hc-tide-high", payload.tideHigh);
+
+  const lowEl = document.querySelector(".hc-premium-card .hc-tide-low");
+  const highEl = document.querySelector(".hc-premium-card .hc-tide-high");
+  const summaryEl = document.querySelector(".hc-premium-card .hc-ocean-summary");
+  if (lowEl && highEl && summaryEl) {
+    const parent = lowEl.parentNode;
+    parent.appendChild(lowEl);
+    parent.appendChild(highEl);
+    parent.appendChild(summaryEl);
+  }
 
   const timeEl = document.getElementById("hcHomeRefreshTime");
   if (timeEl) timeEl.textContent = `${payload.timeStr} 기준`;
@@ -413,7 +444,8 @@ window.fallbackHomeDataLoad = function () {
   if (existingTemp !== "" && existingTemp !== "--°C") return;
   window.applyHomeCardDOM({
     timeStr: window.getFormattedCurrentTime(), temp: "--°C", weather: "정보없음", rain: "강수 --mm (--%)", wind: "--- · -.-m/s",
-    sunrise: "일출 --:--", sunset: "일몰 --:--", tideIdx: "--물", wave: "파고 --.-m", waterTemp: "수온 --.-°C", tideLow: "간조 --:-- ▼--cm", tideHigh: "만조 --:-- ▲--cm", detailedTide: "---"
+    sunrise: "일출 --:--", sunset: "일몰 --:--", tideIdx: "--물", wave: "파고 --.-m", waterTemp: "수온 --.-°C", tideLow: "간조 --:-- ▼--cm", tideHigh: "만조 --:-- ▲--cm",
+    detailedTide: "---", crdir: "유향 ---", crsp: "유속 --m/s"
   });
 };
 
