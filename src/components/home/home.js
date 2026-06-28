@@ -139,19 +139,15 @@ window.refreshHomeLocation = function (btnElement) {
   const selectEl = document.getElementById("hcHomeFavoriteSelect");
   if (!selectEl || !selectEl.value) return;
 
-  let targetIcon = null;
-  if (btnElement) {
-    btnElement.style.pointerEvents = "none";
-    btnElement.style.opacity = "0.5";
-    
-    // 완벽한 대칭축을 갖춘 일체형 단일 패스 타겟팅
-    const singlePathIcon = btnElement.querySelector(".hc-refresh-icon-target");
-    if (singlePathIcon) {
-      singlePathIcon.classList.add("hc-spin-anim");
-      // 요소 내부의 로컬 10px, 10px 정중앙 점을 회전 바인딩 축으로 못박음
-      singlePathIcon.style.transformBox = "fill-box";
-      targetIcon = singlePathIcon;
+  // SVG 내장 애니메이션 엘리먼트 직접 조준
+  const spinAni = document.getElementById("hcHomeSpinAction");
+  if (spinAni && typeof spinAni.beginElement === 'function') {
+    if (btnElement) {
+      btnElement.style.pointerEvents = "none";
+      btnElement.style.opacity = "0.5";
     }
+    // 정중앙 축 회전 시작
+    spinAni.beginElement();
   }
 
   const mainCardEl = document.querySelector(".hc-main-card");
@@ -166,7 +162,7 @@ window.refreshHomeLocation = function (btnElement) {
     } else {
       if (btnElement) {
         btnElement.style.pointerEvents = "auto"; btnElement.style.opacity = "1";
-        if (targetIcon) targetIcon.classList.remove("hc-spin-anim");
+        if (spinAni && typeof spinAni.endElement === 'function') spinAni.endElement();
       }
       if (mainCardEl) mainCardEl.style.opacity = "1";
       return;
@@ -179,7 +175,8 @@ window.refreshHomeLocation = function (btnElement) {
   setTimeout(() => {
     if (btnElement) {
       btnElement.style.pointerEvents = "auto"; btnElement.style.opacity = "1";
-      if (targetIcon) targetIcon.classList.remove("hc-spin-anim");
+      // 2초 뒤 정지
+      if (spinAni && typeof spinAni.endElement === 'function') spinAni.endElement();
     }
   }, 2000);
 };
