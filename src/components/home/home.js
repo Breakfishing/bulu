@@ -187,6 +187,10 @@ window.refreshHomeLocation = function (btnElement) {
   }, 2000);
 };
 
+// =========================================================================
+// [TAB AREA 1] 홈 화면 프리미엄 웨더 대시보드 및 오픈 API 실시간 캐싱 엔진
+// =========================================================================
+
 window.fetchAllPublicOpenAPI = async function (lat, lng) {
   const now = new Date();
   const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
@@ -350,17 +354,4 @@ window.applyHomeCardDOM = function (payload) {
       else if (payload.weather.includes("흐림")) mainCardEl.classList.add("cloudy");
     }
   }
-};
-
-window.fallbackHomeDataLoad = function () {
-  const existingTemp = document.querySelector(".hc-premium-card .hc-temp")?.textContent || "";
-  if (existingTemp !== "" && existingTemp !== "--°C") return;
-  window.applyHomeCardDOM({
-    timeStr: window.getFormattedCurrentTime(), temp: "--°C", weather: "정보없음", rain: "강수 --mm (--%)", wind: "--- · -.-m/s",
-    sunrise: "일출 --:--", sunset: "일몰 --:--", tideIdx: "--물", wave: "파고 --.-m", waterTemp: "수온 --.-°C", tideLow: "간조 --:-- ▼--cm", tideHigh: "만조 --:-- ▲--cm"
-  });
-};
-
-window.getFormattedCurrentTime = function () {
-  const now = new Date(); return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 };
