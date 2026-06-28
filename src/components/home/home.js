@@ -144,14 +144,13 @@ window.refreshHomeLocation = function (btnElement) {
     btnElement.style.pointerEvents = "none";
     btnElement.style.opacity = "0.5";
     
-    // 정밀 축이 설정된 내부 g 태그 타겟팅
-    const iconGroup = btnElement.querySelector(".hc-refresh-icon-target");
-    if (iconGroup) {
-      iconGroup.classList.add("hc-spin-anim");
-      // SVG 내에서 제자리 회전이 가능하도록 중심축 명시적 강제 선언
-      iconGroup.style.transformOrigin = "10px 10px";
-      iconGroup.style.transformBox = "fill-box";
-      targetIcon = iconGroup;
+    // 완벽한 대칭축을 갖춘 일체형 단일 패스 타겟팅
+    const singlePathIcon = btnElement.querySelector(".hc-refresh-icon-target");
+    if (singlePathIcon) {
+      singlePathIcon.classList.add("hc-spin-anim");
+      // 요소 내부의 로컬 10px, 10px 정중앙 점을 회전 바인딩 축으로 못박음
+      singlePathIcon.style.transformBox = "fill-box";
+      targetIcon = singlePathIcon;
     }
   }
 
