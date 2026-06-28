@@ -258,4 +258,205 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     let dirVal = "↓";
     if (kma.VEC) {
       const deg = parseFloat(kma.VEC);
-      if (deg >= 337.5 || deg < 22.5
+      if (deg >= 337.5 || deg < 22.5) dirVal = "북풍";
+      else if (deg >= 22.5 && deg < 67.5) dirVal = "북동풍";
+      else if (deg >= 67.5 && deg < 112.5) dirVal = "동풍";
+      else if (deg >= 112.5 && deg < 157.5) dirVal = "남동풍";
+      else if (deg >= 157.5 && deg < 202.5) dirVal = "남풍";
+      else if (deg >= 202.5 && deg < 247.5) dirVal = "남서풍";
+      else if (deg >= 247.5 && deg < 292.5) dirVal = "서풍";
+      else if (deg >= 292.5 && deg < 337.5) dirVal = "북서풍";
+    }
+    currentWind = `${dirVal} · ${windVal}`;
+
+    if (kma.PTY && kma.PTY !== "0") { currentWeather = kma.PTY === "3" ? "눈" : "비"; }
+    else if (kma.SKY === "3") { currentWeather = "구름많음"; }
+    else if (kma.SKY === "4") { currentWeather = "흐림"; }
+    else { currentWeather = "맑음"; }
+  } else if (seaKma && seaKma.WAV) {
+    currentWave = `파고 ${parseFloat(seaKma.WAV).toFixed(1)}m`;
+  }
+
+  const wTempObj = getWeatherData(waterTempMap?.details, kmaKey);
+  if (wTempObj) {
+    currentWaterTemp = `수온 ${wTempObj.wtemp || "--.-°C"}`;
+    if (wTempObj.crdir !== null && wTempObj.crdir !== undefined) {
+      const d = wTempObj.crdir;
+      const crdirVal = (d >= 337.5 || d < 22.5) ? "북" : (d < 67.5) ? "북동" : (d < 112.5) ? "동" : (d < 157.5) ? "남동" : (d < 202.5) ? "남" : (d < 247.5) ? "남서" : (d < 292.5) ? "서" : "북서";
+      currentCrdir = `유향 ${crdirVal}`;
+    }
+    if (wTempObj.crsp) currentCrsp = `유속 ${wTempObj.crsp}`;
+  } else {
+    const wTempSimple = getWeatherData(waterTempMap, kmaKey);
+    if (wTempSimple && typeof wTempSimple === 'string') currentWaterTemp = `수온 ${wTempSimple}`;
+  }
+
+  let tideLowText = "조석 정보 대기중", tideHighText = "조석 정보 대기중";
+  let targetTides = realTides || [];
+  const nowMs = now.getTime();
+
+  if (targetTides.length === 0) {
+    let dummyTides = [];
+    for (let k = 0; k < 4; k++) {
+      let xHigh = 112 * (Math.PI / 2 + 2 * k * Math.PI); let xLow = 112 * (3 * Math.PI / 2 + 2 * k * Math.PI);
+      let hH = xHigh / 56; let dH = new Date(nowMs + hH * 60 * 60 * 1000);
+      let hL = xLow / 56; let dL = new Date(nowMs + hL * 60 * 60 * 1000);
+      dummyTides.push({ type: '만조', time: `${String(dH.getHours()).padStart(2, '0')}:${String(dH.getMinutes()).padStart(2, '0')}`, level: '270', hoursFromNow: hH, rawDt: dH.toISOString() });
+      dummyTides.push({ type: '간조', time: `${String(dL.getHours()).padStart(2, '0')}:${String(dL.getMinutes()).padStart(2, '0')}`, level: '50', hoursFromNow: hL, rawDt: dL.toISOString() });
+    }
+    targetTides = dummyTides;
+  }
+
+  let futureEvents = targetTides.filter(ev => {
+    const evTime = ev.rawDt ? new Date(ev.rawDt.replace(/-/g, '/')).getTime() : (nowMs + ev.hoursFromNow * 60 * 60 * 1000);
+    return evTime >= nowMs;
+  });
+  futureEvents.sort((a, b) => {
+    const timeA = a.rawDt ? new Date(a.rawDt.replace(/-/g, '/')).getTime() : (nowMs + a.hoursFromNow * 60 * 60 * 1000);
+    const timeB = b.rawDt ? new Date(b.rawDt.replace(/-/g, '/')).getTime() : (nowMs + b.hoursFromNow * 60 * 60 * 1000);
+    return timeA - timeB;
+  });
+
+  if (futureEvents.length >= 1) { const ev1 = futureEvents[0]; tideLowText = `${ev1.type} ${ev1.time} ${ev1.type === "만조" ? "▲" : "▼"}${ev1.level || ev1.value || "--"}cm`; }
+  if (futureEvents.length >= 2) { const ev2 = futureEvents[1]; tideHighText = `${ev2.type} ${ev2.time} ${ev2.type === "만조" ? "▲" : "▼"}${ev2.level || ev2.value || "--"}cm`; } else { tideHighText = ""; }
+
+  let detailedTideStatus = "---";
+  if (targetTides && targetTides.length > 0) {
+    const getEventTime = (ev) => ev.rawDt ? new Date(ev.rawDt.replace(/-/g, '/')).getTime() : (nowMs + ev.hoursFromNow * 60 * 60 * 1000);
+    const sortedTides = [...targetTides].sort((a, b) => getEventTime(a) - getEventTime(b));
+    
+    let prevEv = null;
+    let nextEv = null;
+    
+    for (let i = 0; i < sortedTides.length; i++) {
+      const evTime = getEventTime(sortedTides[i]);
+      if (evTime <= nowMs) {
+        prevEv = sortedTides[i];
+      } else if (evTime > nowMs && !nextEv) {
+        nextEv = sortedTides[i];
+        break;
+      }
+    }
+    
+    if (prevEv && nextEv) {
+      const prevTime = getEventTime(prevEv);
+      const nextTime = getEventTime(nextEv);
+      const totalDuration = nextTime - prevTime;
+      const elapsed = nowMs - prevTime;
+      const ratio = totalDuration > 0 ? (elapsed / totalDuration) : 0;
+      
+      if (prevEv.type === '간조') {
+        if (ratio < 1/3) detailedTideStatus = "초들물";
+        else if (ratio < 2/3) detailedTideStatus = "중들물";
+        else detailedTideStatus = "끝들물";
+      } else if (prevEv.type === '만조') {
+        if (ratio < 1/3) detailedTideStatus = "초썰물";
+        else if (ratio < 2/3) detailedTideStatus = "중썰물";
+        else detailedTideStatus = "끝썰물";
+      }
+    } else if (nextEv) {
+      const nextTime = getEventTime(nextEv);
+      const prevTime = nextTime - (6 * 60 * 60 * 1000);
+      const totalDuration = nextTime - prevTime;
+      const elapsed = nowMs - prevTime;
+      const ratio = Math.max(0, Math.min(1, totalDuration > 0 ? (elapsed / totalDuration) : 0));
+      
+      if (nextEv.type === '만조') {
+        if (ratio < 1/3) detailedTideStatus = "초들물";
+        else if (ratio < 2/3) detailedTideStatus = "중들물";
+        else detailedTideStatus = "끝들물";
+      } else {
+        if (ratio < 1/3) detailedTideStatus = "초썰물";
+        else if (ratio < 2/3) detailedTideStatus = "중썰물";
+        else detailedTideStatus = "끝썰물";
+      }
+    }
+  }
+
+  return {
+    timeStr: window.getFormattedCurrentTime(), temp: currentTemp, weather: currentWeather, rain: currentRain, wind: currentWind,
+    sunrise: currentSunrise, sunset: currentSunset, tideIdx: currentTideIdx, wave: currentWave, waterTemp: currentWaterTemp, tideLow: tideLowText, tideHigh: tideHighText,
+    detailedTide: detailedTideStatus, crdir: currentCrdir, crsp: currentCrsp
+  };
+};
+
+window.applyHomeCardDOM = function (payload) {
+  if (!payload) return;
+  const setTxt = (className, val) => { const el = document.querySelector(`.hc-premium-card ${className}`); if (el) el.textContent = val; };
+
+  setTxt(".hc-temp", payload.temp); setTxt(".hc-weather", payload.weather); setTxt(".hc-rain", payload.rain); setTxt(".hc-wind", payload.wind);
+  setTxt(".hc-sunrise", payload.sunrise); setTxt(".hc-sunset", payload.sunset); setTxt(".hc-tide-idx", payload.tideIdx); setTxt(".hc-wave", payload.wave);
+  setTxt(".hc-water-temp", payload.waterTemp); setTxt(".hc-tide-status", payload.detailedTide);
+  setTxt(".hc-crdir", payload.crdir); setTxt(".hc-crsp", payload.crsp);
+
+  const setTideTxt = (className, val) => {
+    const el = document.querySelector(`.hc-premium-card ${className}`);
+    if (!el) return;
+    if (!val) { el.textContent = ""; return; }
+    const parts = val.split(" ");
+    if (parts.length > 1) {
+      const label = parts[0];
+      const rest = parts.slice(1).join(" ");
+      el.innerHTML = `${label} <span class="hc-txt-muted">${rest}</span>`;
+    } else {
+      el.textContent = val;
+    }
+  };
+  setTideTxt(".hc-tide-low", payload.tideLow);
+  setTideTxt(".hc-tide-high", payload.tideHigh);
+
+  const lowEl = document.querySelector(".hc-premium-card .hc-tide-low");
+  const highEl = document.querySelector(".hc-premium-card .hc-tide-high");
+  const summaryEl = document.querySelector(".hc-premium-card .hc-ocean-summary");
+  if (lowEl && highEl && summaryEl) {
+    lowEl.after(highEl);
+    highEl.after(summaryEl);
+  }
+
+  const timeEl = document.getElementById("hcHomeRefreshTime");
+  if (timeEl) timeEl.textContent = `${payload.timeStr} 기준`;
+
+  const mainCardEl = document.querySelector(".hc-main-card");
+  if (mainCardEl) {
+    mainCardEl.classList.remove("day", "night", "sunset", "snow", "rain", "cloudy");
+    const nowTime = new Date();
+    const kstFormatter = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', hour: 'numeric', minute: 'numeric', hour12: false });
+    const parts = kstFormatter.formatToParts(nowTime);
+    const kstHour = parseInt(parts.find(p => p.type === 'hour').value, 10);
+    const nowMin = kstHour * 60 + parseInt(parts.find(p => p.type === 'minute').value, 10);
+
+    const parseTimeToMinutes = (str) => { if (!str) return null; const match = str.match(/(\d{1,2}):(\d{2})/); return match ? parseInt(match[1], 10) * 60 + parseInt(match[2], 10) : null; };
+    const srMin = parseTimeToMinutes(payload.sunrise); const ssMin = parseTimeToMinutes(payload.sunset);
+
+    if (srMin !== null && ssMin !== null) {
+      if (nowMin >= srMin - 30 && nowMin < srMin + 60) mainCardEl.classList.add("sunset");
+      else if (nowMin >= ssMin - 60 && nowMin < ssMin + 30) mainCardEl.classList.add("sunset");
+      else if (nowMin >= srMin + 60 && nowMin < ssMin - 60) mainCardEl.classList.add("day");
+      else mainCardEl.classList.add("night");
+    } else {
+      if (kstHour >= 6 && kstHour < 17) mainCardEl.classList.add("day");
+      else if (kstHour >= 17 && kstHour < 20) mainCardEl.classList.add("sunset");
+      else mainCardEl.classList.add("night");
+    }
+
+    if (payload.weather) {
+      if (payload.weather.includes("눈")) mainCardEl.classList.add("snow");
+      else if (payload.weather.includes("비")) mainCardEl.classList.add("rain");
+      else if (payload.weather.includes("흐림")) mainCardEl.classList.add("cloudy");
+    }
+  }
+};
+
+window.fallbackHomeDataLoad = function () {
+  const existingTemp = document.querySelector(".hc-premium-card .hc-temp")?.textContent || "";
+  if (existingTemp !== "" && existingTemp !== "--°C") return;
+  window.applyHomeCardDOM({
+    timeStr: window.getFormattedCurrentTime(), temp: "--°C", weather: "정보없음", rain: "강수 --% --mm", wind: "--- · -.-m/s",
+    sunrise: "일출 --:--", sunset: "일몰 --:--", tideIdx: "--물", wave: "파고 --.-m", waterTemp: "수온 --.-°C", tideLow: "간조 --:-- ▼--cm", tideHigh: "만조 --:-- ▲--cm",
+    detailedTide: "---", crdir: "유향 ---", crsp: "유속 --m/s"
+  });
+};
+
+window.getFormattedCurrentTime = function () {
+  const now = new Date(); return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+};
