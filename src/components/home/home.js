@@ -237,8 +237,8 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
   const currentSunrise = sunTimes.sunrise ? `일출 ${sunTimes.sunrise}` : "일출 --:--";
   const currentSunset = sunTimes.sunset ? `일몰 ${sunTimes.sunset}` : "일몰 --:--";
 
-  let currentTemp = "--°C", currentWeather = "맑음", currentRain = "강수 --% --mm", currentWind = "--- · -.-m/s", currentWave = "파고 --.-m", currentWaterTemp = "수온 --.-°C";
-  let currentCrdir = "유향 ---", currentCrsp = "유속 --m/s";
+  let currentTemp = "--°C", currentWeather = "맑음", currentRain = "강수 0% 0mm", currentWind = "--- · -.-m/s";
+  let wtVal = "--.-°C", wvVal = "--.-m", dirVal = "-", spVal = "-.-m/s";
 
   let kma = getWeatherData(weatherMap, kmaKey);
   let seaKma = getWeatherData(seaWeatherMap, kmaKey);
@@ -252,46 +252,50 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     if (pcpVal !== '0mm' && !pcpVal.includes('mm')) { pcpVal = pcpVal + 'mm'; }
     currentRain = `강수 ${popVal} ${pcpVal}`;
     
-    if (kma.WAV) { currentWave = `파고 ${parseFloat(kma.WAV).toFixed(1)}m`; } else if (seaKma && seaKma.WAV) { currentWave = `파고 ${parseFloat(seaKma.WAV).toFixed(1)}m`; }
+    if (kma.WAV) { wvVal = `${parseFloat(kma.WAV).toFixed(1)}m`; } else if (seaKma && seaKma.WAV) { wvVal = `${parseFloat(seaKma.WAV).toFixed(1)}m`; }
     
     let windVal = kma.WSD ? parseFloat(kma.WSD).toFixed(0) + "m/s" : "-m/s";
-    let dirVal = "↓";
+    let windDir = "↓";
     if (kma.VEC) {
       const deg = parseFloat(kma.VEC);
-      if (deg >= 337.5 || deg < 22.5) dirVal = "북풍";
-      else if (deg >= 22.5 && deg < 67.5) dirVal = "북동풍";
-      else if (deg >= 67.5 && deg < 112.5) dirVal = "동풍";
-      else if (deg >= 112.5 && deg < 157.5) dirVal = "남동풍";
-      else if (deg >= 157.5 && deg < 202.5) dirVal = "남풍";
-      else if (deg >= 202.5 && deg < 247.5) dirVal = "남서풍";
-      else if (deg >= 247.5 && deg < 292.5) dirVal = "서풍";
-      else if (deg >= 292.5 && deg < 337.5) dirVal = "북서풍";
+      if (deg >= 337.5 || deg < 22.5) windDir = "북풍";
+      else if (deg >= 22.5 && deg < 67.5) windDir = "북동풍";
+      else if (deg >= 67.5 && deg < 112.5) windDir = "동풍";
+      else if (deg >= 112.5 && deg < 157.5) windDir = "남동풍";
+      else if (deg >= 157.5 && deg < 202.5) windDir = "남풍";
+      else if (deg >= 202.5 && deg < 247.5) windDir = "남서풍";
+      else if (deg >= 247.5 && deg < 292.5) windDir = "서풍";
+      else if (deg >= 292.5 && deg < 337.5) windDir = "북서풍";
     }
-    currentWind = `${dirVal} · ${windVal}`;
+    currentWind = `${windDir} · ${windVal}`;
 
     if (kma.PTY && kma.PTY !== "0") { currentWeather = kma.PTY === "3" ? "눈" : "비"; }
     else if (kma.SKY === "3") { currentWeather = "구름많음"; }
     else if (kma.SKY === "4") { currentWeather = "흐림"; }
     else { currentWeather = "맑음"; }
   } else if (seaKma && seaKma.WAV) {
-    currentWave = `파고 ${parseFloat(seaKma.WAV).toFixed(1)}m`;
+    wvVal = `${parseFloat(seaKma.WAV).toFixed(1)}m`;
   }
 
   const wTempObj = getWeatherData(waterTempMap?.details, kmaKey);
   if (wTempObj) {
-    currentWaterTemp = `수온 ${wTempObj.wtemp || "--.-°C"}`;
+    if (wTempObj.wtemp) {
+      wtVal = typeof wTempObj.wtemp === 'string' && wTempObj.wtemp.includes('°C') ? wTempObj.wtemp : `${parseFloat(wTempObj.wtemp).toFixed(1)}°C`;
+    }
     if (wTempObj.crdir !== null && wTempObj.crdir !== undefined) {
       const d = wTempObj.crdir;
-      const crdirVal = (d >= 337.5 || d < 22.5) ? "북" : (d < 67.5) ? "북동" : (d < 112.5) ? "동" : (d < 157.5) ? "남동" : (d < 202.5) ? "남" : (d < 247.5) ? "남서" : (d < 292.5) ? "서" : "북서";
-      currentCrdir = `유향 ${crdirVal}`;
+      dirVal = (d >= 337.5 || d < 22.5) ? "북" : (d < 67.5) ? "북동" : (d < 112.5) ? "동" : (d < 157.5) ? "남동" : (d < 202.5) ? "남" : (d < 247.5) ? "남서" : (d < 292.5) ? "서" : "북서";
     }
-    if (wTempObj.crsp) currentCrsp = `유속 ${wTempObj.crsp}`;
+    if (wTempObj.crsp) {
+      spVal = typeof wTempObj.crsp === 'string' && wTempObj.crsp.includes('m/s') ? wTempObj.crsp : `${parseFloat(wTempObj.crsp).toFixed(2)}m/s`;
+    }
   } else {
     const wTempSimple = getWeatherData(waterTempMap, kmaKey);
-    if (wTempSimple && typeof wTempSimple === 'string') currentWaterTemp = `수온 ${wTempSimple}`;
+    if (wTempSimple) wtVal = typeof wTempSimple === 'string' && wTempSimple.includes('°C') ? wTempSimple : `${parseFloat(wTempSimple).toFixed(1)}°C`;
   }
 
-  let tideLowText = "조석 정보 대기중", tideHighText = "조석 정보 대기중";
+  let oceanSummaryText = `${wtVal} · ${wvVal} · ${dirVal} · ${spVal}`;
+
   let targetTides = realTides || [];
   const nowMs = now.getTime();
 
@@ -317,8 +321,22 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
     return timeA - timeB;
   });
 
-  if (futureEvents.length >= 1) { const ev1 = futureEvents[0]; tideLowText = `${ev1.type} ${ev1.time} ${ev1.type === "만조" ? "▲" : "▼"}${ev1.level || ev1.value || "--"}cm`; }
-  if (futureEvents.length >= 2) { const ev2 = futureEvents[1]; tideHighText = `${ev2.type} ${ev2.time} ${ev2.type === "만조" ? "▲" : "▼"}${ev2.level || ev2.value || "--"}cm`; } else { tideHighText = ""; }
+  let tideLowText = "간조 --:-- ▼--cm", tideHighText = "만조 --:-- ▲--cm";
+  let firstEvType = "간조";
+
+  if (futureEvents.length >= 1) {
+    const ev1 = futureEvents[0];
+    firstEvType = ev1.type;
+    const restStr = `${ev1.time} ${ev1.type === "만조" ? "▲" : "▼"}${ev1.level || ev1.value || "--"}cm`;
+    if (ev1.type === '간조') tideLowText = `간조 ${restStr}`;
+    else tideHighText = `만조 ${restStr}`;
+  }
+  if (futureEvents.length >= 2) {
+    const ev2 = futureEvents[1];
+    const restStr = `${ev2.time} ${ev2.type === "만조" ? "▲" : "▼"}${ev2.level || ev2.value || "--"}cm`;
+    if (ev2.type === '간조') tideLowText = `간조 ${restStr}`;
+    else tideHighText = `만조 ${restStr}`;
+  }
 
   let detailedTideStatus = "---";
   if (targetTides && targetTides.length > 0) {
@@ -375,8 +393,8 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
 
   return {
     timeStr: window.getFormattedCurrentTime(), temp: currentTemp, weather: currentWeather, rain: currentRain, wind: currentWind,
-    sunrise: currentSunrise, sunset: currentSunset, tideIdx: currentTideIdx, wave: currentWave, waterTemp: currentWaterTemp, tideLow: tideLowText, tideHigh: tideHighText,
-    detailedTide: detailedTideStatus, crdir: currentCrdir, crsp: currentCrsp
+    sunrise: currentSunrise, sunset: currentSunset, tideIdx: currentTideIdx, tideLow: tideLowText, tideHigh: tideHighText,
+    detailedTide: detailedTideStatus, oceanSummary: oceanSummaryText, firstEvType: firstEvType
   };
 };
 
@@ -385,9 +403,8 @@ window.applyHomeCardDOM = function (payload) {
   const setTxt = (className, val) => { const el = document.querySelector(`.hc-premium-card ${className}`); if (el) el.textContent = val; };
 
   setTxt(".hc-temp", payload.temp); setTxt(".hc-weather", payload.weather); setTxt(".hc-rain", payload.rain); setTxt(".hc-wind", payload.wind);
-  setTxt(".hc-sunrise", payload.sunrise); setTxt(".hc-sunset", payload.sunset); setTxt(".hc-tide-idx", payload.tideIdx); setTxt(".hc-wave", payload.wave);
-  setTxt(".hc-water-temp", payload.waterTemp); setTxt(".hc-tide-status", payload.detailedTide);
-  setTxt(".hc-crdir", payload.crdir); setTxt(".hc-crsp", payload.crsp);
+  setTxt(".hc-sunrise", payload.sunrise); setTxt(".hc-sunset", payload.sunset); setTxt(".hc-tide-idx", payload.tideIdx); setTxt(".hc-tide-status", payload.detailedTide);
+  setTxt(".hc-ocean-summary", payload.oceanSummary);
 
   const setTideTxt = (className, val) => {
     const el = document.querySelector(`.hc-premium-card ${className}`);
@@ -397,7 +414,7 @@ window.applyHomeCardDOM = function (payload) {
     if (parts.length > 1) {
       const label = parts[0];
       const rest = parts.slice(1).join(" ");
-      el.innerHTML = `${label} <span class="hc-txt-muted">${rest}</span>`;
+      el.innerHTML = `${label} <tspan class="hc-txt-muted">${rest}</tspan>`;
     } else {
       el.textContent = val;
     }
@@ -408,9 +425,16 @@ window.applyHomeCardDOM = function (payload) {
   const lowEl = document.querySelector(".hc-premium-card .hc-tide-low");
   const highEl = document.querySelector(".hc-premium-card .hc-tide-high");
   const summaryEl = document.querySelector(".hc-premium-card .hc-ocean-summary");
+  
   if (lowEl && highEl && summaryEl) {
-    lowEl.after(highEl);
-    highEl.after(summaryEl);
+    if (payload.firstEvType === '간조') {
+      lowEl.setAttribute("y", "194");
+      highEl.setAttribute("y", "214");
+    } else {
+      highEl.setAttribute("y", "194");
+      lowEl.setAttribute("y", "214");
+    }
+    summaryEl.setAttribute("y", "234");
   }
 
   const timeEl = document.getElementById("hcHomeRefreshTime");
@@ -451,9 +475,9 @@ window.fallbackHomeDataLoad = function () {
   const existingTemp = document.querySelector(".hc-premium-card .hc-temp")?.textContent || "";
   if (existingTemp !== "" && existingTemp !== "--°C") return;
   window.applyHomeCardDOM({
-    timeStr: window.getFormattedCurrentTime(), temp: "--°C", weather: "정보없음", rain: "강수 --% --mm", wind: "--- · -.-m/s",
+    timeStr: window.getFormattedCurrentTime(), temp: "--°C", weather: "정보없음", rain: "강수 0% 0mm", wind: "--- · -.-m/s",
     sunrise: "일출 --:--", sunset: "일몰 --:--", tideIdx: "--물", wave: "파고 --.-m", waterTemp: "수온 --.-°C", tideLow: "간조 --:-- ▼--cm", tideHigh: "만조 --:-- ▲--cm",
-    detailedTide: "---", crdir: "유향 ---", crsp: "유속 --m/s"
+    detailedTide: "---", oceanSummary: "--.-°C · --.-m · - · -.-m/s", firstEvType: "간조"
   });
 };
 
