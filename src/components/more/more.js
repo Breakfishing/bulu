@@ -1,7 +1,7 @@
 // =========================================================================
 // [MODULE] 더보기 탭 통합 제어 엔진 (게시판 / 정보망 / 라인 정보 / 앱 설정)
 // =========================================================================
-import { db } from '../../utils/firebase.js';
+import { db } from '../../utils/firebase.js'; 
 import firebase from 'firebase/compat/app'; // Timestamp 및 FieldValue 처리를 위한 코어 바인딩
 import './more.css'; 
 
@@ -403,7 +403,7 @@ export function renderInfoContentCards(filterKeyword = "") {
 
   if (currentInfoTab === 'fishing_ban') {
     const filtered = cachedFishingBans.filter(b => (b.species || "").toLowerCase().includes(kw));
-    if (filtered.length === 0) { container.innerHTML = '<div class="pm-empty-msg">검색된 어종이 없습니다.</div>'; return; }
+    if (filtered.length === 0) { container.innerHTML = '<div class="pm-empty-msg">검색된 금어기 정보가 없습니다.</div>'; return; }
     
     filtered.forEach(item => {
       const card = document.createElement('div');
@@ -434,7 +434,7 @@ export function renderInfoContentCards(filterKeyword = "") {
   } 
   else if (currentInfoTab === 'size_limit') {
     const filtered = cachedSizeLimits.filter(s => (s.species || "").toLowerCase().includes(kw));
-    if (filtered.length === 0) { container.innerHTML = '<div class="pm-empty-msg">검색된 어종이 없습니다.</div>'; return; }
+    if (filtered.length === 0) { container.innerHTML = '<div class="pm-empty-msg">검색된 금지체장 기준이 없습니다.</div>'; return; }
     
     filtered.forEach(item => {
       const card = document.createElement('div');
@@ -449,7 +449,7 @@ export function renderInfoContentCards(filterKeyword = "") {
       if (min > 0 && max > 0) sizeRenderStr = `${min}cm 이상 ~ ${max}cm 이하`;
       else if (min > 0) sizeRenderStr = `${min}cm 이상`;
       else if (max > 0) sizeRenderStr = `${max}cm 이하`;
-      else sizeRenderStr = "금지 체장 없음";
+      else sizeRenderStr = "제한 규격 없음";
 
       card.innerHTML = `
         <div class="info-card-img-box">${imgContent}</div>

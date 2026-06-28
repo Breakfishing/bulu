@@ -3,7 +3,6 @@
 // =========================================================================
 import './weatherModal.css';
 import { db } from '../../utils/firebase.js';
-import { TIDE_STATIONS } from '../../utils/constants.js';
 
 // 전역 캐시 및 데이터 저장소 초기화 바인딩
 window.globalSunTimesCache = window.globalSunTimesCache || {};
@@ -18,6 +17,17 @@ const PUBLIC_PORTAL_KEY = "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b
 window.DATA_GO_KR_SERVICE_KEY = PUBLIC_PORTAL_KEY;
 const KHOA_API_KEY = PUBLIC_PORTAL_KEY;
 const KMA_AUTH_KEY = "RAp21103R7OKdtddNwezzw";
+
+// 조석 관측소 참조 데이터 스택 복크
+const TIDE_STATIONS = [
+  { code: 'DT_0005', name: '부산', lat: 35.0975, lng: 129.0369 },
+  { code: 'DT_0023', name: '통영', lat: 34.8286, lng: 128.4328 },
+  { code: 'DT_0026', name: '삼천포', lat: 34.9258, lng: 128.0336 },
+  { code: 'DT_0004', name: '마산', lat: 35.2044, lng: 128.5786 },
+  { code: 'DT_0016', name: '가덕도', lat: 35.0233, mesh: 128.8322 },
+  { code: 'DT_0013', name: '울산', lat: 35.5033, lng: 129.3853 },
+  { code: 'DT_0012', name: '포항', lat: 36.0442, lng: 129.3839 }
+];
 
 // -------------------------------------------------------------------------
 // [GEOMETRIC PART] 최인접 조석 관측소 기하학적 매핑 연산
@@ -365,10 +375,7 @@ window.loadTimelineWithOptimisticUI = async function (lat, lng) {
   if (modalBody && !document.getElementById('miniSplashBodyBlock')) {
     const splashBlock = document.createElement('div'); splashBlock.id = 'miniSplashBodyBlock';
     splashBlock.style.cssText = 'position: absolute; top: 0; left: 0; width: 100%; height: 100%; min-height: 430px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: var(--text-muted); background: var(--modal-bg, #ffffff); z-index: 100;';
-    
-    // [교정] 회전 애니메이션(hc-spin-anim) 속성을 인라인 스타일에 직접 주입하여 정상 작동 보장
-    splashBlock.innerHTML = `<div class="mini-splash-spinner spinning" style="width: 36px; height: 36px; border: 4px solid var(--border-color); border-top-color: var(--primary-color); border-radius: 50%; animation: hc-spin-anim 0.8s linear infinite;"></div><div class="mini-splash-text" style="font-size: 13.5px; font-weight: 700;">실시간 데이터 분석 중...</div>`;
-    
+    splashBlock.innerHTML = `<div class="mini-splash-spinner spinning" style="width: 36px; height: 36px; border: 4px solid var(--border-color); border-top-color: var(--primary-color); border-radius: 50%;"></div><div class="mini-splash-text" style="font-size: 13.5px; font-weight: 700;">실시간 데이터 분석 중...</div>`;
     modalBody.style.position = 'relative'; modalBody.style.minHeight = '430px'; modalBody.appendChild(splashBlock);
     if (dateSticky) dateSticky.style.visibility = 'hidden'; if (bridge) bridge.style.visibility = 'hidden';
   }
@@ -421,7 +428,7 @@ window.buildTimelineUI = function (lat, lng, weatherMap, realTides, waterTempMap
   const gridRow = document.createElement('div'); gridRow.className = 'timeline-grid-row';
   const now = new Date(); let svgHighlightsHtml = ''; const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
-  const dayBrightColor = '#e3f2fd', dayMainColor = '#b3e5fc', nightColor = '#0a0f1a', seaTopColor = '#5ba2e9', seaBottomColor = '#3f86d1';
+  const dayBrightColor = '#e3f2fd', dayMainColor = '#b3e5fc', nightColor = '#1a263f', seaTopColor = '#6cb0f6', seaBottomColor = '#2b6cb0';
   let allSegments = []; let prevType = null; let segmentStartX = 0;
 
   for (let m = 0; m <= 72 * 60; m += 10) {

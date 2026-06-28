@@ -9,83 +9,9 @@
     <link rel="stylesheet" as="style" crossorigin
         href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
     <link rel="stylesheet" href="/src/style.css">
-    <style>
-        /* 1. 메인 CSS 로드 전 브라우저 기본 마진 및 스크롤바 강제 리셋 */
-        html, body {
-            margin: 0 !important;
-            padding: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            overflow: hidden !important;
-            background-color: #ffffff !important;
-        }
 
-        /* 2. 자바스크립트 변수 의존성 제거 및 최상위 레이어 고정 */
-        #splash-screen {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            background-color: #ffffff !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            z-index: 99999 !important; /* 다른 어떤 레이어보다 상위에 배치 */
-        }
-
-        #splash-screen.fade-out {
-            opacity: 0 !important;
-            visibility: hidden !important;
-            pointer-events: none !important;
-            transition: opacity 0.35s ease-out !important;
-        }
-
-        .splash-container {
-            position: relative !important;
-            width: 320px !important;
-            height: 320px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-        }
-
-        /* [교정] opacity 0 고정 강제 명령(!important)을 제거하여 키프레임 애니메이션 작동 보장 */
-        .splash-wave {
-            position: absolute !important;
-            width: 140px !important;
-            height: 35px !important;
-            bottom: 20px !important;
-            left: 50% !important;
-            margin-left: -70px !important;
-            border: 1.5px solid #00a799 !important; /* var 변수 대신 테마 색상 값 다이렉트 주입 */
-            border-radius: 50% !important;
-            opacity: 0;
-            animation: splashPulseEffect 2.8s cubic-bezier(0.215, 0.610, 0.355, 1.000) infinite !important;
-        }
-
-        .splash-wave.wave-2 { animation-delay: 0.9s !important; }
-        .splash-wave.wave-3 { animation-delay: 1.8s !important; }
-
-        .splash-logo-wrapper {
-            position: relative !important;
-            margin-top: -30px !important;
-            animation: splashLogoFloat 3s ease-in-out infinite !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-        }
-
-        @keyframes splashPulseEffect {
-            0% { transform: scale(0.6); opacity: 0.8; }
-            30% { opacity: 0.4; }
-            100% { transform: scale(2.2); opacity: 0; }
-        }
-        @keyframes splashLogoFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-8px); }
-        }
-    </style>
+    <script
+        src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=9698fb632fa0dfcf26667bdb0e31dbb4&libraries=services&autoload=false"></script>
 </head>
 
 <body>
@@ -100,14 +26,14 @@
             <div class="splash-logo-wrapper">
                 <svg width="120" height="180" viewBox="0 0 36 54" xmlns="http://www.w3.org/2000/svg"
                     class="splash-svg-element">
-                    <path stroke-miterlimit="4" stroke-width="2" stroke="#00a799"
-                        fill="#00a799"
+                    <path stroke-miterlimit="4" stroke-width="2" stroke="var(--primary-color)"
+                        fill="var(--primary-color)"
                         d="m17.92332,2.23007c10.56135,0 17.35337,7.23988 17.35337,16.73988c0,6.3 -3.7,12.3 -7,18l-4.7767,7.06625l-10.82147,-14.71349l9.9681,6.32147l5.03742,-9.40184c3.34356,-5.96319 1.81902,-13.27301 -2.79755,-16.35276c-4.61656,-3.07976 -9.56595,-2.69938 -13.69325,0.6227c-4.1273,3.32208 -5.29064,10.78758 -3.27837,15.73735c2.01227,4.94977 1.37193,3.3194 2.89187,6.0878l10.53198,15.06992l-3.26204,5.3626l-11.47546,-16.21472c-3,-4.57669 -6.02454,-7.93865 -5.7454,-17.57975c0.27914,-9.6411 6.50613,-16.7454 17.06748,-16.7454z" />
-                    <path stroke="#00a799" fill="#ffffff"
+                    <path stroke="var(--primary-color)" fill="#ffffff"
                         d="m18.38343,27.7546c-3.94028,0 -7.1319,-3.53481 -7.1319,-7.89877c0,-4.36396 3.19162,-7.89877 7.1319,-7.89877c3.94028,0 7.1319,3.53481 7.1319,7.89877c0,4.36396 -3.19162,7.89877 -7.1319,7.89877z"
                         stroke-width="2" />
                     <text x="18.5" y="21.5" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="5"
-                        font-weight="900" fill="#00a799" text-anchor="middle"
+                        font-weight="900" fill="var(--primary-color)" text-anchor="middle"
                         letter-spacing="0.2">부루</text>
                 </svg>
             </div>
@@ -270,7 +196,7 @@
                                 class="hc-lighthouse-fallback" />
                             <polygon points="201,168 206,162 211,168" fill="#475569" class="hc-lighthouse-fallback" />
 
-                            <g fill-opacity="0.3" class="hc-moon-node">
+                            <g id="hc-moon-phase-group" transform="translate(186, 51)" class="hc-moon-node">
                             </g>
 
                             <g transform="rotate(3, 200, 125)" class="hc-rain-layer">
@@ -287,7 +213,7 @@
                                 <line x1="285" y1="85" x2="285" y2="103" class="hc-rain-drop"
                                     style="animation-duration: 0.48s; animation-delay: 0.22s;" stroke-width="0.7" />
                                 <line x1="335" y1="20" x2="335" y2="43" class="hc-rain-drop"
-                                    style="animation-duration: 6s; animation-delay: 0.02s;" stroke-width="0.9" />
+                                    style="animation-duration: 0.6s; animation-delay: 0.02s;" stroke-width="0.9" />
                                 <line x1="375" y1="65" x2="375" y2="83" class="hc-rain-drop"
                                     style="animation-duration: 0.53s; animation-delay: 0.38s;" stroke-width="0.6" />
                             </g>
@@ -329,7 +255,8 @@
                                 font-weight="800">23°C</text>
                             <text x="20" y="58" class="hc-txt-white hc-txt-shadow hc-weather" font-size="13"
                                 font-weight="700">맑음</text>
-                            <text x="20" y="76" class="hc-txt-muted hc-txt-shadow hc-rain" font-size="11">0% · 0mm</text>
+                            <text x="20" y="76" class="hc-txt-muted hc-txt-shadow hc-rain" font-size="11">강수 0mm
+                                (20%)</text>
                             <text x="20" y="91" class="hc-txt-muted hc-txt-shadow hc-wind" font-size="11">북동풍 ·
                                 3.2m/s</text>
 
@@ -341,22 +268,21 @@
                                     fill="#ffdd00">--물</text>
                             </g>
 
-                            <text x="20" y="174" class="hc-txt-white hc-txt-shadow hc-tide-status" font-size="13"
-                                font-weight="700">물때 계산중</text>
-                            <text x="20" y="194" class="hc-txt-white hc-txt-shadow hc-tide-low" font-size="11"
+                            <text x="20" y="174" class="hc-txt-white hc-txt-shadow hc-wave" font-size="11"
+                                font-weight="700">파고 --.-m</text>
+                            <text x="20" y="194" class="hc-txt-white hc-txt-shadow hc-water-temp" font-size="11"
+                                font-weight="700">수온 --.-°C</text>
+                            <text x="20" y="214" class="hc-txt-white hc-txt-shadow hc-tide-low" font-size="11"
                                 font-weight="700">간조 --:-- ▼--cm</text>
-                            <text x="20" y="214" class="hc-txt-white hc-txt-shadow hc-tide-high" font-size="11"
+                            <text x="20" y="234" class="hc-txt-white hc-txt-shadow hc-tide-high" font-size="11"
                                 font-weight="700">만조 --:-- ▲--cm</text>
-                            <text x="20" y="234" class="hc-txt-white hc-txt-shadow hc-ocean-summary" font-size="11"
-                                font-weight="700">--.-°C · --.-m · -- · -.-m/s</text>
 
-                            <g class="hc-premium-card .hc-home-refresh-btn" transform="translate(362, 208)" cursor="pointer"
+                            <g class="hc-home-refresh-btn" transform="translate(365, 211)" cursor="pointer"
                                 onclick="window.refreshHomeLocation(this)">
-                                <circle cx="12" cy="12" r="16" fill="transparent" />
-                                <g class="hc-refresh-icon-g" style="transform-origin: 12px 12px;">
-                                    <rect x="0" y="0" width="24" height="24" fill="none" pointer-events="none" />
-                                    <path d="M12 4a8 8 0 1 1-5.66 2.34M12 4H16M12 4V8" fill="none"
-                                        stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"
+                                <circle cx="10" cy="10" r="16" fill="transparent" transform="translate(-5, -5)" />
+                                <g transform="scale(0.75)">
+                                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" fill="none"
+                                        stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"
                                         stroke-linejoin="round" />
                                 </g>
                             </g>
@@ -372,7 +298,7 @@
                 <button class="top-center-ctrl" onclick="window.refreshMapData()">
                     <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M 7 11 L 7 6 M 12 4 a 8 8 0 1 1 -5 2 L 3 9 L 7 6"/>
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                     </svg>
                 </button>
 
@@ -514,10 +440,12 @@
                         <span class="grid-label">1:1문의</span>
                     </div>
                     <div class="grid-item" onclick="window.showSettingsPage()">
-                        <svg class="settings-grid-icon" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        <svg class="settings-grid-icon" width="22" height="22" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="3"></circle>
-                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1-1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+                            </path>
                         </svg>
                         <span class="grid-label">앱 설정</span>
                     </div>
@@ -648,6 +576,7 @@
                         <span id="lblInfoBoardHeaderTitle">금어기 정보</span>
                         <button id="btnInfoBoardAction" class="notice-header-write-btn" title="글 등록">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -782,7 +711,7 @@
                 <span class="nav-label">지도</span>
             </div>
             <div class="nav-item" onclick="window.switchTab('tab-manage', this)">
-                <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
                     <line x1="8" y1="6" x2="21" y2="6"></line>
                     <line x1="8" y1="12" x2="21" y2="12"></line>
@@ -1108,6 +1037,8 @@
 
     <div id="detailModalWrapper" class="detail-popup-wrapper" onclick="window.closeModals()">
         <div id="detailModal" class="bottom-sheet-modal-native" onclick="event.stopPropagation()">
+            <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
+
             <div class="detail-modal-header-flex">
                 <div class="header-left-title-box">
                     <span id="lblDetailCategory" class="badge-category-dynamic">일반포인트</span>
@@ -1204,6 +1135,7 @@
     </div>
 
     <div id="weatherModal" class="bottom-sheet-modal-native weather-modal-overlay">
+        <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
         <div class="weather-modal-header weather-header-container">
             <div class="weather-title-wrapper">
                 <div id="weatherModalMarkerIcon"
@@ -1228,6 +1160,7 @@
     </div>
 
     <div id="noticeWriteModal" class="bottom-sheet-modal-native">
+        <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
         <h3 id="lblNoticeWriteModalTitle" class="notice-write-title-text">글 등록</h3>
         <input type="hidden" id="noticeWriteMode" value="add">
         <input type="hidden" id="noticeWriteTargetId" value="">
@@ -1262,6 +1195,7 @@
     </div>
 
     <div id="infoEditModal" class="bottom-sheet-modal-native">
+        <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
         <h3 id="lblInfoEditModalTitle" class="notice-write-title-text">내용 수정</h3>
         <input type="hidden" id="infoEditTargetTab" value="">
         <div class="modal-form-group notice-write-group-margin">
@@ -1275,6 +1209,7 @@
     </div>
 
     <div id="fishingBanModal" class="bottom-sheet-modal-native">
+        <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
         <h3 id="lblFishingBanModalTitle" class="notice-write-title-text">금어기 등록</h3>
         <input type="hidden" id="banModalMode" value="add">
         <input type="hidden" id="banModalTargetId" value="">
@@ -1322,6 +1257,7 @@
     </div>
 
     <div id="sizeLimitModal" class="bottom-sheet-modal-native">
+        <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
         <h3 id="lblSizeLimitModalTitle" class="notice-write-title-text">금지체장 등록</h3>
         <input type="hidden" id="limitModalMode" value="add">
         <input type="hidden" id="limitModalTargetId" value="">
@@ -1357,6 +1293,7 @@
     </div>
 
     <div id="knotGuideModal" class="bottom-sheet-modal-native">
+        <div class="bottom-sheet-handle-bar" onclick="window.closeModals()"></div>
         <h3 id="lblKnotGuideModalTitle" class="notice-write-title-text">매듭법 등록</h3>
         <input type="hidden" id="knotModalMode" value="add">
         <input type="hidden" id="knotModalTargetId" value="">
@@ -1382,7 +1319,6 @@
         </div>
     </div>
 
-    <script defer src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=9698fb632fa0dfcf26667bdb0e31dbb4&libraries=services&autoload=false"></script>
     <script type="module" src="/src/main.js"></script>
 </body>
 

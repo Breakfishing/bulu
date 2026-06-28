@@ -1,198 +1,8 @@
 /* =========================================================================
-   SECTION 1: 기상 모달 코어 껍데기 및 오버레이 프레임 제어
+    [COMPONENT] 실시간 연안 종합 기상/조석 타임라인 디자인 시스템
    ========================================================================= */
-/* 기상 기본 모달 및 뒷배경 암전 오버레이 레이아웃 선언 */
-.modal.weather-modal,
-.weather-modal-overlay {
-    display: none !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    max-height: 90vh !important;
-    position: fixed !important;
-    top: auto !important;
-    bottom: var(--nav-height) !important;
-    left: 0 !important;
-    border-radius: 24px 24px 0 0 !important;
-    padding: 0 env(safe-area-inset-bottom) !important;
-    display: flex !important;
-    flex-direction: column;
-    gap: 0;
-    z-index: 1005 !important;
-    box-sizing: border-box;
-    background: var(--bg-panel);
-    visibility: hidden;
-    opacity: 0;
-    transform: translateY(100%) !important;
-    transition: transform 0.3s cubic-bezier(0.1, 0.76, 0.55, 0.94), opacity 0.3s, visibility 0.3s !important;
-    padding: 20px 0 0 0;
-}
 
-/* 기상 모달 및 백드롭 레이어 활성화 상태 구동 엔진 */
-.modal.weather-modal.active,
-.weather-modal-overlay.active,
-#weatherModal.active {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    transform: translateY(0) !important;
-    z-index: 1020 !important;
-}
-
-/* 기상 모달 내부 스크롤 바디 프레임 */
-.weather-modal-body {
-    flex: 1;
-    overflow-y: auto !important;
-    display: flex;
-    flex-direction: column;
-    gap: 0px !important;
-    width: 100%;
-}
-
-.weather-modal-body::-webkit-scrollbar {
-    display: none;
-}
-
-#weatherModal.active .weather-modal-body {
-    display: flex !important;
-    flex-direction: column !important;
-    overflow-y: auto !important;
-}
-
-
-/* =========================================================================
-   SECTION 2: 모달 헤더, 스티키 타이틀 바 및 천체(일출/일몰/월령) 정보 레이어
-   ========================================================================= */
-/* 기상 모달 상단 텍스트 정렬 헤더 컨테이너 */
-.weather-modal-header,
-.weather-header-container {
-    display: block;
-    padding: 20px 20px;
-    flex-shrink: 0;
-    border: none !important;
-    width: 100%;
-    text-align: center;
-}
-
-.weather-header-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.weather-modal-header h3,
-.weather-title-text {
-    margin: 0;
-    font-size: 18px;
-    color: var(--text-main);
-}
-
-.weather-title-text {
-    margin-bottom: 0;
-}
-
-.weather-title-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: center;
-    width: 100%;
-}
-
-/* 실시간 날짜 확인 스티키 가로 바 레이아웃 */
-#lblDetailDate,
-.weather-date-sticky-bar {
-    padding: 0 20px !important;
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: center !important;
-    justify-content: space-between !important;
-    width: 100% !important;
-    white-space: nowrap !important;
-    flex-wrap: nowrap !important;
-    box-sizing: border-box;
-    font-size: 13px;
-    color: var(--text-main);
-}
-
-.weather-date-margin {
-    margin-bottom: 30px;
-}
-
-/* 스티키 바 내부 좌측 파트 (물때 및 음력/양력 날짜 표기) */
-.sun-moon-left-wrapper {
-    display: flex !important;
-    align-items: center !important;
-    flex-wrap: nowrap !important;
-    gap: 8px !important;
-    height: 100% !important;
-}
-
-.sun-moon-tide-label {
-    background: none !important;
-    color: var(--text-main) !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    font-weight: 800 !important;
-    font-size: 17px !important;
-    margin-right: 4px !important;
-}
-
-.sun-moon-date-label {
-    font-size: 15px !important;
-    font-weight: 700;
-    color: var(--text-main) !important;
-    display: inline-flex !important;
-    align-items: center !important;
-}
-
-.sun-moon-lunar-subtext {
-    font-weight: 400;
-    font-size: 12px;
-    color: var(--text-muted);
-}
-
-/* 스티키 바 내부 우측 파트 (일출 및 일몰 수치 바인딩) */
-.sun-times-right-wrapper {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    justify-content: center !important;
-    gap: 4px !important;
-    flex-wrap: nowrap !important;
-}
-
-.sun-time-item-flex {
-    display: flex !important;
-    align-items: center !important;
-    font-size: 12px !important;
-    line-height: 1.3 !important;
-}
-
-.sun-node-icon {
-    width: 14px !important;
-    height: 14px !important;
-    margin-right: 5px !important;
-    flex-shrink: 0 !important;
-    display: inline-block !important;
-    vertical-align: middle !important;
-}
-
-.sun-node-icon.sunrise { color: #ff9500 !important; }
-.sun-node-icon.sunset { color: #ff3b30 !important; }
-
-.sun-time-bold {
-    font-weight: 700 !important;
-    margin-right: 4px !important;
-    color: var(--text-muted) !important;
-}
-
-
-/* =========================================================================
-   SECTION 3: 상단 환경 정보 요약 블록 및 바텀시트 연동 제어 유틸리티
-   ========================================================================= */
-/* 실시간 환경 정보(기온, 수온 등) 요약 수평 그리드 헤더 */
+/* 1. 상단 환경 정보 레이어 요약 블록 */
 .timeline-environmental-header {
     display: flex;
     justify-content: space-between;
@@ -218,320 +28,7 @@
     color: var(--text-main);
 }
 
-/* 바텀시트 내부 기상 호출 전체 너비 액션 전용 버튼 */
-.weather-link-full-btn {
-    width: 100%;
-    height: 44px;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    background-color: var(--primary-color);
-    color: #ffffff;
-    transition: opacity 0.2s;
-    box-sizing: border-box;
-}
-
-.weather-link-full-btn:active {
-    opacity: 0.8;
-}
-
-.weather-link-full-btn svg {
-    width: 14px;
-    height: 14px;
-    stroke: currentColor;
-    fill: none;
-}
-
-/* 기상 상태 미니 아이콘 래핑 박스 사양 */
-.weather-preview-box {
-    width: 18px !important;
-    height: 26px !important;
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transform: none !important;
-}
-
-
-/* =========================================================================
-   SECTION 4: 기상 타임라인 가로 스크롤 메인 뷰포트 컨테이너
-   ========================================================================= */
-/* 기상 종합 타임라인 테이블 스택 전체 외곽 프레임 박스 */
-.timeline-viewport-container-native {
-    position: relative;
-    background: var(--bg-panel);
-    overflow: visible !important;
-    margin-top: 0px !important;
-    flex-shrink: 0;
-    border: none !important;
-    box-shadow: none !important;
-    width: 100%;
-    border-radius: 0 !important;
-}
-
-/* 좌측 인덱스 열(75px)을 제외한 나머지 시간 영역 수평 스크롤 엔진 */
-.timeline-viewport-container-native .timeline-scroll-outer {
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    touch-action: pan-x !important;
-    margin-left: 75px;
-    width: calc(100% - 75px);
-    border-radius: 0 !important;
-}
-
-.timeline-scroll-outer::-webkit-scrollbar {
-    display: none !important;
-}
-
-/* 수평 열 구조 유지 관리를 위한 가상 브릿지 베이스 레이어 */
-.timeline-inner-bridge {
-    display: flex;
-    flex-direction: column;
-    width: max-content;
-}
-
-
-/* =========================================================================
-   SECTION 5: 타임라인 테이블 그리드 구조, 컬럼 및 개별 데이터 셀 체계
-   ========================================================================= */
-/* 시간축 수평 데이터 로우 그리드 래퍼 */
-.timeline-grid-row {
-    display: flex;
-    width: max-content;
-}
-
-/* 좌측 0시 기준 첫 번째 고정 열 (항목 타이틀 마운팅 필드) */
-.timeline-label-column {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 75px;
-    height: 100%;
-    background: var(--bg-panel);
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    box-sizing: border-box;
-    border-radius: 0 !important;
-    display: grid;
-    grid-template-rows: repeat(10, 1fr);
-    height: 100%;
-}
-
-.timeline-label-column .tl-cell {
-    height: 36px;
-    font-size: 13px;
-    font-weight: 800;
-    color: var(--text-muted);
-    width: 100%;
-    justify-content: center;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.03);
-    border-radius: 0 !important;
-}
-
-/* 시간의 흐름에 따라 생성되는 세로 단위 타임라인 단일 슬롯 열 */
-.timeline-hour-column {
-    width: 56px;
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    border-radius: 0 !important;
-    display: grid;
-    grid-template-rows: repeat(10, 1fr);
-    height: 100%;
-}
-
-/* 가독성 증진을 위한 짝수 번째 타임라인 열 배경 음영 그리드 분할화 */
-.timeline-hour-column:nth-child(even) {
-    background-color: var(--grid-item);
-}
-
-/* 타임라인 가로 뷰포트 내부 공통 단일 셀 인스턴스 규격 */
-.tl-cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    box-sizing: border-box;
-    font-size: 11px;
-    color: var(--text-main);
-    border-radius: 0 !important;
-}
-
-/* 기상 요소 데이터 종류별 커스텀 셀 높이 및 폰트 컬러 매핑 스택 */
-.timeline-label-column .tl-cell,
-.cell-time {
-    color: var(--text-main) !important;
-}
-
-.cell-time {
-    height: 36px;
-    font-weight: 700;
-    background: var(--bg-main);
-    border-radius: 0 !important;
-}
-
-.cell-icon, .cell-temp, .cell-rain, .cell-wind, .cell-dir, .cell-wave, .cell-wtemp, .cell-crdir, .cell-crsp {
-    height: 36px;
-    border-radius: 0 !important;
-}
-
-
-/* =========================================================================
-   SECTION 6: 조석 파고 그래프 SVG 캔버스 및 실시간 시간 동기화 가이드선
-   ========================================================================= */
-/* 조석 웨이브 시각화 수평 컨테이너 패널 */
-.timeline-wave-row-container {
-    display: flex;
-    width: max-content;
-    height: 160px;
-    position: relative;
-    background: var(--bg-panel);
-    box-sizing: border-box;
-    margin-top: 0 !important;
-    border-radius: 0 !important;
-}
-
-/* 72시간 백엔드 가변 폭 조석 가로 너비 확장 레이어 구조 규격 */
-.tide-svg-wrapper {
-    position: relative;
-    width: 4032px;
-    height: 160px;
-    flex-shrink: 0;
-    border-radius: 0 !important;
-}
-
-/* 실제 조석 사인파 곡선 곡률을 드로잉하는 벡터 도화지 */
-.tide-svg-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 2;
-    border-radius: 0 !important;
-}
-
-/* 스마트폰 실시간 KST 시간 매핑 세로 버티컬 인디케이터 바 */
-.timeline-sync-line {
-    position: absolute !important;
-    top: 0 !important;
-    width: 2px !important;
-    height: 100% !important;
-    background: var(--primary-color) !important;
-    opacity: 0.85 !important;
-    z-index: 99 !important;
-    pointer-events: none !important;
-    display: block !important;
-}
-
-/* 동기화 세로선 상단에 고정 추적되는 실시간 KST 현재 시각 말풍선 */
-.timeline-sync-bubble {
-    position: absolute !important;
-    top: -22px !important;
-    width:90px;
-    transform: translateX(-50%) !important;
-    background: var(--primary-color) !important;
-    color: #ffffff !important;
-    font-size: 12px !important;
-    font-weight: 800 !important;
-    padding: 4px 8px !important;
-    border-radius: 6px !important;
-    z-index: 100 !important;
-    white-space: nowrap !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
-}
-.timeline-sync-line::after {
-    content: '';
-    position: absolute;
-    left:1px;
-    border-width: 6px 6px 0;
-    transform: translateX(-50%);
-    border-style: solid;
-    border-color: var(--primary-color) transparent;
-    display: block;
-    width: 0;
-}
-
-
-/* =========================================================================
-   SECTION 7: 상하 만간조 정보 가로 스크롤 플로팅 미니 카드 팩 스택
-   ========================================================================= */
-/* 실시간 간만조 시간 수평 조석 텍스트 스크롤 영역 */
-.do-not-delete-tides-floating-text-area {
-    overflow-x: auto !important;
-    width: 100% !important;
-}
-
-.tides-floating-text-area::-webkit-scrollbar {
-    display: none !important;
-}
-
-/* 수평 스크롤식 만조/간조 타임 데이터 미니 독립 카드 아이템 */
-.tide-floating-card-item {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: 13px !important;
-    min-width: 75px !important;
-    padding: 6px 10px !important;
-    box-sizing: border-box;
-}
-
-.tide-floating-card-item .tide-floating-card-symbol {
-    font-size: 12px !important;
-    font-weight: 800 !important;
-}
-
-.tide-floating-card-item .tide-floating-card-time {
-    font-size: 11px !important;
-    color: var(--text-muted);
-    margin-top: 2px;
-}
-
-
-/* =========================================================================
-   SECTION 8: 고정 규격 실시간 달 형상 월령(Moon Phase) SVG 벡터 노드
-   ========================================================================= */
-.lunar-phase-svg-node {
-    width: 28px !important;
-    height: 28px !important;
-    vertical-align: middle !important;
-    flex-shrink: 0 !important;
-}
-
-.lunar-phase-bg-circle {
-    fill: var(--bg-main) !important;
-}
-
-.lunar-phase-light-path {
-    fill: #ffd700 !important;
-}
-
-.lunar-phase-border-line {
-    fill: none !important;
-    stroke: #ffd700 !important;
-    stroke-opacity: 0.45 !important;
-    stroke-width: 1.5 !important;
-}
-
-
-/* =========================================================================
-   SECTION 9: 24시간 가로 버티컬 카드 슬롯형 단독 미니 타임라인 컴포넌트
-   ========================================================================= */
-/* 미니 타임라인용 수평 스크롤 축 뷰포트 컨테이너 */
+/* 2. 타임라인 스크롤 축 뷰포트 컨테이너 */
 .timeline-scroll-axis {
     display: flex;
     gap: 8px;
@@ -541,20 +38,7 @@
     -webkit-overflow-scrolling: touch;
 }
 
-.timeline-scroll-axis::-webkit-scrollbar {
-    height: 6px;
-}
-
-.timeline-scroll-axis::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.timeline-scroll-axis::-webkit-scrollbar-thumb {
-    background-color: var(--border-color);
-    border-radius: 10px;
-}
-
-/* 시간별 버티컬 슬롯 단독 미니 제어 카드 */
+/* 3. 시간별 버티컬 슬롯 카드 */
 .timeline-hour-slot {
     flex: 0 0 66px;
     background-color: var(--bg-panel);
@@ -571,7 +55,7 @@
     transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-/* 카드 슬롯 내부 텍스트 유닛별 가독성 타이포그래피 */
+/* 4. 가변 데이터별 가독성 색상 배정 */
 .timeline-hour-slot .active-current-time {
     font-weight: 700;
     color: var(--primary-color);
@@ -591,13 +75,13 @@
 .timeline-hour-slot .weather-wind-value {
     font-size: 10.5px;
     color: var(--text-muted);
-    background-color: var(--grid-item);
+    background-color: var(--grid-item-bg);
     padding: 2px 6px;
     border-radius: 4px;
     display: inline-block;
 }
 
-/* 실시간 기준 현재 시각에 속한 슬롯 카드 전용 강조 디스플레이 인터페이스 */
+/* 5. 현재 활성화(현재 시간) 슬롯 강조 스타일 */
 .timeline-hour-slot.active-current {
     border-color: var(--primary-color) !important;
     background-color: var(--bg-main) !important;
@@ -605,10 +89,21 @@
     transform: translateY(-2px);
 }
 
+/* 스크롤바 커스텀 보정 */
+.timeline-scroll-axis::-webkit-scrollbar {
+    height: 6px;
+}
 
-/* =========================================================================
-   SECTION 10: 비동기 백엔드 통신용 모달 데이터 로딩 스케톤(Skeleton) 레이어
-   ========================================================================= */
+.timeline-scroll-axis::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.timeline-scroll-axis::-webkit-scrollbar-thumb {
+    background-color: var(--border-color);
+    border-radius: 10px;
+}
+
+/* 6. 모달 로딩 애니메이션 스켈레톤 */
 .timeline-loading-skeleton {
     display: flex;
     flex-direction: column;
@@ -620,7 +115,6 @@
     font-weight: 500;
 }
 
-/* 무한 회전 코어 인디케이터 스피너 */
 .skeleton-spinner {
     width: 28px;
     height: 28px;
