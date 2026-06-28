@@ -8,7 +8,7 @@ import { db } from './utils/firebase.js';
 import './components/more/more.js';
 import './components/map/map.js';
 import './components/weather/weatherModal.js';
-import './components/home/home.js'; // 분리된 홈 레이어 가동 모듈 스레드 추가
+import './components/home/home.js'; // 분리된 홈 레이어 가동 모듈 스레드
 
 // --- 전역 변수 및 상태 레이어 관리 ---
 window.cachedFishingPoints = [];
@@ -36,26 +36,6 @@ const KMA_AUTH_KEY = "RAp21103R7OKdtddNwezzw";
 // =========================================================================
 // [COMMON UI] 라이프사이클 및 네비게이션 공통 UI 제어 영역
 // =========================================================================
-// [카토 레이어 제어 엔진 추가]
-window.toggleMapLayer = function(layerType) {
-    if (!window.mapObj) return;
-    
-    // 기존 레이어 제거 (Base Layer 제외하고 모두 제거)
-    window.mapObj.eachLayer((layer) => {
-        if (layer.options && layer.options.isCartoLayer) {
-            window.mapObj.removeLayer(layer);
-        }
-    });
-
-    // 새로운 레이어 주입
-    if (layerType === 'carto') {
-        const cartoLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
-            isCartoLayer: true,
-            attribution: '© CartoDB'
-        }).addTo(window.mapObj);
-        window.isToiletLayerActive = true;
-    }
-};
 
 // [초기 부팅 시점 자동 실행]
 window.loadCoastalDepthData = async function() {
@@ -64,9 +44,6 @@ window.loadCoastalDepthData = async function() {
     if (response.ok) {
       window.coastalDepthData = await response.json();
       console.log(`[수심 데이터 로드 완료] 총 ${window.coastalDepthData.length} 격자 확보`);
-      
-      // 데이터 로드 완료 후 지도 레이어 강제 활성화 시도
-      if (window.mapObj) window.toggleMapLayer('carto'); 
     }
   } catch (err) { console.error("수심 데이터 로드 중 에러 발생:", err); }
 };
@@ -319,7 +296,7 @@ window.bindCategoryDragAndDropEvents = function (container) {
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerUp);
 
-      const newOrder = [...container.querySelectorAll('.pm-item')].map(el => el.getAttribute('data-name'));
+      const newOrder = [...container.querySelectorAll('.pm-item')].map(el => el.exportAttribute('data-name'));
       localStorage.setItem('pm-category-order', JSON.stringify(newOrder));
 
       if (typeof window.renderPointsManagementTab === 'function') {
@@ -522,7 +499,7 @@ window.openToiletModal = function () {
 window.savePointMarker = function () {
   const name = document.getElementById('pointName').value.trim(); if (!name) return alert("포인트 이름을 입력하세요.");
   const categorySelect = document.getElementById('pointCategory'); const category = categorySelect ? (categorySelect.value || '미분류') : '미분류';
-  let color = (categorySelect && categorySelect.options.length > 0) ? categorySelect.options[categorySelect.selectedIndex].getAttribute('data-color') : '#007aff';
+  let color = (categorySelect && categorySelect.options.length > 0) ? categorySelect.options[categorySelect.selectedIndex].exportAttribute('data-color') : '#007aff';
   if (category === '미분류') color = '#868e96';
 
   db.collection('fishing_points').add({
