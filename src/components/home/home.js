@@ -1,21 +1,4 @@
 // =========================================================================
-// [MODULE] 홈 화면 프리미엄 웨더 대시보드 및 오픈 API 실시간 캐싱 엔진 (src/components/home/home.js)
-// =========================================================================
-
-// =========================================================================
-// [RESTORED AREA] 홈 레이어 연동용 조석 관측소 데이터 스택
-// =========================================================================
-const TIDE_STATIONS = [
-  { code: 'DT_0005', name: '부산', lat: 35.0975, lng: 129.0369 },
-  { code: 'DT_0023', name: '통영', lat: 34.8286, lng: 128.4328 },
-  { code: 'DT_0026', name: '삼천포', lat: 34.9258, lng: 128.0336 },
-  { code: 'DT_0004', name: '마산', lat: 35.2044, lng: 128.5786 },
-  { code: 'DT_0016', name: '가덕도', lat: 35.0233, mesh: 128.8322 },
-  { code: 'DT_0013', name: '울산', lat: 35.5033, lng: 129.3853 },
-  { code: 'DT_0012', name: '포항', lat: 36.0442, lng: 129.3839 }
-];
-
-// =========================================================================
 // [TAB AREA 1] 홈 화면 프리미엄 웨더 대시보드 및 오픈 API 실시간 캐싱 엔진
 // =========================================================================
 window.HOME_CARD_CACHE_KEY = "home_card_weather_tide_data";
@@ -187,10 +170,6 @@ window.refreshHomeLocation = function (btnElement) {
   }, 2000);
 };
 
-// =========================================================================
-// [TAB AREA 1] 홈 화면 프리미엄 웨더 대시보드 및 오픈 API 실시간 캐싱 엔진
-// =========================================================================
-
 window.fetchAllPublicOpenAPI = async function (lat, lng) {
   const now = new Date();
   const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
@@ -308,9 +287,64 @@ window.fetchAllPublicOpenAPI = async function (lat, lng) {
   if (futureEvents.length >= 1) { const ev1 = futureEvents[0]; tideLowText = `${ev1.type} ${ev1.time} ${ev1.type === "만조" ? "▲" : "▼"}${ev1.level || ev1.value || "--"}cm`; }
   if (futureEvents.length >= 2) { const ev2 = futureEvents[1]; tideHighText = `${ev2.type} ${ev2.time} ${ev2.type === "만조" ? "▲" : "▼"}${ev2.level || ev2.value || "--"}cm`; } else { tideHighText = ""; }
 
+  // 상세 실시간 변동 물때 흐름 분석 엔진 (초들물, 중들물, 끝들물 / 초썰물, 중썰물, 끝썰물)
+  let detailedTideStatus = "---";
+  if (targetTides && targetTides.length > 0) {
+    const getEventTime = (ev) => ev.rawDt ? new Date(ev.rawDt.replace(/-/g, '/')).getTime() : (nowMs + ev.hoursFromNow * 60 * 60 * 1000);
+    const sortedTides = [...targetTides].sort((a, b) => getEventTime(a) - getEventTime(b));
+    
+    let prevEv = null;
+    let nextEv = null;
+    
+    for (let i = 0; i < sortedTides.length; i++) {
+      const evTime = getEventTime(sortedTides[i]);
+      if (evTime <= nowMs) {
+        prevEv = sortedTides[i];
+      } else if (evTime > nowMs && !nextEv) {
+        nextEv = sortedTides[i];
+        break;
+      }
+    }
+    
+    if (prevEv && nextEv) {
+      const prevTime = getEventTime(prevEv);
+      const nextTime = getEventTime(nextEv);
+      const totalDuration = nextTime - prevTime;
+      const elapsed = nowMs - prevTime;
+      const ratio = totalDuration > 0 ? (elapsed / totalDuration) : 0;
+      
+      if (prevEv.type === '간조') {
+        if (ratio < 1/3) detailedTideStatus = "초들물";
+        else if (ratio < 2/3) detailedTideStatus = "중들물";
+        else detailedTideStatus = "끝들물";
+      } else if (prevEv.type === '만조') {
+        if (ratio < 1/3) detailedTideStatus = "초썰물";
+        else if (ratio < 2/3) detailedTideStatus = "중썰물";
+        else detailedTideStatus = "끝썰물";
+      }
+    } else if (nextEv) {
+      const nextTime = getEventTime(nextEv);
+      const prevTime = nextTime - (6 * 60 * 60 * 1000);
+      const totalDuration = nextTime - prevTime;
+      const elapsed = nowMs - prevTime;
+      const ratio = Math.max(0, Math.min(1, totalDuration > 0 ? (elapsed / totalDuration) : 0));
+      
+      if (nextEv.type === '만조') {
+        if (ratio < 1/3) detailedTideStatus = "초들물";
+        else if (ratio < 2/3) detailedTideStatus = "중들물";
+        else detailedTideStatus = "끝들물";
+      } else {
+        if (ratio < 1/3) detailedTideStatus = "초썰물";
+        else if (ratio < 2/3) detailedTideStatus = "중썰물";
+        else detailedTideStatus = "끝썰물";
+      }
+    }
+  }
+
   return {
     timeStr: window.getFormattedCurrentTime(), temp: currentTemp, weather: currentWeather, rain: currentRain, wind: currentWind,
-    sunrise: currentSunrise, sunset: currentSunset, tideIdx: currentTideIdx, wave: currentWave, waterTemp: currentWaterTemp, tideLow: tideLowText, tideHigh: tideHighText
+    sunrise: currentSunrise, sunset: currentSunset, tideIdx: `${currentTideIdx} (${detailedTideStatus})`, wave: currentWave, waterTemp: currentWaterTemp, tideLow: tideLowText, tideHigh: tideHighText,
+    detailedTide: detailedTideStatus
   };
 };
 
@@ -321,6 +355,7 @@ window.applyHomeCardDOM = function (payload) {
   setTxt(".hc-temp", payload.temp); setTxt(".hc-weather", payload.weather); setTxt(".hc-rain", payload.rain); setTxt(".hc-wind", payload.wind);
   setTxt(".hc-sunrise", payload.sunrise); setTxt(".hc-sunset", payload.sunset); setTxt(".hc-tide-idx", payload.tideIdx); setTxt(".hc-wave", payload.wave);
   setTxt(".hc-water-temp", payload.waterTemp); setTxt(".hc-tide-low", payload.tideLow); setTxt(".hc-tide-high", payload.tideHigh);
+  setTxt(".hc-tide-status", payload.detailedTide);
 
   const timeEl = document.getElementById("hcHomeRefreshTime");
   if (timeEl) timeEl.textContent = `${payload.timeStr} 기준`;
@@ -354,4 +389,17 @@ window.applyHomeCardDOM = function (payload) {
       else if (payload.weather.includes("흐림")) mainCardEl.classList.add("cloudy");
     }
   }
+};
+
+window.fallbackHomeDataLoad = function () {
+  const existingTemp = document.querySelector(".hc-premium-card .hc-temp")?.textContent || "";
+  if (existingTemp !== "" && existingTemp !== "--°C") return;
+  window.applyHomeCardDOM({
+    timeStr: window.getFormattedCurrentTime(), temp: "--°C", weather: "정보없음", rain: "강수 --mm (--%)", wind: "--- · -.-m/s",
+    sunrise: "일출 --:--", sunset: "일몰 --:--", tideIdx: "--물", wave: "파고 --.-m", waterTemp: "수온 --.-°C", tideLow: "간조 --:-- ▼--cm", tideHigh: "만조 --:-- ▲--cm", detailedTide: "---"
+  });
+};
+
+window.getFormattedCurrentTime = function () {
+  const now = new Date(); return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 };
