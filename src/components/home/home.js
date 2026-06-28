@@ -139,14 +139,18 @@ window.refreshHomeLocation = function (btnElement) {
   const selectEl = document.getElementById("hcHomeFavoriteSelect");
   if (!selectEl || !selectEl.value) return;
 
-  let targetIcon = btnElement;
+  let targetIcon = null;
   if (btnElement) {
     btnElement.style.pointerEvents = "none";
     btnElement.style.opacity = "0.5";
-    const icon = btnElement.querySelector("svg") || btnElement.querySelector("i") || btnElement;
-    if (icon) {
-      icon.classList.add("hc-spin-anim");
-      targetIcon = icon;
+    // 회전 화살표가 그려진 순수 path 엘리먼트만 정확히 조준
+    const pathIcon = btnElement.querySelector("path");
+    if (pathIcon) {
+      pathIcon.classList.add("hc-spin-anim");
+      // SVG 내부 path가 제자리에서 회전하도록 중심 축 강제 바인딩
+      pathIcon.style.transformOrigin = "center";
+      pathIcon.style.transformBox = "fill-box";
+      targetIcon = pathIcon;
     }
   }
 
