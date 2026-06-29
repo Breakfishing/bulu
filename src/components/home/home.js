@@ -1,15 +1,9 @@
 // =========================================================================
 // [TAB AREA 1] 홈 화면 프리미엄 웨더 대시보드 및 오픈 API 실시간 캐싱 엔진
 // =========================================================================
-const TIDE_STATIONS = [
-  { code: 'DT_0005', name: '부산', lat: 35.0975, lng: 129.0369 },
-  { code: 'DT_0023', name: '통영', lat: 34.8286, lng: 128.4328 },
-  { code: 'DT_0026', name: '삼천포', lat: 34.9258, lng: 128.0336 },
-  { code: 'DT_0004', name: '마산', lat: 35.2044, lng: 128.5786 },
-  { code: 'DT_0016', name: '가덕도', lat: 35.0233, mesh: 128.8322 },
-  { code: 'DT_0013', name: '울산', lat: 35.5033, lng: 129.3853 },
-  { code: 'DT_0012', name: '포항', lat: 36.0442, lng: 129.3839 }
-];
+import './home.css';
+import { db } from '../../utils/firebase.js';
+import { TIDE_STATIONS } from '../../utils/tideStations.js';
 
 window.HOME_CARD_CACHE_KEY = "home_card_weather_tide_data";
 window.HOME_SELECTED_FAV_KEY = "home_selected_favorite_id";
