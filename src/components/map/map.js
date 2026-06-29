@@ -234,35 +234,9 @@ db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot((snapsho
 // =========================================================================
 // 실시간 격자 연안 수심 데이터 오버레이 매핑
 // =========================================================================
-export async function loadCoastalDepthData() {
-  try {
-    const response = await fetch('coastal_depth_compact.json');
-    if (response.ok) {
-      window.coastalDepthData = await response.json();
-      console.log(`[수심 데이터 로드 완료] 총 ${window.coastalDepthData.length} 격자 확보`);
-    }
-  } catch (err) { console.error("수심 데이터 로드 중 에러 발생:", err); }
-}
-loadCoastalDepthData();
-
-export function findNearestDepth(lat, lng) {
-  if (!window.coastalDepthData || window.coastalDepthData.length === 0) return null;
-  let minDstSquare = Infinity; let nearestDepth = null;
-  const latToMeters = 111000; const lngToMeters = 91000; const maxSearchRadiusMeters = 150;
-  
-  for (let i = 0; i < window.coastalDepthData.length; i++) {
-    const pt = window.coastalDepthData[i];
-    const dLatMeters = (pt[0] - lat) * latToMeters; const dLngMeters = (pt[1] - lng) * lngToMeters;
-    const dstSquare = dLatMeters * dLatMeters + dLngMeters * dLngMeters;
-    if (dstSquare < minDstSquare) { minDstSquare = dstSquare; nearestDepth = pt[2]; }
-  }
-  if (Math.sqrt(minDstSquare) > maxSearchRadiusMeters) return null;
-  return nearestDepth;
-}
-
 map.on('click', function (e) {
   const backdrop = document.getElementById('modalBackdrop'); if (backdrop && backdrop.classList.contains('active')) return;
-  const depth = window.findNearestDepth(e.latlng.lat, e.latlng.lng);
+  const depth = (typeof window.findNearestDepth === 'function') ? window.findNearestDepth(e.latlng.lat, e.latlng.lng) : null;
   if (depth !== null) L.popup({ className: 'custom-depth-popup', closeButton: false, offset: [0, -10] }).setLatLng(e.latlng).setContent(`<div style="font-weight: 800; font-size: 14px; text-align: center;">${depth}m</div>`).openOn(map);
   else map.closePopup();
 });
@@ -275,7 +249,7 @@ map.on('contextmenu', function (e) {
 });
 
 // =========================================================================
-// 마커 신규 등록 및 정보 수정 수동 인스턴스 모달 시스템
+// 마커 신규 등록 및 정보 수정 수동 인스턴스 모달 시스템 브릿지 연동
 // =========================================================================
 export function openPointModal() {
   document.getElementById('firstModal')?.classList.remove('active');
@@ -297,7 +271,7 @@ export function openPointModal() {
     });
     categorySelect.value = '미분류';
   }
-  window.fetchAddressForModal(window.tempLatLng.lat, window.tempLatLng.lng, 'pointAddress');
+  if (typeof window.fetchAddressForModal === 'function') window.fetchAddressForModal(window.tempLatLng.lat, window.tempLatLng.lng, 'pointAddress');
 }
 
 export function openToiletModal() {
@@ -309,7 +283,7 @@ export function openToiletModal() {
   const chips = document.getElementById('newToiletHoursChips');
   if (chips) { chips.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active')); document.getElementById('chipNewHours24')?.classList.add('active'); }
   document.getElementById('newToiletHoursDetailRow')?.classList.remove('active');
-  window.fetchAddressForModal(window.tempLatLng.lat, window.tempLatLng.lng, 'toiletAddress');
+  if (typeof window.fetchAddressForModal === 'function') window.fetchAddressForModal(window.tempLatLng.lat, window.tempLatLng.lng, 'toiletAddress');
 }
 
 export function savePointMarker() {
@@ -352,8 +326,8 @@ export function openPointEditModal(docId, name, category, memo, pType, pUnit, pP
   const memoInput = document.getElementById('editPointMemo'); if (memoInput) memoInput.value = memo;
   const pointEditAddrEl = document.getElementById('pointEditAddress'); if (pointEditAddrEl) pointEditAddrEl.innerText = address || "주소 정보 없음";
 
-  if ((!address || address.includes("없음") || address.includes("중...")) && lat && lng) {
-    searchNearestCoastalLandmark(lat, lng, nearestAddr => { if (pointEditAddrEl) pointEditAddrEl.innerText = nearestAddr; db.collection('fishing_points').doc(docId).update({ address: nearestAddr }); }, () => {});
+  if ((!address || address.includes("없음") || address.includes("중...")) && lat && lng && typeof window.searchNearestCoastalLandmark === 'function') {
+    window.searchNearestCoastalLandmark(lat, lng, nearestAddr => { if (pointEditAddrEl) pointEditAddrEl.innerText = nearestAddr; db.collection('fishing_points').doc(docId).update({ address: nearestAddr }); }, () => {});
   }
 
   const catSelect = document.getElementById('editPointCategory');
@@ -448,88 +422,6 @@ export function openMarkerDeleteModal(docId, collectionName, displayName, onSucc
   document.getElementById('modalBackdrop')?.classList.add('active'); deleteModal.classList.add('active');
 }
 
-// --- 카테고리 관리 제어 함수 군 브릿지 ---
-export function openCategoryEditBottomSheet(catName, catColor, event) {
-  if (event) event.stopPropagation();
-  const oldInput = document.getElementById('editTargetCategoryOldName'); if (oldInput) oldInput.value = catName;
-  const nameInput = document.getElementById('editCategoryNameInput'); if (nameInput) nameInput.value = catName;
-  const modalTitle = document.querySelector('#categoryEditModal h3 span'); if (modalTitle) modalTitle.innerText = "카테고리 수정";
-  window.selectCategoryColor(catColor || '#4f46e5'); document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('categoryEditModal')?.classList.add('active');
-}
-
-export function openCategoryAddBottomSheet() {
-  const oldInput = document.getElementById('editTargetCategoryOldName'); if (oldInput) oldInput.value = "NEW_CATEGORY";
-  const nameInput = document.getElementById('editCategoryNameInput'); if (nameInput) nameInput.value = "";
-  const modalTitle = document.querySelector('#categoryEditModal h3 span'); if (modalTitle) modalTitle.innerText = "카테고리 추가";
-  window.selectCategoryColor('#4f46e5'); document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('categoryEditModal')?.classList.add('active');
-}
-
-export function saveCategoryEditData() {
-  const modeFlag = document.getElementById('editTargetCategoryOldName').value; 
-  const nextCatName = document.getElementById('editCategoryNameInput').value.trim(); 
-  const nextColor = document.getElementById('editCategoryColorInput').value;
-
-  if (!nextCatName) return alert("카테고리 명칭은 필수입니다.");
-  if (nextCatName.length > 8) return alert("카테고리 이름은 띄어쓰기 포함 8자 이내로 입력해 주세요.");
-
-  let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]'); 
-  let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
-
-  const systemCategories = ['전체', '즐겨찾기', '최근 추가된 화장실', '미분류', '공중화장실 정보'];
-
-  if (modeFlag === "NEW_CATEGORY") {
-    if (savedCatOrder.includes(nextCatName) || systemCategories.includes(nextCatName)) {
-      return alert("이미 존재하는 카테고리 명칭이거나 사용할 수 없는 이름입니다.");
-    }
-    savedCatOrder.push(nextCatName); savedCatColors[nextCatName] = nextColor;
-    localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
-    window.closeModals(); alert(`[${nextCatName}] 카테고리가 추가되었습니다.`); if (typeof window.renderPointsManagementTab === 'function') window.renderPointsManagementTab(); return;
-  }
-
-  if (nextCatName !== modeFlag && (savedCatOrder.includes(nextCatName) || systemCategories.includes(nextCatName))) {
-    return alert("이미 존재하는 카테고리 명칭이거나 사용할 수 없는 이름입니다.");
-  }
-
-  const idx = savedCatOrder.indexOf(modeFlag); 
-  if (idx !== -1) savedCatOrder[idx] = nextCatName;
-
-  delete savedCatColors[modeFlag]; savedCatColors[nextCatName] = nextColor;
-  localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
-
-  const batch = db.batch(); 
-  const targets = window.cachedFishingPoints.filter(p => (p.category || '미분류').trim() === modeFlag.trim());
-  targets.forEach(item => batch.update(db.collection('fishing_points').doc(item.id), { category: nextCatName, color: nextColor }));
-  
-  batch.commit().then(() => { 
-    if (window.currentActiveCategory === modeFlag) {
-      window.currentActiveCategory = nextCatName;
-      localStorage.setItem('pm-last-category', nextCatName);
-    }
-    window.closeModals(); 
-    if (typeof window.renderPointsManagementTab === 'function') window.renderPointsManagementTab();
-  }).catch(err => {
-    console.error(err);
-    alert("카테고리 데이터 동기화 중 오류가 발생했습니다.");
-  });
-}
-
-export function deleteCategoryWithGuard(catName, event) {
-  if (event) event.stopPropagation();
-  if (window.cachedFishingPoints.some(p => (p.category || '미분류').trim() === catName.trim())) { alert(`삭제 불가: [${catName}] 카테고리 내부에 소속된 포인트 마커가 존재합니다.`); return; }
-  if (confirm(`[${catName}] 카테고리를 삭제하시겠습니까?`)) {
-    let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]'); let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
-    savedCatOrder = savedCatOrder.filter(c => c !== catName); delete savedCatColors[catName];
-    localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
-    alert("카테고리가 삭제되었습니다."); if (typeof window.renderPointsManagementTab === 'function') window.renderPointsManagementTab();
-  }
-}
-
-export function selectCategoryColor(color) {
-  if (document.getElementById('editCategoryColorInput')) document.getElementById('editCategoryColorInput').value = color;
-  document.querySelectorAll('.color-palette-btn').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-color') === color));
-  const previewEl = document.getElementById('categoryEditMarkerIcon'); if (previewEl) previewEl.innerHTML = getFishingPointSvg(color);
-}
-
 // --- 모달 칩 토글 유틸 보조 스택 ---
 export function selectNewToiletHours(type, element) { window.selectedNewToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('newToiletHoursDetailRow')?.classList.toggle('active', type === '지정시간'); }
 export function selectParking(type, element) { selectedParkingType = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('parkingDetailRow')?.classList.toggle('active', type === 'paid'); }
@@ -556,7 +448,9 @@ export function renderPointDetailBottomSheet(docId, name, category, color, memo,
           if (status === window.kakao.maps.services.Status.OK && result[0]) {
             let finalAddr = result[0].road_address ? result[0].road_address.address_name : (result[0].address ? result[0].address.address_name : "주소 정보 없음");
             if (finalAddr === "주소 정보 없음" || finalAddr.trim() === "") {
-              searchNearestCoastalLandmark(lat, lng, nearestAddr => { if (addrField) addrField.innerText = nearestAddr; db.collection((category === 'toilet') ? 'public_toilets' : 'fishing_points').doc(docId).update({ [category === 'toilet' ? 'dbSavedAddress' : 'address']: nearestAddr }); }, () => {});
+              if (typeof window.searchNearestCoastalLandmark === 'function') {
+                window.searchNearestCoastalLandmark(lat, lng, nearestAddr => { if (addrField) addrField.innerText = nearestAddr; db.collection((category === 'toilet') ? 'public_toilets' : 'fishing_points').doc(docId).update({ [category === 'toilet' ? 'dbSavedAddress' : 'address']: nearestAddr }); }, () => {});
+              }
             } else { if (addrField) addrField.innerText = finalAddr; db.collection((category === 'toilet') ? 'public_toilets' : 'fishing_points').doc(docId).update({ [category === 'toilet' ? 'dbSavedAddress' : 'address']: finalAddr }); }
           }
         });
@@ -603,10 +497,7 @@ export function renderPointDetailBottomSheet(docId, name, category, color, memo,
       const wIcon = document.getElementById('weatherModalMarkerIcon');
       if (wIcon) {
         if (category === 'toilet') {
-          wIcon.innerHTML = `<svg width="20" height="30" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#ff9500"/>
-            <circle cx="12" cy="12" r="4" fill="#ffffff"/>
-          </svg>`;
+          wIcon.innerHTML = `<svg width="20" height="30" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#ff9500"/><circle cx="12" cy="12" r="4" fill="#ffffff"/></svg>`;
         } else {
           wIcon.innerHTML = getFishingPointSvg(color).replace('width="26" height="39"', 'width="20" height="30"');
         }
@@ -652,45 +543,12 @@ export function openPointDetailFromList(pt) {
 
   if (pt.category === 'toilet') {
     if (window.tempToiletMarker) map.removeLayer(window.tempToiletMarker);
-    const toiletHtml = `<svg width="24" height="36" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#ff9500"/>
-      <circle cx="12" cy="12" r="4" fill="#ffffff"/>
-    </svg>`;
+    const toiletHtml = `<svg width="24" height="36" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#ff9500"/><circle cx="12" cy="12" r="4" fill="#ffffff"/></svg>`;
     window.tempToiletMarker = L.marker([pt.lat, pt.lng], { icon: L.divIcon({ html: toiletHtml, className: 'custom-marker-wrapper-toilet temp-list-injected-toilet-node', iconSize: [24, 36], iconAnchor: [12, 36] }), zIndexOffset: 1000 }).addTo(map);
     window.renderPointDetailBottomSheet(pt.id, pt.name || '공중화장실', 'toilet', '#ff9500', pt.memo || '', '', '', 0, false, false, false, pt.lat, pt.lng, false, pt.dbSavedAddress || pt.address || '주소 정보 없음');
   } else {
     window.renderPointDetailBottomSheet(pt.id, pt.name, pt.category, pt.color, pt.memo, pt.parkingType || 'none', pt.parkingUnit || '', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, pt.lat, pt.lng, pt.isFavorite || false, pt.address || "주소 정보 없음");
   }
-}
-
-// =========================================================================
-// 주소 역변환 및 해안 랜드마크 탐색 유틸리티
-// =========================================================================
-export function fetchAddressForModal(lat, lng, elementId) {
-  const el = document.getElementById(elementId); if (el) el.innerText = "주소 변환 중...";
-  if (typeof kakao !== 'undefined' && kakao.maps) {
-    kakao.maps.load(() => {
-      new kakao.maps.services.Geocoder().coord2Address(lng, lat, (result, status) => {
-        if (status === kakao.maps.services.Status.OK && result[0]) {
-          const finalAddr = result[0].road_address?.address_name || result[0].address?.address_name || "주소 정보 없음";
-          if (finalAddr === "주소 정보 없음") searchNearestCoastalLandmark(lat, lng, n => { if (el) el.innerText = n; }, () => { if (el) el.innerText = "주소 정보 없음"; });
-          else { if (el) el.innerText = finalAddr; if (elementId === 'pointAddress') window.cachedActiveAddressStr = finalAddr; }
-        } else { searchNearestCoastalLandmark(lat, lng, n => { if (el) el.innerText = n; }, () => { if (el) el.innerText = "주소 정보 없음"; }); }
-      });
-    });
-  }
-}
-
-export function searchNearestCoastalLandmark(lat, lng, successCallback, errorCallback) {
-  if (typeof kakao === 'undefined' || !kakao.maps?.services?.Places) { if (errorCallback) errorCallback(); return; }
-  const ps = new kakao.maps.services.Places(); const keywords = ['방파제', '해수욕장', '항구', '선착장', '해안', '갯바위']; let idx = 0;
-  const tryNext = () => {
-    if (idx >= keywords.length) { if (errorCallback) errorCallback(); return; }
-    ps.keywordSearch(keywords[idx], (data, status) => {
-      if (status === kakao.maps.services.Status.OK && data?.[0]) { successCallback(`${data[0].place_name} 인근 ${(parseFloat(data[0].distance)/1000).toFixed(1)}km`); }
-      else { idx++; tryNext(); }
-    }, { location: new kakao.maps.LatLng(lat, lng), radius: 20000, sort: kakao.maps.services.SortBy.DISTANCE });
-  }; tryNext();
 }
 
 export function getNearestTideStation(lat, lng) {
@@ -712,7 +570,6 @@ window.toggleProhibitedZones = toggleProhibitedZones;
 window.toggleToiletLayer = toggleToiletLayer;
 window.updateVisibleMarkersOnMap = updateVisibleMarkersOnMap;
 window.getFishingPointSvg = getFishingPointSvg;
-window.findNearestDepth = findNearestDepth;
 
 window.openPointModal = openPointModal;
 window.openToiletModal = openToiletModal;
@@ -724,12 +581,6 @@ window.savePointEditData = savePointEditData;
 window.saveToiletEditData = saveToiletEditData;
 window.openMarkerDeleteModal = openMarkerDeleteModal;
 
-window.openCategoryEditBottomSheet = openCategoryEditBottomSheet;
-window.openCategoryAddBottomSheet = openCategoryAddBottomSheet;
-window.saveCategoryEditData = saveCategoryEditData;
-window.deleteCategoryWithGuard = deleteCategoryWithGuard;
-window.selectCategoryColor = selectCategoryColor;
-
 window.selectNewToiletHours = selectNewToiletHours;
 window.selectParking = selectParking;
 window.shiftParkingUnit = shiftParkingUnit;
@@ -739,6 +590,4 @@ window.selectEditToiletHours = selectEditToiletHours;
 
 window.renderPointDetailBottomSheet = renderPointDetailBottomSheet;
 window.openPointDetailFromList = openPointDetailFromList;
-window.fetchAddressForModal = fetchAddressForModal;
-window.searchNearestCoastalLandmark = searchNearestCoastalLandmark;
 window.getNearestTideStation = getNearestTideStation;
