@@ -37,7 +37,7 @@ const KMA_AUTH_KEY = "RAp21103R7OKdtddNwezzw";
 // [COMMON UI] 라이프사이클 및 네비게이션 공통 UI 제어 영역
 // =========================================================================
 
-// [초기 부팅 시점 자동 실행]
+// [지연 로딩 체제] 초기 부팅 무거움을 방지하기 위해 스플래시가 제거된 직후 백그라운드 가동하도록 변경
 window.loadCoastalDepthData = async function() {
   try {
     const response = await fetch('coastal_depth_compact.json');
@@ -56,6 +56,7 @@ window.checkAndHideSplash = function () {
   const pointsLoaded = window.isFishingPointsLoaded === true;
   const toiletsLoaded = window.isPublicToiletsLoaded === true;
 
+  // 교정: 임의의 강제 강하 타이머(Fallback)를 원천 삭제. 오직 모든 실시간 DB 스트리밍이 완료되어야만 스플래시 해제
   if (homeLoaded && pointsLoaded && toiletsLoaded) {
     splashEl.style.transition = 'opacity 0.35s ease-out';
     splashEl.style.opacity = '0';
@@ -63,18 +64,11 @@ window.checkAndHideSplash = function () {
       if (splashEl.parentNode) {
         splashEl.remove();
         console.log("[SYSTEM] 전역 라이프사이클 부팅 정상 완료 - 스플래시 블록 제거");
+        
+        // 최적화 핵심: 메인 UI가 완벽히 떠서 유저가 조작 가능한 상태가 된 직후 대용량 JSON 파싱 스레드 가동
+        window.loadCoastalDepthData();
       }
     }, 350);
-  } else {
-    if (!window.globalSplashFallbackTimer) {
-      window.globalSplashFallbackTimer = setTimeout(() => {
-        console.warn("[SYSTEM] 백엔드 응답 지연으로 인한 스플래시 강제 타파 실행");
-        window.isHomeCardLoaded = true;
-        window.isFishingPointsLoaded = true;
-        window.isPublicToiletsLoaded = true;
-        window.checkAndHideSplash();
-      }, 3000);
-    }
   }
 };
 
