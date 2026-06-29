@@ -6,6 +6,11 @@ import { db } from '../../utils/firebase.js';
 
 window.currentActiveCategory = null;
 
+// 카테고리 수정 모달 닫기 연동 함수 추가
+window.closeCategoryEditModal = function () {
+  window.closeModals();
+};
+
 // 카테고리 관리 모달 오픈 및 리스트 빌드
 window.openCategoryManageModal = function () {
   window.closeModals();
@@ -121,28 +126,26 @@ window.openCategoryManageModal = function () {
     });
   }
 
-  const addBtnRow = modal.querySelector('.category-manage-add-row') || document.querySelector('.category-manage-add-row');
-  if (addBtnRow) {
-    const addBtn = addBtnRow.querySelector('.btn-main');
-    if (addBtn) {
-      if (finalCatOrder.length >= 10) {
-        addBtn.disabled = true;
-        addBtn.style.opacity = '0.4';
-        addBtn.style.pointerEvents = 'none';
-        
-        if (!addBtn.dataset.limitHooked) {
-          addBtn.addEventListener('click', function (evt) {
-            evt.preventDefault();
-            evt.stopPropagation();
-            return false;
-          }, true);
-          addBtn.dataset.limitHooked = 'true';
-        }
-      } else {
-        addBtn.disabled = false;
-        addBtn.style.opacity = '1';
-        addBtn.style.pointerEvents = 'auto';
+  // index.html 모달의 하단 고정 가로 그리드 버튼 배치 구조(.modal-action-row-grid .modal-btn.save)에 맞춰 타겟팅 세정
+  const addBtn = modal.querySelector('.modal-action-row-grid .modal-btn.save');
+  if (addBtn) {
+    if (finalCatOrder.length >= 10) {
+      addBtn.disabled = true;
+      addBtn.style.opacity = '0.4';
+      addBtn.style.pointerEvents = 'none';
+      
+      if (!addBtn.dataset.limitHooked) {
+        addBtn.addEventListener('click', function (evt) {
+          evt.preventDefault();
+          evt.stopPropagation();
+          return false;
+        }, true);
+        addBtn.dataset.limitHooked = 'true';
       }
+    } else {
+      addBtn.disabled = false;
+      addBtn.style.opacity = '1';
+      addBtn.style.pointerEvents = 'auto';
     }
   }
 
@@ -160,7 +163,6 @@ window.bindCategoryDragAndDropEvents = function (container) {
     
     e.preventDefault();
     item.classList.add('dragging');
-    // 교정: 이동 노드가 아닌 상위 고정 컨테이너 보드에 포인터 가드를 걸어 트래킹 이탈 원천 제거
     container.setPointerCapture(e.pointerId);
 
     const onPointerMove = (evt) => {
@@ -292,7 +294,13 @@ function createPointRowComponent(pt, isFavSection) {
 
   row.innerHTML = `
     <div class="pm-item-left" style="width: calc(100% - 100px);">
-      <div class="pm-drag-handle" style="${isToilet ? 'visibility:hidden; pointer-events:none;' : ''}; touch-action: none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="var(--text-main)" stroke="var(--text-main)" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></svg></div>
+      <div class="pm-drag-handle" style="${isToilet ? 'visibility:hidden; pointer-events:none;' : ''}; touch-action: none;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--text-main)" stroke="var(--text-main)" stroke-width="2.5">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </div>
       ${isFavSection ? `<div class="pm-color-dot" style="background-color: ${isToilet ? '#ff9500' : (pt.color || '#007aff')}; margin-right: 4px;"></div>` : ''}
       <div class="pm-item-info" style="padding-left: 4px; min-width: 0; flex: 1;">
         <span class="pm-item-name" style="outline:none; font-weight:600;">${pt.name || (isToilet ? '공중화장실' : '무명 포인트')}</span>
@@ -326,7 +334,6 @@ window.bindDragAndDropEvents = function (container, isFavSection = false) {
     
     e.preventDefault(); 
     item.classList.add('dragging'); 
-    // 교정: 유동 엘리먼트가 아닌 정적 캔버스 컨테이너 스코프에 캡처 파이프라인을 밀착 바인딩
     container.setPointerCapture(e.pointerId);
 
     const onPointerMove = (evt) => {
