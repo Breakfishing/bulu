@@ -79,7 +79,6 @@ const CARTO_LIGHT_URL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{
 const CARTO_DARK_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
 const isInitialDark = localStorage.getItem('dark-mode') === 'true';
 
-// 교정: updateInterval 브레이크를 삭제하고 edgeBufferTiles 범위를 3으로 늘려 드래그 중에도 끊김없이 선행 로드되도록 변경
 const clean2DLayer = L.tileLayer(isInitialDark ? CARTO_DARK_URL : CARTO_LIGHT_URL, { 
   attribution: '&copy; OpenStreetMap &copy; CARTO', 
   subdomains: 'abcd', 
@@ -159,19 +158,11 @@ const CenterToMyLocationControl = L.Control.extend({
 });
 map.addControl(new CenterToMyLocationControl());
 
-// 교정: 국내 실정에 맞춰 야드/마일 단위를 숨기고 미터(m/km) 법만 좌측 하단에 고정 출력하도록 빌트인 축척도 결합
 L.control.scale({
   position: 'bottomleft',
   metric: true,
   imperial: false
 }).addTo(map);
-
-export function refreshMapData() {
-  const btn = document.querySelector('.top-center-ctrl'); if (!btn) return;
-  const icon = btn.querySelector('.app-icon'); if (icon && icon.classList.contains('spinning')) return;
-  if (icon) icon.classList.add('spinning');
-  setTimeout(() => { if (icon) icon.classList.remove('spinning'); console.log("지도 레이어 실시간 데이터 동기화 완료!"); }, 1500);
-}
 
 let showProhibited = false;
 export function toggleProhibitedZones() {
@@ -196,7 +187,6 @@ export function updateVisibleMarkersOnMap() {
     window.cachedFishingPoints.forEach(item => {
       if (!item || item.lat === undefined || item.lng === undefined || isNaN(item.lat) || isNaN(item.lng) || item.lat === null || item.lng === null) return;
       const marker = L.marker([item.lat, item.lng], { icon: L.divIcon({ html: getFishingPointSvg(item.color), className: 'custom-marker-wrapper', iconSize: [26, 39], iconAnchor: [13, 39] }), zIndexOffset: 500 });
-      // 교정: 참조 누락되었던 hasCafe 부분을 item.hasCafe로 완벽히 수정 완료
       marker.on('click', () => { window.closeModals(); window.renderPointDetailBottomSheet(item.id, item.name, item.category, item.color, item.memo, item.parkingType || 'none', item.parkingUnit || '', item.parkingPrice || '0', item.hasStore || false, item.hasCafe || false, item.hasTackle || false, item.lat, item.lng, item.isFavorite || false, item.address || "주소 정보 없음"); });
       cloudPointsLayer.addLayer(marker);
     });
@@ -588,7 +578,6 @@ export function getNearestTideStation(lat, lng) {
 // [Vite 호환 가드] 기존 index.html 및 마크업 인라인 바인딩 전역 가드
 // =========================================================================
 window.toggleMapLayer = toggleMapLayer;
-window.refreshMapData = refreshMapData;
 window.toggleProhibitedZones = toggleProhibitedZones;
 window.toggleToiletLayer = toggleToiletLayer;
 window.updateVisibleMarkersOnMap = updateVisibleMarkersOnMap;
