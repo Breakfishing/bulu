@@ -3,6 +3,7 @@
 // =========================================================================
 import './weatherModal.css';
 import { db } from '../../utils/firebase.js';
+import { TIDE_STATIONS } from '../../utils/tideStations.js';
 
 // 전역 캐시 및 데이터 저장소 초기화 바인딩
 window.globalSunTimesCache = window.globalSunTimesCache || {};
@@ -17,17 +18,6 @@ const PUBLIC_PORTAL_KEY = "7440915081950a748b3d8d5d1b9904d246ce8028893a02ec4042b
 window.DATA_GO_KR_SERVICE_KEY = PUBLIC_PORTAL_KEY;
 const KHOA_API_KEY = PUBLIC_PORTAL_KEY;
 const KMA_AUTH_KEY = "RAp21103R7OKdtddNwezzw";
-
-// 조석 관측소 참조 데이터 스택 복크
-const TIDE_STATIONS = [
-  { code: 'DT_0005', name: '부산', lat: 35.0975, lng: 129.0369 },
-  { code: 'DT_0023', name: '통영', lat: 34.8286, lng: 128.4328 },
-  { code: 'DT_0026', name: '삼천포', lat: 34.9258, lng: 128.0336 },
-  { code: 'DT_0004', name: '마산', lat: 35.2044, lng: 128.5786 },
-  { code: 'DT_0016', name: '가덕도', lat: 35.0233, mesh: 128.8322 },
-  { code: 'DT_0013', name: '울산', lat: 35.5033, lng: 129.3853 },
-  { code: 'DT_0012', name: '포항', lat: 36.0442, lng: 129.3839 }
-];
 
 // -------------------------------------------------------------------------
 // [GEOMETRIC PART] 최인접 조석 관측소 기하학적 매핑 연산
