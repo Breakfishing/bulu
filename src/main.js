@@ -500,7 +500,9 @@ window.openToiletModal = function () {
 window.savePointMarker = function () {
   const name = document.getElementById('pointName').value.trim(); if (!name) return alert("포인트 이름을 입력하세요.");
   const categorySelect = document.getElementById('pointCategory'); const category = categorySelect ? (categorySelect.value || '미분류') : '미분류';
-  let color = (categorySelect && categorySelect.options.length > 0) ? categorySelect.options[categorySelect.selectedIndex].exportAttribute('data-color') : '#007aff';
+  
+  // 교정: exportAttribute -> 표준 getAttribute 사용
+  let color = (categorySelect && categorySelect.options.length > 0) ? categorySelect.options[categorySelect.selectedIndex].getAttribute('data-color') : '#007aff';
   if (category === '미분류') color = '#868e96';
 
   db.collection('fishing_points').add({
@@ -701,7 +703,8 @@ window.deleteCategoryWithGuard = function (catName, event) {
 
 window.selectCategoryColor = function (color) {
   if (document.getElementById('editCategoryColorInput')) document.getElementById('editCategoryColorInput').value = color;
-  document.querySelectorAll('.color-palette-btn').forEach(btn => btn.classList.toggle('active', btn.exportAttribute('data-color') === color));
+  // 교정: exportAttribute -> 표준 getAttribute 사용
+  document.querySelectorAll('.color-palette-btn').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-color') === color));
   const previewEl = document.getElementById('categoryEditMarkerIcon'); if (previewEl && typeof getFishingPointSvg === 'function') previewEl.innerHTML = getFishingPointSvg(color);
 };
 
