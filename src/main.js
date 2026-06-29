@@ -4,15 +4,9 @@
 import './style.css'; 
 import { db } from './utils/firebase.js'; 
 
-// 하위 컴포넌트 및 유틸리티 모듈 스레드 가동
-import './utils/geoUtils.js'; 
-import './components/more/more.js';
-import './components/map/map.js';
-import './components/weather/weatherModal.js';
-import './components/home/home.js'; 
-import './components/management/management.js'; 
-
-// --- 전역 변수 및 상태 레이어 관리 ---
+// =========================================================================
+// [1. PHASE ONE] 핵심 전역 상태 레이어 및 컴포넌트 변수 선언
+// =========================================================================
 window.cachedFishingPoints = [];
 window.cachedPublicToilets = [];
 window.userLatLng = null;
@@ -36,10 +30,46 @@ const KHOA_API_KEY = PUBLIC_PORTAL_KEY;
 const KMA_AUTH_KEY = "RAp21103R7OKdtddNwezzw";
 
 // =========================================================================
-// [COMMON UI] 라이프사이클 및 네비게이션 공통 UI 제어 영역
+// [2. PHASE TWO] 라이프사이클 및 네비게이션 공통 UI 제어 영역 (최상단 배치로 가드 구축)
 // =========================================================================
+window.switchTab = function (tabId, navItem) {
+  window.closeModals();
+  document.getElementById('settings-page')?.classList.remove('active');
+  document.getElementById('notice-page')?.classList.remove('active');
+  document.getElementById('info-board-page')?.classList.remove('active');
 
-// 교정: 누락되었던 대용량 연안 수심 데이터 컴팩트 런타임 로더 엔진 복구 완료
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(ni => ni.classList.remove('active'));
+
+  const targetTab = document.getElementById(tabId);
+  if (targetTab) targetTab.classList.add('active');
+  if (navItem) navItem.classList.add('active');
+
+  if (tabId === 'tab-map') {
+    setTimeout(() => { if (window.mapObj) window.mapObj.invalidateSize(); }, 50);
+  }
+  if (tabId === 'tab-manage') {
+    if (typeof window.renderPointsManagementTab === 'function') {
+      window.renderPointsManagementTab();
+    }
+  }
+};
+
+window.closeModals = function () {
+  document.querySelectorAll('.modal, .custom-modal-native, .bottom-sheet-modal-native, .bottom-sheet').forEach(m => m.classList.remove('active'));
+  document.getElementById('noticeWriteModal')?.classList.remove('active');
+  document.getElementById('infoEditModal')?.classList.remove('active');
+  document.getElementById('fishingBanModal')?.classList.remove('active');
+  document.getElementById('sizeLimitModal')?.classList.remove('active');
+  document.getElementById('knotGuideModal')?.classList.remove('active');
+  document.getElementById('detailModalWrapper')?.classList.remove('active');
+  document.getElementById('modalBackdrop')?.classList.remove('active');
+  document.getElementById('weatherModal')?.classList.remove('active');
+
+  if (window.tempTargetVisual && window.mapObj) { window.mapObj.removeLayer(window.tempTargetVisual); window.tempTargetVisual = null; }
+  if (window.tempToiletMarker && window.mapObj) { window.mapObj.removeLayer(window.tempToiletMarker); window.tempToiletMarker = null; }
+};
+
 window.loadCoastalDepthData = async function() {
   try {
     const response = await fetch('coastal_depth_compact.json');
@@ -65,7 +95,6 @@ window.checkAndHideSplash = function () {
       if (splashEl.parentNode) {
         splashEl.remove();
         console.log("[SYSTEM] 전역 라이프사이클 부팅 정상 완료 - 스플래시 블록 제거");
-        
         window.loadCoastalDepthData();
       }
     }, 350);
@@ -78,42 +107,6 @@ window.logApiStatus = function(apiName, status, details = {}) {
   console.log(`${msg}`, details);
   if (typeof window.logToAdminTerminal === 'function') {
     window.logToAdminTerminal(`${time} ${msg} ${details.error || ''}`);
-  }
-};
-
-window.closeModals = function () {
-  document.querySelectorAll('.modal, .custom-modal-native, .bottom-sheet-modal-native, .bottom-sheet').forEach(m => m.classList.remove('active'));
-  document.getElementById('noticeWriteModal')?.classList.remove('active');
-  document.getElementById('infoEditModal')?.classList.remove('active');
-  document.getElementById('fishingBanModal')?.classList.remove('active');
-  document.getElementById('sizeLimitModal')?.classList.remove('active');
-  document.getElementById('knotGuideModal')?.classList.remove('active');
-  document.getElementById('detailModalWrapper')?.classList.remove('active');
-  document.getElementById('modalBackdrop')?.classList.remove('active');
-  document.getElementById('weatherModal')?.classList.remove('active');
-
-  if (window.tempTargetVisual && window.mapObj) { window.mapObj.removeLayer(window.tempTargetVisual); window.tempTargetVisual = null; }
-  if (window.tempToiletMarker && window.mapObj) { window.mapObj.removeLayer(window.tempToiletMarker); window.tempToiletMarker = null; }
-};
-
-window.switchTab = function (tabId, navItem) {
-  window.closeModals();
-  document.getElementById('settings-page')?.classList.remove('active');
-  document.getElementById('notice-page')?.classList.remove('active');
-  document.getElementById('info-board-page')?.classList.remove('active');
-
-  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(ni => ni.classList.remove('active'));
-
-  const targetTab = document.getElementById(tabId);
-  if (targetTab) targetTab.classList.add('active');
-  if (navItem) navItem.classList.add('active');
-
-  if (tabId === 'tab-map') {
-    setTimeout(() => { if (window.mapObj) window.mapObj.invalidateSize(); }, 50);
-  }
-  if (tabId === 'tab-manage') {
-    window.renderPointsManagementTab();
   }
 };
 
@@ -148,7 +141,7 @@ window.openPointModal = function () {
     });
     categorySelect.value = '미분류';
   }
-  window.fetchAddressForModal(window.tempLatLng.lat, window.tempLatLng.lng, 'pointAddress');
+  if (typeof window.fetchAddressForModal === 'function') window.fetchAddressForModal(window.tempLatLng.lat, window.tempLatLng.lng, 'pointAddress');
 };
 
 window.openToiletModal = function () {
@@ -160,7 +153,7 @@ window.openToiletModal = function () {
   const chips = document.getElementById('newToiletHoursChips');
   if (chips) { chips.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active')); document.getElementById('chipNewHours24')?.classList.add('active'); }
   document.getElementById('newToiletHoursDetailRow').classList.remove('active');
-  window.fetchAddressForModal(window.tempLatLng.lat, window.tempLatLng.lng, 'toiletAddress');
+  if (typeof window.fetchAddressForModal === 'function') window.fetchAddressForModal(window.tempLatLng.lat, window.tempLatLng.lng, 'toiletAddress');
 };
 
 window.savePointMarker = function () {
@@ -200,7 +193,7 @@ window.openPointEditModal = function (docId, name, category, memo, pType, pUnit,
   document.getElementById('editPointDocId').value = docId; document.getElementById('editPointName').value = name; document.getElementById('editPointMemo').value = memo;
   const pointEditAddrEl = document.getElementById('pointEditAddress'); if (pointEditAddrEl) pointEditAddrEl.innerText = address || "주소 정보 없음";
 
-  if ((!address || address.includes("없음") || address.includes("중...")) && lat && lng) {
+  if ((!address || address.includes("없음") || address.includes("중...")) && lat && lng && typeof window.searchNearestCoastalLandmark === 'function') {
     window.searchNearestCoastalLandmark(lat, lng, nearestAddr => { if (pointEditAddrEl) pointEditAddrEl.innerText = nearestAddr; db.collection('fishing_points').doc(docId).update({ address: nearestAddr }); }, () => {});
   }
 
@@ -215,7 +208,7 @@ window.openPointEditModal = function (docId, name, category, memo, pType, pUnit,
       const matchPoints = window.cachedFishingPoints.filter(p => (p.category || '미분류') === catName);
       const groupColor = catName === '미분류' ? '#868e96' : (matchPoints.length > 0 ? matchPoints[0].color : (savedCatColors[catName] || '#007aff'));
       const option = document.createElement('option'); option.value = catName; option.setAttribute('data-color', groupColor); option.innerText = catName;
-      catSelect.appendChild(option);
+      categorySelect.appendChild(option);
     });
     catSelect.value = category || '미분류';
   }
@@ -318,7 +311,9 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
           if (status === window.kakao.maps.services.Status.OK && result[0]) {
             let finalAddr = result[0].road_address ? result[0].road_address.address_name : (result[0].address ? result[0].address.address_name : "주소 정보 없음");
             if (finalAddr === "주소 정보 없음" || finalAddr.trim() === "") {
-              window.searchNearestCoastalLandmark(lat, lng, nearestAddr => { if (addrField) addrField.innerText = nearestAddr; db.collection((category === 'toilet') ? 'public_toilets' : 'fishing_points').doc(docId).update({ [category === 'toilet' ? 'dbSavedAddress' : 'address']: nearestAddr }); }, () => {});
+              if (typeof window.searchNearestCoastalLandmark === 'function') {
+                window.searchNearestCoastalLandmark(lat, lng, nearestAddr => { if (addrField) addrField.innerText = nearestAddr; db.collection((category === 'toilet') ? 'public_toilets' : 'fishing_points').doc(docId).update({ [category === 'toilet' ? 'dbSavedAddress' : 'address']: nearestAddr }); }, () => {});
+              }
             } else { if (addrField) addrField.innerText = finalAddr; db.collection((category === 'toilet') ? 'public_toilets' : 'fishing_points').doc(docId).update({ [category === 'toilet' ? 'dbSavedAddress' : 'address']: finalAddr }); }
           }
         });
@@ -429,11 +424,6 @@ function getFishingPointSvg(color) {
 }
 window.getFishingPointSvg = getFishingPointSvg;
 
-// =========================================================================
-// [BACKEND AREA] 백엔드 데이터베이스 실시간 트래킹 모델 및 오버레이 렌더러
-// =========================================================================
-window.coastalDepthData = [];
-
 window.findNearestDepth = function(lat, lng) {
   if (!window.coastalDepthData || window.coastalDepthData.length === 0) return null;
   let minDstSquare = Infinity; let nearestDepth = null;
@@ -449,6 +439,19 @@ window.findNearestDepth = function(lat, lng) {
   return nearestDepth;
 };
 
+// =========================================================================
+// [3. PHASE THREE] 하위 컴포넌트 및 모듈 스레드 가동 (함수 선언 완료 후 안전 로드)
+// =========================================================================
+import './utils/geoUtils.js'; 
+import './components/more/more.js';
+import './components/map/map.js';
+import './components/weather/weatherModal.js';
+import './components/home/home.js'; 
+import './components/management/management.js'; 
+
+// =========================================================================
+// [4. PHASE FOUR] 백엔드 데이터베이스 실시간 트래킹 모델 및 오버레이 리스너
+// =========================================================================
 db.collection('fishing_points').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
   try {
     window.cachedFishingPoints = []; snapshot.forEach(doc => window.cachedFishingPoints.push({ id: doc.id, ...doc.data() }));
@@ -485,4 +488,6 @@ db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot((snapsho
 // =========================================================================
 // 전역 초기 부팅 실행 시퀀스
 // =========================================================================
-window.initHomeDataSequence();
+if (typeof window.initHomeDataSequence === 'function') {
+  window.initHomeDataSequence();
+}
