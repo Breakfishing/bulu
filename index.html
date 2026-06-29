@@ -1080,7 +1080,7 @@
         <h3>화장실 정보 수정</h3>
         <input type="hidden" id="editToiletDocId">
         <div class="modal-form-group">
-            <label>화장실 이름</label>
+            <label>이름</label>
             <input type="text" id="editToiletName" placeholder="화장실 위치의 지역 이름이나 건물 이름을 입력하세요.">
         </div>
         <div class="modal-form-group">
@@ -1088,7 +1088,7 @@
             <div id="toiletEditAddress" class="form-static-text">주소 변환 중...</div>
         </div>
         <div class="modal-form-group">
-            <label>개방시간 설정</label>
+            <label>개방 시간</label>
             <div class="chip-group-row" id="editToiletHoursChips">
                 <button type="button" class="chip-btn" id="chipEditHours24"
                     onclick="window.selectEditToiletHours('24시간', this)">24시간</button>
@@ -1180,7 +1180,7 @@
 
     <div id="deleteConfirmModal" class="modal">
         <h3><span>삭제</span></h3>
-        <p class="delete-modal-text"><span id="deleteModalTargetName"></span> 삭제하겠습니까?</p>
+        <p class="delete-modal-text">삭제하겠습니까?</p>
         <div class="modal-action-row-grid delete-modal-grid-flex">
             <button type="button" class="modal-btn cancel delete-modal-btn-padding"
                 onclick="window.closeModals()">닫기</button>
@@ -1232,7 +1232,7 @@
                 </div>
             </div>
 
-            <div id="lblDetailAddressField" class="detail-address-subtext">위치 정보를 조회하는 중입니다...</div>
+            <div id="lblDetailAddressField" class="detail-address-subtext">위치 정보 조회 중</div>
 
             <div class="detail-tags-scroll-row">
                 <div id="lblDetailToiletHours" class="detail-tag-item inline-flex detail-toilet-hours-hidden">
@@ -1276,7 +1276,7 @@
                 </button>
 
                 <button type="button" id="btnDetailWeatherOpen" class="weather-link-full-btn detail-weather-btn-reset">
-                    <span>72시간 기상정보</span>
+                    <span>72시간 기상 정보</span>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="9 18 15 12 9 6"></polyline>
@@ -1295,7 +1295,7 @@
                 </div>
                 <h3 id="lblWeatherModalTitle" class="weather-title-text weather-modal-title-fix">포인트 기상 정보</h3>
             </div>
-            <div id="lblDetailDate" class="weather-date-sticky-bar weather-date-margin">날짜 계산 중...</div>
+            <div id="lblDetailDate" class="weather-date-sticky-bar weather-date-margin">날짜 계산 중</div>
         </div>
 
         <div class="weather-modal-body">
@@ -1360,7 +1360,7 @@
     </div>
 
     <div id="fishingBanModal" class="bottom-sheet-modal-native">
-        <h3 id="lblFishingBanModalTitle" class="notice-write-title-text">금어기 등록</h3>
+        <h3 id="lblFishingBanModalTitle" class="notice-write-title-text">금어기 어종 등록</h3>
         <input type="hidden" id="banModalMode" value="add">
         <input type="hidden" id="banModalTargetId" value="">
         <div class="modal-form-group">
@@ -1409,7 +1409,7 @@
     </div>
 
     <div id="sizeLimitModal" class="bottom-sheet-modal-native">
-        <h3 id="lblSizeLimitModalTitle" class="notice-write-title-text">금지체장 등록</h3>
+        <h3 id="lblSizeLimitModalTitle" class="notice-write-title-text">금지체장 어종 등록</h3>
         <input type="hidden" id="limitModalMode" value="add">
         <input type="hidden" id="limitModalTargetId" value="">
         <div class="modal-form-group">
@@ -1451,11 +1451,11 @@
         <input type="hidden" id="knotModalTargetId" value="">
         <div class="modal-form-group">
             <label>매듭법 명</label>
-            <input type="text" id="knotTitle" placeholder="매듭법 이름을 입력하세요">
+            <input type="text" id="knotTitle" placeholder="매듭법 명칭을 입력하세요">
         </div>
         <div class="modal-form-group">
-            <label>태그 (콤마로 구분하여 입력)</label>
-            <input type="text" id="knotTags" placeholder="예: 원줄, 쇼크리더, 바늘">
+            <label>태그</label>
+            <input type="text" id="knotTags" placeholder="콤마로 구분하여 입력하세요. (ex: 원줄, 쇼크리더, 바늘)">
         </div>
         <div class="modal-form-group">
             <label>출처 채널명</label>
