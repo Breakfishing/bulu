@@ -1275,6 +1275,10 @@ textarea,
     content: '';
     position: absolute;
     top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px 5px 0;
+    border-style: solid;
     border-color: var(--primary-color) transparent;
     display: block;
     width: 0;
