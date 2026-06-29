@@ -144,6 +144,13 @@ const CenterToMyLocationControl = L.Control.extend({
 });
 map.addControl(new CenterToMyLocationControl());
 
+// 교정: 국내 실정에 맞춰 야드/마일 단위를 숨기고 미터(m/km) 법만 좌측 하단에 고정 출력하도록 빌트인 축척도 결합
+L.control.scale({
+  position: 'bottomleft',
+  metric: true,
+  imperial: false
+}).addTo(map);
+
 export function refreshMapData() {
   const btn = document.querySelector('.top-center-ctrl'); if (!btn) return;
   const icon = btn.querySelector('.app-icon'); if (icon && icon.classList.contains('spinning')) return;
@@ -174,7 +181,7 @@ export function updateVisibleMarkersOnMap() {
     window.cachedFishingPoints.forEach(item => {
       if (!item || item.lat === undefined || item.lng === undefined || isNaN(item.lat) || isNaN(item.lng) || item.lat === null || item.lng === null) return;
       const marker = L.marker([item.lat, item.lng], { icon: L.divIcon({ html: getFishingPointSvg(item.color), className: 'custom-marker-wrapper', iconSize: [26, 39], iconAnchor: [13, 39] }), zIndexOffset: 500 });
-      marker.on('click', () => { window.closeModals(); window.renderPointDetailBottomSheet(item.id, item.name, item.category, item.color, item.memo, item.parkingType || 'none', item.parkingUnit || '', item.parkingPrice || '0', item.hasStore || false, item.hasCafe || false, item.hasTackle || false, item.lat, item.lng, item.isFavorite || false, item.address || "주소 정보 없음"); });
+      marker.on('click', () => { window.closeModals(); window.renderPointDetailBottomSheet(item.id, item.name, item.category, item.color, item.memo, item.parkingType || 'none', item.parkingUnit || '', item.parkingPrice || '0', item.hasStore || false, hasCafe || false, item.hasTackle || false, item.lat, item.lng, item.isFavorite || false, item.address || "주소 정보 없음"); });
       cloudPointsLayer.addLayer(marker);
     });
   }
