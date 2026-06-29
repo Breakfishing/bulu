@@ -95,7 +95,7 @@ textarea,
 .app-icon {
     width: 24px;
     height: 24px;
-    stroke: var(--text-muted);
+    stroke: var(--text-main);
     fill: none;
     stroke-width: 2;
     stroke-linecap: round;
