@@ -1256,7 +1256,7 @@ textarea,
 .timeline-sync-bubble {
     position: absolute !important;
     top: -30px !important;
-    width: 85px;
+    width: 80px;
     transform: translateX(-50%) !important;
     background: var(--primary-color) !important;
     color: #ffffff !important;
