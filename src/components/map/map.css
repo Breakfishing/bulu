@@ -257,4 +257,34 @@
     font-size: 11px !important;
     padding: 4px 8px !important;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
+}/* =========================================================================
+   Leaflet 순정 축척도(Scale) UI 테마 커스텀 가용 레이어
+   ========================================================================= */
+.leaflet-control-scale {
+  margin-left: 16px !important;
+  margin-bottom: 24px !important;
+  pointer-events: none;
+}
+
+.leaflet-control-scale-line {
+  border: 1.5px solid var(--border-color, #dbdbdb) !important;
+  border-top: none !important;
+  line-height: 1.2 !important;
+  padding: 2px 6px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  color: var(--text-main, #333333) !important;
+  background: var(--modal-bg, rgba(255, 255, 255, 0.85)) !important;
+  backdrop-filter: blur(4px);
+  border-bottom-left-radius: 2px;
+  border-bottom-right-radius: 2px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  transition: background-color 0.25s, color 0.25s, border-color 0.25s;
+}
+
+/* 다크모드 대응 속성 검증 매핑 */
+[data-theme="dark"] .leaflet-control-scale-line {
+  background: rgba(30, 41, 59, 0.85) !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
 }
