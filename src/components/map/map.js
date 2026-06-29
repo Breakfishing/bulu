@@ -79,8 +79,23 @@ const CARTO_LIGHT_URL = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{
 const CARTO_DARK_URL = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
 const isInitialDark = localStorage.getItem('dark-mode') === 'true';
 
-const clean2DLayer = L.tileLayer(isInitialDark ? CARTO_DARK_URL : CARTO_LIGHT_URL, { attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 18, edgeBufferTiles: 1, keepBuffer: 4, updateInterval: 200 });
-const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri', edgeBufferTiles: 1, keepBuffer: 4, updateInterval: 200 });
+// 교정: updateInterval 브레이크를 삭제하고 edgeBufferTiles 범위를 3으로 늘려 드래그 중에도 끊김없이 선행 로드되도록 변경
+const clean2DLayer = L.tileLayer(isInitialDark ? CARTO_DARK_URL : CARTO_LIGHT_URL, { 
+  attribution: '&copy; OpenStreetMap &copy; CARTO', 
+  subdomains: 'abcd', 
+  maxZoom: 18, 
+  edgeBufferTiles: 3, 
+  keepBuffer: 8, 
+  updateWhenIdle: false 
+});
+
+const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { 
+  attribution: 'Tiles &copy; Esri', 
+  edgeBufferTiles: 3, 
+  keepBuffer: 8, 
+  updateWhenIdle: false 
+});
+
 clean2DLayer.addTo(map);
 
 let currentLayerMode = '2D';
