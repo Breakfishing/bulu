@@ -1260,9 +1260,8 @@ textarea,
     transform: translateX(-50%) !important;
     background: var(--primary-color) !important;
     color: #ffffff !important;
-    font-size: 12px !important;
     font-weight: 800 !important;
-    padding: 4px 8px !important;
+    padding: 4px 0 !important;
     border-radius: 6px !important;
     z-index: 100 !important;
     white-space: nowrap !important;
