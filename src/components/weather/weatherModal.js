@@ -1,5 +1,5 @@
 // =========================================================================
-// [THREAD 1 & 5] 기상 API 통신, 기하 변환 스레드 및 타임라인 그래픽 엔진 모듈
+// [기상 모듈] 전역 초기화 및 환경 변수 설정
 // =========================================================================
 import './weatherModal.css';
 import { db } from '../../utils/firebase.js';
@@ -19,9 +19,11 @@ window.DATA_GO_KR_SERVICE_KEY = PUBLIC_PORTAL_KEY;
 const KHOA_API_KEY = PUBLIC_PORTAL_KEY;
 const KMA_AUTH_KEY = "RAp21103R7OKdtddNwezzw";
 
-// -------------------------------------------------------------------------
-// [GEOMETRIC PART] 최인접 조석 관측소 기하학적 매핑 연산
-// -------------------------------------------------------------------------
+// =========================================================================
+// [기상 모듈] 좌표 변환 및 관측소 매핑 유틸리티
+// =========================================================================
+
+// 최인접 조석 관측소 기하학적 매핑 연산
 window.getNearestTideStation = function (lat, lng) {
   let minDistance = Infinity; 
   let nearestStation = TIDE_STATIONS[0];
@@ -33,9 +35,7 @@ window.getNearestTideStation = function (lat, lng) {
   return nearestStation.code;
 };
 
-// -------------------------------------------------------------------------
-// [GEOMETRIC PART] 대한민국 기상청 람베르트 정각원추도법 좌표 변환 스레드
-// -------------------------------------------------------------------------
+// 대한민국 기상청 람베르트 정각원추도법 좌표 변환 스레드
 window.convertLatLngToGrid = function (lat, lng) {
   const RE = 6371.00877; 
   const GRID = 5.0; 
@@ -76,6 +76,7 @@ window.convertLatLngToGrid = function (lat, lng) {
   };
 };
 
+// 일출 및 일몰 가운트 기본 백업 연산 데이터 파싱
 window.getSunTimesForDate = function (targetDate) {
   if (!window.globalSunTimesCache) window.globalSunTimesCache = {};
   const key = `${targetDate.getFullYear()}${String(targetDate.getMonth() + 1).padStart(2, '0')}${String(targetDate.getDate()).padStart(2, '0')}`;
@@ -83,6 +84,7 @@ window.getSunTimesForDate = function (targetDate) {
   return { sunrise: `05:${32 + (targetDate.getDate() % 5)}`, sunset: `19:${41 - (targetDate.getDate() % 5)}` };
 };
 
+// 기상청 단기예보 동기화용 기준 날짜 및 시간 계산기
 window.getKMABaseDateTime = function () {
   const now = new Date(); 
   const hours = [2, 5, 8, 11, 14, 17, 20, 23]; 
@@ -98,6 +100,11 @@ window.getKMABaseDateTime = function () {
   return { baseDate: `${bd.getFullYear()}${String(bd.getMonth() + 1).padStart(2, '0')}${String(bd.getDate()).padStart(2, '0')}`, baseTime: bt };
 };
 
+// =========================================================================
+// [기상 모듈] 실시간 해양 및 기상 데이터 외부 API 통신 엔진
+// =========================================================================
+
+// 천문우주정보국 일출/일몰 데이터 수신 세션
 window.fetchSunriseSunsetForDatesPromise = function (lat, lng, dateStrings) {
   if (!window.globalSunTimesCache) window.globalSunTimesCache = {}; 
   const ck = `${lat.toFixed(1)}_${lng.toFixed(1)}`;
@@ -122,6 +129,7 @@ window.fetchSunriseSunsetForDatesPromise = function (lat, lng, dateStrings) {
   }));
 };
 
+// 기상청 단기 예보 동네 날씨 데이터 수신 세션
 window.fetchKMAWeatherPromise = function (lat, lng) {
   const grid = window.convertLatLngToGrid(lat, lng); 
   const cacheKey = `cc_weather_v6_${grid.nx}_${grid.ny}`; 
@@ -177,6 +185,7 @@ window.fetchKMAWeatherPromise = function (lat, lng) {
   return weatherPromise;
 };
 
+// 국립해양조사원 관측소별 5일치 실시간 조석(물때) 데이터 수신 세션
 window.fetchTideData3DaysPromise = function (lat, lng) {
   const safeGetStationFunc = typeof window.getNearestTideStation === 'function' ? window.getNearestTideStation : () => 'DT_0005';
   const obsCode = safeGetStationFunc(lat, lng); 
@@ -190,7 +199,6 @@ window.fetchTideData3DaysPromise = function (lat, lng) {
     const lData = localStorage.getItem(cacheKey);
     if (lData) {
       const parsed = JSON.parse(lData);
-      // 최적화: 고정성 예보 데이터 특성에 맞춰 유효기간을 3시간에서 24시간(하루)으로 대폭 연장
       if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
         safeLogger("TIDE_API", "캐시 적중");
         return Promise.resolve(parsed.data);
@@ -262,6 +270,7 @@ window.fetchTideData3DaysPromise = function (lat, lng) {
   return tidePromise;
 };
 
+// 국립해양조사원 ROMS 해양 순환 격자 모델 수온 및 해류 조류 분석 세션
 window.fetchRealWaterTempPromise = function (lat, lng, dateStrings) {
   const cacheKey = `cc_roms_dual_track_v3_${lat.toFixed(2)}_${lng.toFixed(2)}`; 
   const safeLogger = typeof window.logApiStatus === 'function' ? window.logApiStatus : () => {};
@@ -273,7 +282,6 @@ window.fetchRealWaterTempPromise = function (lat, lng, dateStrings) {
     const lData = localStorage.getItem(cacheKey);
     if (lData) {
       const parsed = JSON.parse(lData);
-      // 최적화: 예측치 업데이트 주기를 고려하여 수온 캐시 기간을 3시간에서 12시간으로 상향 조정
       if (Date.now() - parsed.timestamp < 12 * 60 * 60 * 1000) {
         safeLogger("ROMS_WATER_TEMP", "캐시 적중");
         return Promise.resolve(parsed.data);
@@ -320,9 +328,16 @@ window.fetchRealWaterTempPromise = function (lat, lng, dateStrings) {
           
           wtm[key] = formattedWtemp;
           
+          // 교정: 유향(crdir) 방위 데이터 표기를 풍향과 동일한 8방향 화살표 메커니즘으로 교정 연산
+          let currentArrow = "---";
+          if (cd !== undefined && cd !== null) {
+            const d = parseFloat(cd);
+            currentArrow = (d >= 337.5 || d < 22.5) ? "↓" : (d < 67.5) ? "↙" : (d < 112.5) ? "←" : (d < 157.5) ? "↖" : (d < 202.5) ? "↑" : (d < 247.5) ? "↗" : (d < 292.5) ? "→" : "↘";
+          }
+
           wtm.details[key] = {
             wtemp: formattedWtemp,
-            crdir: cd !== undefined ? parseFloat(cd) : null,
+            crdir: currentArrow,
             crsp: cs !== undefined ? parseFloat(cs).toFixed(2) + "m/s" : "--m/s"
           };
         }
@@ -346,9 +361,11 @@ window.fetchRealWaterTempPromise = function (lat, lng, dateStrings) {
   return romsPromise;
 };
 
-// -------------------------------------------------------------------------
-// [WEATHER CORE] 기상/조석 해양 기하 타임라인 가변 그래픽 스레드 모듈
-// -------------------------------------------------------------------------
+// =========================================================================
+// [기상 모듈] 타임라인 UI 그래픽 렌더링 및 모달 라이프사이클 컨트롤러
+// =========================================================================
+
+// 기상 정보 비동기 병렬 수집 시퀀스 및 옵티미스틱 인디케이터 관리 핸들러
 window.loadTimelineWithOptimisticUI = async function (lat, lng) {
   const modalBody = document.querySelector('.weather-modal-body'), dateSticky = document.getElementById('lblDetailDate'), bridge = document.getElementById('timelineInnerBridge');
   if (modalBody && dateSticky && dateSticky.parentNode !== modalBody) modalBody.insertBefore(dateSticky, modalBody.firstChild);
@@ -369,7 +386,6 @@ window.loadTimelineWithOptimisticUI = async function (lat, lng) {
   const obsCode = safeGetStationFunc(lat, lng); 
   const stationObj = safeStations.find(s => s && s.code === obsCode) || safeStations[0] || { lat: lat, lng: lng };
 
-  // 최적화: 사용자 지정 좌표와 해안 관측소 좌표의 기상청 격자가 같으면 동일 프로미스를 바인딩하여 트래픽 반감
   const stationLng = stationObj.lng !== undefined ? stationObj.lng : (stationObj.mesh !== undefined ? stationObj.mesh : lng);
   const userGrid = window.convertLatLngToGrid(lat, lng);
   const stationGrid = window.convertLatLngToGrid(stationObj.lat, stationLng);
@@ -408,6 +424,7 @@ window.loadTimelineWithOptimisticUI = async function (lat, lng) {
   }
 };
 
+// 시간별 기상 격자 그리드 배치 및 일월령 물때 곡선 통합 조형 그래픽 컴포넌트 엔진
 window.buildTimelineUI = function (lat, lng, weatherMap, realTides, waterTempMap, seaWeatherMap) {
   const scroller = document.getElementById('timelineScrollWrapper'), bridge = document.getElementById('timelineInnerBridge'); if (!bridge) return;
 
@@ -439,7 +456,7 @@ window.buildTimelineUI = function (lat, lng, weatherMap, realTides, waterTempMap
       for (let s = 0; s < Math.floor(seg.width / 15); s++) svgBackgroundsHtml += `<circle cx="${(seg.start + (Math.random() * seg.width)).toFixed(2)}" cy="${(5 + (Math.random() * 35)).toFixed(2)}" r="${(0.6 + Math.random() * 0.4).toFixed(1)}" fill="#ffffff" opacity="${(0.3 + Math.random() * 0.6).toFixed(2)}" />`;
       if (seg.width > 30) {
         const moonX = (seg.start + seg.width / 2).toFixed(2); const phase = (((new Date(now.getTime() + (seg.start + seg.width / 2) / 56 * 60 * 60 * 1000).getTime() - new Date(Date.UTC(2000, 0, 6, 18, 14, 0)).getTime()) / (1000 * 60 * 60 * 24)) % 29.530588853 + 29.530588853) % 29.530588853;
-        let mc = (phase < 1.5 || phase > 28.0) ? `<circle cx="14" cy="14" r="11" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-dasharray="2,2"/>` : `<circle cx="14" cy="14" r="11" fill="none" stroke="#ffffff" stroke-opacity="0.15"/><path d="M 14 3 A 11 11 0 0 ${phase < 14.7 ? 1 : 0} 14 25 A 6 11 0 0 ${phase < 14.7 ? 0 : 1} 14 3 Z" fill="#ffd700"/>`;
+        let mc = (phase < 1.5 || phase > 28.0) ? `<circle cx="14" cy="14" r="11" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-dasharray="2,2"/>` : `<circle cx="14" cy="14" r="11" fill="none" stroke="#ffffff" stroke-opacity="0.15"/><path d="M 14 3 A 11 11 0 0 ${phase < 14.7 ? 1 : 0} 14 25 A 5 11 0 0 ${phase < 14.7 ? 0 : 1} 14 3 Z" fill="#ffd700"/>`;
         svgBackgroundsHtml += `<g transform="translate(${(moonX - 14)}, 12)">${mc}</g>`;
       }
     }
@@ -460,19 +477,11 @@ window.buildTimelineUI = function (lat, lng, weatherMap, realTides, waterTempMap
     } else if (seaWeatherMap && seaWeatherMap[kmaKey] && seaWeatherMap[kmaKey].WAV) waveVal = parseFloat(seaWeatherMap[kmaKey].WAV).toFixed(1) + "m";
     
     if (waterTempMap && waterTempMap.details && waterTempMap.details[kmaKey]) {
-      const rObj = waterTempMap.details[kmaKey]; wtempVal = rObj.wtemp; crspVal = rObj.crsp;
-      if (rObj.crdir !== null) {
-        const d = rObj.crdir;
-        crdirVal = (d >= 337.5 || d < 22.5) ? "북" : (d < 67.5) ? "북동" : (d < 112.5) ? "동" : (d < 157.5) ? "남동" : (d < 202.5) ? "남" : (d < 247.5) ? "남서" : (d < 292.5) ? "서" : "북서";
-      }
+      const rObj = waterTempMap.details[kmaKey]; wtempVal = rObj.wtemp; crspVal = rObj.crsp; crdirVal = rObj.crdir;
     } else if (waterTempMap && waterTempMap.details) {
       const fk = Object.keys(waterTempMap.details).find(k => k.startsWith(kmaKey.substring(0, 8)));
       if (fk && waterTempMap.details[fk]) {
-        const rObj = waterTempMap.details[fk]; wtempVal = rObj.wtemp; crspVal = rObj.crsp;
-        if (rObj.crdir !== null) {
-          const d = rObj.crdir;
-          crdirVal = (d >= 337.5 || d < 22.5) ? "북" : (d < 67.5) ? "북동" : (d < 112.5) ? "동" : (d < 157.5) ? "남동" : (d < 202.5) ? "남" : (d < 247.5) ? "남서" : (d < 292.5) ? "서" : "북서";
-        }
+        const rObj = waterTempMap.details[fk]; wtempVal = rObj.wtemp; crspVal = rObj.crsp; crdirVal = rObj.crdir;
       }
     }
 
@@ -525,6 +534,7 @@ window.buildTimelineUI = function (lat, lng, weatherMap, realTides, waterTempMap
   window.syncTimelineDateHeader(scroller);
 };
 
+// 스크롤 트래킹 기반 시간별 정보 바인딩 및 일월령 물때 인디케이터 동기화 핸들러
 window.syncTimelineDateHeader = function (scrollElement) {
   if (!scrollElement || !window.timelineDatesArray || window.timelineDatesArray.length === 0) return;
   const container = scrollElement.closest('.timeline-viewport-container-native'); if (!container) return;
