@@ -5,7 +5,7 @@ import './style.css';
 import { db } from './utils/firebase.js'; 
 
 // 하위 컴포넌트 및 유틸리티 모듈 스레드 가동
-import './utils/geoUtils.js'; // 분리된 주소 역변환 및 해안 랜드마크 유틸리티 연동
+import './utils/geoUtils.js'; 
 import './components/more/more.js';
 import './components/map/map.js';
 import './components/weather/weatherModal.js';
@@ -38,6 +38,17 @@ const KMA_AUTH_KEY = "RAp21103R7OKdtddNwezzw";
 // =========================================================================
 // [COMMON UI] 라이프사이클 및 네비게이션 공통 UI 제어 영역
 // =========================================================================
+
+// 교정: 누락되었던 대용량 연안 수심 데이터 컴팩트 런타임 로더 엔진 복구 완료
+window.loadCoastalDepthData = async function() {
+  try {
+    const response = await fetch('coastal_depth_compact.json');
+    if (response.ok) {
+      window.coastalDepthData = await response.json();
+      console.log(`[수심 데이터 로드 완료] 총 ${window.coastalDepthData.length} 격자 확보`);
+    }
+  } catch (err) { console.error("수심 데이터 로드 중 에러 발생:", err); }
+};
 
 window.checkAndHideSplash = function () {
   const splashEl = document.getElementById('splash-screen');
@@ -147,7 +158,7 @@ window.openToiletModal = function () {
   window.selectedNewToiletHoursValue = "24시간";
 
   const chips = document.getElementById('newToiletHoursChips');
-  if (chips) { chips.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active')); document.getElementById('chipNewHours24')?.add('active'); }
+  if (chips) { chips.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active')); document.getElementById('chipNewHours24')?.classList.add('active'); }
   document.getElementById('newToiletHoursDetailRow').classList.remove('active');
   window.fetchAddressForModal(window.tempLatLng.lat, window.tempLatLng.lng, 'toiletAddress');
 };
@@ -282,12 +293,12 @@ window.openMarkerDeleteModal = function (docId, collectionName, displayName, onS
   document.getElementById('modalBackdrop')?.classList.add('active'); deleteModal.classList.add('active');
 };
 
-window.selectNewToiletHours = function (type, element) { window.selectedNewToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('newToiletHoursDetailRow').classList.toggle('active', type === '지정시간'); };
-window.selectParking = function (type, element) { selectedParkingType = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('parkingDetailRow').classList.toggle('active', type === 'paid'); };
+window.selectNewToiletHours = function (type, element) { window.selectedNewToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('newToiletHoursDetailRow')?.classList.toggle('active', type === '지정시간'); };
+window.selectParking = function (type, element) { selectedParkingType = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('parkingDetailRow')?.classList.toggle('active', type === 'paid'); };
 window.shiftParkingUnit = function (btn) { currentUnitIndex = (currentUnitIndex + 1) % parkingUnits.length; if (btn) btn.innerText = parkingUnits[currentUnitIndex]; };
 window.shiftEditPointParkingUnit = function (btn) { currentEditPointUnitIndex = (currentEditPointUnitIndex + 1) % editPointParkingUnits.length; if (btn) btn.innerText = editPointParkingUnits[currentEditPointUnitIndex]; };
-window.selectEditPointParking = function (type, element) { selectedEditPointParkingType = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editPointParkingDetailRow').classList.toggle('active', type === 'paid'); };
-window.selectEditToiletHours = function (type, element) { selectedToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editToiletHoursDetailRow').classList.toggle('active', type === '지정시간'); };
+window.selectEditPointParking = function (type, element) { selectedEditPointParkingType = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editPointParkingDetailRow')?.classList.toggle('active', type === 'paid'); };
+window.selectEditToiletHours = function (type, element) { selectedToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editToiletHoursDetailRow')?.classList.toggle('active', type === '지정시간'); };
 
 // =========================================================================
 // [SHEET AREA] 실시간 연안 종합 타임라인 바텀시트 정보 렌더링 엔진
@@ -300,7 +311,7 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
   document.getElementById('lblDetailName').innerText = name;
   const addrField = document.getElementById('lblDetailAddressField'); if (addrField) addrField.innerText = dbSavedAddress || "주소 변환 중...";
 
-  if ((!dbSavedAddress || dbSavedAddress.includes("중...")) && typeof window.kakao !== 'undefined' && window.kakao.maps) {
+  if ((!dbSavedAddress || dbSavedAddress.includes("중...") || dbSavedAddress.includes("없음")) && typeof window.kakao !== 'undefined' && window.kakao.maps) {
     window.kakao.maps.load(function () {
       if (window.kakao.maps.services?.Geocoder) {
         new window.kakao.maps.services.Geocoder().coord2Address(lng, lat, function (result, status) {
@@ -342,7 +353,7 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
       if (hasCafe) facContainer.innerHTML += `<div class="detail-tag-item inline-flex"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/></svg><span class="tag-txt">카페</span></div>`;
       if (hasTackle) facContainer.innerHTML += `<div class="detail-tag-item inline-flex"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span class="tag-txt">낚시점</span></div>`;
     }
-    try { window.buildTimelineUI(lat, lng, null, []); } catch (err) {}
+    try { if (typeof window.buildTimelineUI === 'function') window.buildTimelineUI(lat, lng, null, []); } catch (err) {}
   }
 
   document.getElementById('btnDetailPointDelete').onclick = function (e) { e.stopPropagation(); window.openMarkerDeleteModal(docId, (category === 'toilet') ? 'public_toilets' : 'fishing_points', name || '지정 포인트'); };
@@ -359,7 +370,7 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
           wIcon.innerHTML = getFishingPointSvg(color).replace('width="26" height="39"', 'width="20" height="30"');
         }
       }
-      document.getElementById('weatherModal')?.classList.add('active'); window.loadTimelineWithOptimisticUI(lat, lng);
+      document.getElementById('weatherModal')?.classList.add('active'); if (typeof window.loadTimelineWithOptimisticUI === 'function') window.loadTimelineWithOptimisticUI(lat, lng);
     };
   }
 
