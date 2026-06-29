@@ -19,6 +19,32 @@
     box-shadow: none !important;
 }
 
+.top-center-ctrl {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    background: var(--bg-panel);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.top-center-ctrl .app-icon {
+    stroke: var(--text-main);
+    width: 20px;
+    height: 20px;
+}
+
 .top-right-ctrl-group {
     position: absolute;
     top: 15px;
@@ -263,7 +289,7 @@
   position: absolute;
   bottom: 0;
   left: 50%;
-  width: 1px; /* 하단 테두리와 일치하는 눈금 두께 */
+  width: 15px; /* 하단 테두리와 일치하는 눈금 두께 */
   height: 4px;  /* 중간값 예측용 눈금선 높이 */
   background-color: #333333;
   transform: translateX(-50%);

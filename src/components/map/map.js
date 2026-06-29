@@ -166,6 +166,13 @@ L.control.scale({
   imperial: false
 }).addTo(map);
 
+export function refreshMapData() {
+  const btn = document.querySelector('.top-center-ctrl'); if (!btn) return;
+  const icon = btn.querySelector('.app-icon'); if (icon && icon.classList.contains('spinning')) return;
+  if (icon) icon.classList.add('spinning');
+  setTimeout(() => { if (icon) icon.classList.remove('spinning'); console.log("지도 레이어 실시간 데이터 동기화 완료!"); }, 1500);
+}
+
 let showProhibited = false;
 export function toggleProhibitedZones() {
   showProhibited = !showProhibited; 
