@@ -388,19 +388,42 @@ function saveCategoryOrderWithinTabToFirebase(container) {
   batch.commit().catch(err => console.error("순서 저장 중 파이어베이스 배치 트랜잭션 실패:", err));
 }
 
+// =========================================================================
+// [포인트 관리] 카테고리 생성, 수정, 삭제 및 모달 레이어 트랜지션 제어 그룹
+// =========================================================================
+
 // 카테고리 정보 수정 바텀시트 호출 핸들러
 window.openCategoryEditBottomSheet = function (catName, catColor, event) {
   if (event) event.stopPropagation();
-  document.getElementById('editTargetCategoryOldName').value = catName; document.getElementById('editCategoryNameInput').value = catName;
-  const modalTitle = document.querySelector('#categoryEditModal h3 span'); if (modalTitle) modalTitle.innerText = "카테고리 수정";
-  window.selectCategoryColor(catColor || '#4f46e5'); document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('categoryEditModal').classList.add('active');
+  
+  // 기존 카테고리 관리 모달 활성 클래스 제거 (숨김 처리)
+  document.getElementById('categoryManageModal')?.classList.remove('active');
+  
+  document.getElementById('editTargetCategoryOldName').value = catName; 
+  document.getElementById('editCategoryNameInput').value = catName;
+  
+  const modalTitle = document.querySelector('#categoryEditModal h3 span'); 
+  if (modalTitle) modalTitle.innerText = "카테고리 수정";
+  
+  window.selectCategoryColor(catColor || '#4f46e5'); 
+  document.getElementById('modalBackdrop')?.classList.add('active'); 
+  document.getElementById('categoryEditModal').classList.add('active');
 };
 
 // 신규 카테고리 추가 바텀시트 호출 핸들러
 window.openCategoryAddBottomSheet = function () {
-  const modalTitle = document.querySelector('#categoryEditModal h3 span'); if (modalTitle) modalTitle.innerText = "카테고리 추가";
-  document.getElementById('editTargetCategoryOldName').value = "NEW_CATEGORY"; document.getElementById('editCategoryNameInput').value = "";
-  window.selectCategoryColor('#4f46e5'); document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('categoryEditModal').classList.add('active');
+  // 기존 카테고리 관리 모달 활성 클래스 제거 (숨김 처리)
+  document.getElementById('categoryManageModal')?.classList.remove('active');
+
+  const modalTitle = document.querySelector('#categoryEditModal h3 span'); 
+  if (modalTitle) modalTitle.innerText = "카테고리 추가";
+  
+  document.getElementById('editTargetCategoryOldName').value = "NEW_CATEGORY"; 
+  document.getElementById('editCategoryNameInput').value = "";
+  
+  window.selectCategoryColor('#4f46e5'); 
+  document.getElementById('modalBackdrop')?.classList.add('active'); 
+  document.getElementById('categoryEditModal').classList.add('active');
 };
 
 // 카테고리 수정/생성 폼 데이터 컴포넌트 연동 세션
@@ -422,8 +445,12 @@ window.saveCategoryEditData = function () {
       return alert("이미 존재하는 카테고리 명칭이거나 사용할 수 없는 이름입니다.");
     }
     savedCatOrder.push(nextCatName); savedCatColors[nextCatName] = nextColor;
-    localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
-    window.closeModals(); alert(`[${nextCatName}] 카테고리가 추가되었습니다.`); window.renderPointsManagementTab(); return;
+    localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); 
+    localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
+    
+    alert(`[${nextCatName}] 카테고리가 추가되었습니다.`); 
+    window.openCategoryManageModal();
+    return;
   }
 
   if (nextCatName !== modeFlag && (savedCatOrder.includes(nextCatName) || systemCategories.includes(nextCatName))) {
@@ -434,7 +461,8 @@ window.saveCategoryEditData = function () {
   if (idx !== -1) savedCatOrder[idx] = nextCatName;
 
   delete savedCatColors[modeFlag]; savedCatColors[nextCatName] = nextColor;
-  localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
+  localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); 
+  localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
 
   const batch = db.batch(); 
   const targets = window.cachedFishingPoints.filter(p => (p.category || '미분류').trim() === modeFlag.trim());
@@ -445,8 +473,7 @@ window.saveCategoryEditData = function () {
       window.currentActiveCategory = nextCatName;
       localStorage.setItem('pm-last-category', nextCatName);
     }
-    window.closeModals(); 
-    window.renderPointsManagementTab();
+    window.openCategoryManageModal();
   }).catch(err => {
     console.error(err);
     alert("카테고리 데이터 동기화 중 오류가 발생했습니다.");
@@ -456,12 +483,19 @@ window.saveCategoryEditData = function () {
 // 소속 인스턴스 검증 기반 카테고리 안전 삭제 모델 인터페이스
 window.deleteCategoryWithGuard = function (catName, event) {
   if (event) event.stopPropagation();
-  if (window.cachedFishingPoints.some(p => (p.category || '미분류').trim() === catName.trim())) { alert(`삭제 불가: [${catName}] 카테고리 내부에 소속된 포인트 마커가 존재합니다.`); return; }
+  if (window.cachedFishingPoints.some(p => (p.category || '미분류').trim() === catName.trim())) { 
+    alert(`삭제 불가: [${catName}] 카테고리 내부에 소속된 포인트 마커가 존재합니다.`); 
+    return; 
+  }
   if (confirm(`[${catName}] 카테고리를 삭제하시겠습니까?`)) {
-    let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]'); let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
-    savedCatOrder = savedCatOrder.filter(c => c !== catName); delete savedCatColors[catName];
-    localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
-    alert("카테고리가 삭제되었습니다."); window.renderPointsManagementTab();
+    let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]'); 
+    let savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
+    savedCatOrder = savedCatOrder.filter(c => c !== catName); 
+    delete savedCatColors[catName];
+    localStorage.setItem('pm-category-order', JSON.stringify(savedCatOrder)); 
+    localStorage.setItem('pm-category-colors', JSON.stringify(savedCatColors));
+    alert("카테고리가 삭제되었습니다."); 
+    window.renderPointsManagementTab();
   }
 };
 
@@ -469,5 +503,12 @@ window.deleteCategoryWithGuard = function (catName, event) {
 window.selectCategoryColor = function (color) {
   if (document.getElementById('editCategoryColorInput')) document.getElementById('editCategoryColorInput').value = color;
   document.querySelectorAll('.color-palette-btn').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-color') === color));
-  const previewEl = document.getElementById('categoryEditMarkerIcon'); if (previewEl && typeof window.getFishingPointSvg === 'function') previewEl.innerHTML = window.getFishingPointSvg(color);
+  const previewEl = document.getElementById('categoryEditMarkerIcon'); 
+  if (previewEl && typeof window.getFishingPointSvg === 'function') previewEl.innerHTML = window.getFishingPointSvg(color);
+};
+
+// 카테고리 추가/수정 바텀시트 닫기(취소) 연동 함수 교정 (상단 선언부 대체 가능)
+window.closeCategoryEditModal = function () {
+  document.getElementById('categoryEditModal')?.classList.remove('active');
+  window.openCategoryManageModal();
 };
