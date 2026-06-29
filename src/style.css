@@ -962,6 +962,10 @@ textarea,
 .detail-memo-content-text {
     color: var(--text-main);
     word-break: break-all;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
 }
 
 .weather-link-full-btn {
