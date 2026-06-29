@@ -247,7 +247,8 @@
                                 font-weight="800">--°C</text>
                             <text x="20" y="58" class="hc-txt-white hc-txt-shadow hc-weather" font-size="13"
                                 font-weight="700">--</text>
-                            <text x="20" y="76" class="hc-txt-muted hc-txt-shadow hc-rain" font-size="11">강수 --mm (-%)</text>
+                            <text x="20" y="76" class="hc-txt-muted hc-txt-shadow hc-rain" font-size="11">강수 --mm
+                                (-%)</text>
                             <text x="20" y="91" class="hc-txt-muted hc-txt-shadow hc-wind" font-size="11">북동풍 ·
                                 -.-m/s</text>
 
@@ -268,11 +269,12 @@
                             <text x="20" y="214" class="hc-txt-muted hc-txt-shadow hc-ocean-summary"
                                 font-size="11">--.-°C · --.-m · -- · -.-m/s</text>
 
-                            <g class="hc-home-refresh-btn" transform="translate(365, 211)" cursor="pointer" onclick="window.refreshHomeLocation(this)">
+                            <g class="hc-home-refresh-btn" transform="translate(365, 211)" cursor="pointer"
+                                onclick="window.refreshHomeLocation(this)">
                                 <circle cx="10" cy="10" r="16" fill="transparent" />
-                                <path class="hc-refresh-icon" 
-                                      d="M 10,2.5 A 7.5,7.5 0 1,1 3,5 L 6,2 M 6,5 L 3,5 L 3,2" 
-                                      fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <path class="hc-refresh-icon" d="M 10,2.5 A 7.5,7.5 0 1,1 3,5 L 6,2 M 6,5 L 3,5 L 3,2"
+                                    fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
                             </g>
                         </svg>
                     </div>
@@ -437,448 +439,455 @@
                         <span class="grid-label">앱 설정</span>
                     </div>
                 </div>
+                <div class="codeView01"
+                    style="position:relative;margin:0;padding:0;margin-top:5px;background:#fff;border:1px solid #dbdbdb;padding:25px 15px 30px 190px;font-size:12px;color:#292929;font-weight:bold;">
+                    <img src="https://www.kogl.or.kr/open/web/images/images_2014/codetype/new_img_opentype01.png"
+                        alt="공공누리 1유형"
+                        style="position:absolute;left:20px;top:12%;vertical-align:middle;width:149px;height:54px;" /> 본
+                    공공저작물은 공공누리 "출처표시" 조건에 따라 이용할 수 있습니다.</div>
             </div>
 
-            <div id="settings-page" class="tab-content">
-                <div class="points-management-wrapper">
-                    <div class="pm-header settings-header-flex">
-                        <button type="button" onclick="window.hideSettingsPage()" class="settings-back-btn">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="19" y1="12" x2="5" y2="12"></line>
-                                <polyline points="12 19 5 12 12 5"></polyline>
-                            </svg>
-                        </button>
-                        <span>앱 설정</span>
-                    </div>
-                    <div class="pm-container">
-                        <div class="setting-row-custom">
-                            <span class="setting-label-flex">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    </div>
+
+    <div id="settings-page" class="tab-content">
+        <div class="points-management-wrapper">
+            <div class="pm-header settings-header-flex">
+                <button type="button" onclick="window.hideSettingsPage()" class="settings-back-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </button>
+                <span>앱 설정</span>
+            </div>
+            <div class="pm-container">
+                <div class="setting-row-custom">
+                    <span class="setting-label-flex">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                        <span>다크 모드</span>
+                    </span>
+                    <label class="switch">
+                        <input type="checkbox" id="darkModeToggle" onchange="window.toggleDarkMode(this)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="setting-row-custom setting-row-margin">
+                    <span class="setting-label-flex">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                        </svg>
+                        <span id="naviAppLabel">네비게이션: 카카오맵</span>
+                    </span>
+                    <label class="switch">
+                        <input type="checkbox" id="naviAppToggle" onchange="window.toggleNaviApp(this)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notice-page" class="tab-content">
+        <div class="points-management-wrapper">
+            <div class="pm-header settings-header-flex">
+                <button id="btnNoticeHeaderBack" type="button" onclick="window.handleNoticeBackNavigation()"
+                    class="settings-back-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </button>
+                <span id="lblNoticeHeaderTitle">공지사항</span>
+                <button id="btn-add-notice" class="notice-header-write-btn" onclick="window.openNoticeWriteModal()"
+                    title="글 등록">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="board-sub-tab-container">
+                <button type="button" id="btnSubTabNotice" class="board-sub-tab-btn active"
+                    onclick="window.switchBoardSubTab('notice')">공지사항</button>
+                <button type="button" id="btnSubTabEvent" class="board-sub-tab-btn"
+                    onclick="window.switchBoardSubTab('event')">이벤트</button>
+            </div>
+
+            <div class="pm-container">
+                <div id="notice-list-container" class="notice-list-flex active">
+                </div>
+
+                <div id="event-list-container" class="notice-list-flex">
+                </div>
+
+                <div id="notice-inline-detail-container" class="notice-detail-inline-panel">
+                    <div class="notice-inline-header-flex">
+                        <h3 id="lblInlineNoticeTitle" class="notice-inline-title"></h3>
+                        <div class="notice-inline-actions">
+                            <button type="button" class="icon-action-btn" id="btnNoticeInlineEdit" title="수정">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#adb5bd"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                 </svg>
-                                <span>다크 모드</span>
-                            </span>
-                            <label class="switch">
-                                <input type="checkbox" id="darkModeToggle" onchange="window.toggleDarkMode(this)">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-
-                        <div class="setting-row-custom setting-row-margin">
-                            <span class="setting-label-flex">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            </button>
+                            <button type="button" class="icon-action-btn delete" id="btnNoticeInlineDelete" title="삭제">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#adb5bd"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path
+                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
                                 </svg>
-                                <span id="naviAppLabel">네비게이션: 카카오맵</span>
-                            </span>
-                            <label class="switch">
-                                <input type="checkbox" id="naviAppToggle" onchange="window.toggleNaviApp(this)">
-                                <span class="slider"></span>
-                            </label>
+                            </button>
                         </div>
                     </div>
+                    <div id="lblInlineNoticeDate" class="notice-inline-date"></div>
+                    <div id="lblInlineNoticeContent" class="notice-inline-content"></div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div id="notice-page" class="tab-content">
-                <div class="points-management-wrapper">
-                    <div class="pm-header settings-header-flex">
-                        <button id="btnNoticeHeaderBack" type="button" onclick="window.handleNoticeBackNavigation()"
-                            class="settings-back-btn">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="19" y1="12" x2="5" y2="12"></line>
-                                <polyline points="12 19 5 12 12 5"></polyline>
-                            </svg>
-                        </button>
-                        <span id="lblNoticeHeaderTitle">공지사항</span>
-                        <button id="btn-add-notice" class="notice-header-write-btn"
-                            onclick="window.openNoticeWriteModal()" title="글 등록">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                        </button>
-                    </div>
+    <div id="info-board-page" class="tab-content">
+        <div class="points-management-wrapper">
+            <div class="pm-header settings-header-flex">
+                <button id="btnInfoBoardHeaderBack" type="button" onclick="window.handleNoticeBackNavigation()"
+                    class="settings-back-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </button>
+                <span id="lblInfoBoardHeaderTitle">금어기 정보</span>
+                <button id="btnInfoBoardAction" class="notice-header-write-btn" title="글 등록">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                </button>
+            </div>
 
-                    <div class="board-sub-tab-container">
-                        <button type="button" id="btnSubTabNotice" class="board-sub-tab-btn active"
-                            onclick="window.switchBoardSubTab('notice')">공지사항</button>
-                        <button type="button" id="btnSubTabEvent" class="board-sub-tab-btn"
-                            onclick="window.switchBoardSubTab('event')">이벤트</button>
-                    </div>
+            <div class="board-sub-tab-container info-board-tab-scroll">
+                <button type="button" id="btnSubTabFishingBan" class="board-sub-tab-btn active"
+                    onclick="window.switchInfoSubTab('fishing_ban')">금어기</button>
+                <button type="button" id="btnSubTabSizeLimit" class="board-sub-tab-btn"
+                    onclick="window.switchInfoSubTab('size_limit')">금지체장</button>
+                <button type="button" id="btnSubTabTideTable" class="board-sub-tab-btn"
+                    onclick="window.switchInfoSubTab('tide_table')">물때표</button>
+                <button type="button" id="btnSubTabKnotGuide" class="board-sub-tab-btn"
+                    onclick="window.switchInfoSubTab('knot_guide')">매듭법</button>
+            </div>
 
-                    <div class="pm-container">
-                        <div id="notice-list-container" class="notice-list-flex active">
-                        </div>
+            <div class="info-search-wrapper" id="infoSearchWrapper">
+                <input type="text" id="infoSearchInput" placeholder="검색할 어종을 입력하세요"
+                    oninput="window.handleInfoSearch(this.value)">
+            </div>
 
-                        <div id="event-list-container" class="notice-list-flex">
-                        </div>
+            <div class="pm-container" id="infoBoardContentContainer">
+            </div>
+        </div>
+    </div>
 
-                        <div id="notice-inline-detail-container" class="notice-detail-inline-panel">
-                            <div class="notice-inline-header-flex">
-                                <h3 id="lblInlineNoticeTitle" class="notice-inline-title"></h3>
-                                <div class="notice-inline-actions">
-                                    <button type="button" class="icon-action-btn" id="btnNoticeInlineEdit" title="수정">
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#adb5bd"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                            <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                        </svg>
-                                    </button>
-                                    <button type="button" class="icon-action-btn delete" id="btnNoticeInlineDelete"
-                                        title="삭제">
-                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#adb5bd"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <polyline points="3 6 5 6 21 6"></polyline>
-                                            <path
-                                                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                                            </path>
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div id="lblInlineNoticeDate" class="notice-inline-date"></div>
-                            <div id="lblInlineNoticeContent" class="notice-inline-content"></div>
-                        </div>
-                    </div>
+    <div id="line-page" class="tab-content">
+        <div class="points-management-wrapper">
+            <div class="pm-header settings-header-flex">
+                <button type="button" onclick="window.handleNoticeBackNavigation()" class="settings-back-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                </button>
+                <span>라인 규격 정보</span>
+            </div>
+
+            <div class="board-sub-tab-container">
+                <button type="button" id="btnSubTabLineCarbonNylon" class="board-sub-tab-btn active"
+                    onclick="window.switchLineSubTab('carbon_nylon')">카본·나일론</button>
+                <button type="button" id="btnSubTabLinePE" class="board-sub-tab-btn"
+                    onclick="window.switchLineSubTab('pe')">PE 합사</button>
+            </div>
+
+            <div class="pm-container">
+                <div id="line-carbon-nylon-container" class="line-list-group active">
+                    <table class="line-spec-table">
+                        <thead>
+                            <tr>
+                                <th>호수 (#)</th>
+                                <th>라인 직경 (mm)</th>
+                                <th>LB CLASS (lb)</th>
+                                <th>인장강도 (kg)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>0.2호</td>
+                                <td>0.074 mm</td>
+                                <td>1 lb</td>
+                                <td>약 0.45 kg</td>
+                            </tr>
+                            <tr>
+                                <td>0.4호</td>
+                                <td>0.104 mm</td>
+                                <td>1.5 lb</td>
+                                <td>약 0.70 kg</td>
+                            </tr>
+                            <tr>
+                                <td>0.6호</td>
+                                <td>0.128 mm</td>
+                                <td>2.5 lb</td>
+                                <td>약 1.10 kg</td>
+                            </tr>
+                            <tr>
+                                <td>0.8호</td>
+                                <td>0.148 mm</td>
+                                <td>3 lb</td>
+                                <td>약 1.35 kg</td>
+                            </tr>
+                            <tr>
+                                <td>1.0호</td>
+                                <td>0.165 mm</td>
+                                <td>4 lb</td>
+                                <td>약 1.80 kg</td>
+                            </tr>
+                            <tr>
+                                <td>1.2호</td>
+                                <td>0.185 mm</td>
+                                <td>5 lb</td>
+                                <td>약 2.25 kg</td>
+                            </tr>
+                            <tr>
+                                <td>1.5호</td>
+                                <td>0.205 mm</td>
+                                <td>6 lb</td>
+                                <td>약 2.70 kg</td>
+                            </tr>
+                            <tr>
+                                <td>2.0호</td>
+                                <td>0.235 mm</td>
+                                <td>8 lb</td>
+                                <td>약 3.60 kg</td>
+                            </tr>
+                            <tr>
+                                <td>2.5호</td>
+                                <td>0.260 mm</td>
+                                <td>10 lb</td>
+                                <td>약 4.50 kg</td>
+                            </tr>
+                            <tr>
+                                <td>3.0호</td>
+                                <td>0.285 mm</td>
+                                <td>12 lb</td>
+                                <td>약 5.40 kg</td>
+                            </tr>
+                            <tr>
+                                <td>3.5호</td>
+                                <td>0.310 mm</td>
+                                <td>14 lb</td>
+                                <td>약 6.35 kg</td>
+                            </tr>
+                            <tr>
+                                <td>4.0호</td>
+                                <td>0.330 mm</td>
+                                <td>16 lb</td>
+                                <td>약 7.25 kg</td>
+                            </tr>
+                            <tr>
+                                <td>5.0호</td>
+                                <td>0.370 mm</td>
+                                <td>20 lb</td>
+                                <td>약 9.00 kg</td>
+                            </tr>
+                            <tr>
+                                <td>6.0호</td>
+                                <td>0.405 mm</td>
+                                <td>22 lb</td>
+                                <td>약 10.00 kg</td>
+                            </tr>
+                            <tr>
+                                <td>7.0호</td>
+                                <td>0.435 mm</td>
+                                <td>25 lb</td>
+                                <td>약 11.30 kg</td>
+                            </tr>
+                            <tr>
+                                <td>8.0호</td>
+                                <td>0.470 mm</td>
+                                <td>30 lb</td>
+                                <td>약 13.60 kg</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="line-pe-container" class="line-list-group">
+                    <table class="line-spec-table">
+                        <thead>
+                            <tr>
+                                <th>호수 (#)</th>
+                                <th>라인 직경 (mm)</th>
+                                <th>LB CLASS (lb)</th>
+                                <th>인장강도 (kg)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>0.2호</td>
+                                <td>약 0.070 mm</td>
+                                <td>4 ~ 5 lb</td>
+                                <td>약 1.8 ~ 2.2 kg</td>
+                            </tr>
+                            <tr>
+                                <td>0.4호</td>
+                                <td>약 0.100 mm</td>
+                                <td>6 ~ 8 lb</td>
+                                <td>약 2.7 ~ 3.6 kg</td>
+                            </tr>
+                            <tr>
+                                <td>0.6호</td>
+                                <td>약 0.130 mm</td>
+                                <td>10 ~ 12 lb</td>
+                                <td>약 4.5 ~ 5.4 kg</td>
+                            </tr>
+                            <tr>
+                                <td>0.8호</td>
+                                <td>약 0.150 mm</td>
+                                <td>14 ~ 16 lb</td>
+                                <td>약 6.3 ~ 7.2 kg</td>
+                            </tr>
+                            <tr>
+                                <td>1.0호</td>
+                                <td>약 0.170 mm</td>
+                                <td>18 ~ 20 lb</td>
+                                <td>약 8.1 ~ 9.0 kg</td>
+                            </tr>
+                            <tr>
+                                <td>1.2호</td>
+                                <td>약 0.190 mm</td>
+                                <td>22 ~ 25 lb</td>
+                                <td>약 10.0 ~ 11.3 kg</td>
+                            </tr>
+                            <tr>
+                                <td>1.5호</td>
+                                <td>약 0.210 mm</td>
+                                <td>28 ~ 30 lb</td>
+                                <td>약 12.7 ~ 13.6 kg</td>
+                            </tr>
+                            <tr>
+                                <td>2.0호</td>
+                                <td>약 0.240 mm</td>
+                                <td>33 ~ 35 lb</td>
+                                <td>약 15.0 ~ 15.8 kg</td>
+                            </tr>
+                            <tr>
+                                <td>2.5호</td>
+                                <td>약 0.260 mm</td>
+                                <td>40 lb</td>
+                                <td>약 18.1 kg</td>
+                            </tr>
+                            <tr>
+                                <td>3.0호</td>
+                                <td>약 0.290 mm</td>
+                                <td>45 ~ 50 lb</td>
+                                <td>약 20.4 ~ 22.6 kg</td>
+                            </tr>
+                            <tr>
+                                <td>3.5호</td>
+                                <td>약 0.310 mm</td>
+                                <td>55 lb</td>
+                                <td>약 25.0 kg</td>
+                            </tr>
+                            <tr>
+                                <td>4.0호</td>
+                                <td>약 0.330 mm</td>
+                                <td>60 lb</td>
+                                <td>약 27.2 kg</td>
+                            </tr>
+                            <tr>
+                                <td>5.0호</td>
+                                <td>약 0.370 mm</td>
+                                <td>70 ~ 80 lb</td>
+                                <td>약 31.7 ~ 36.2 kg</td>
+                            </tr>
+                            <tr>
+                                <td>6.0호</td>
+                                <td>약 0.410 mm</td>
+                                <td>85 ~ 90 lb</td>
+                                <td>약 38.5 ~ 40.8 kg</td>
+                            </tr>
+                            <tr>
+                                <td>7.0호</td>
+                                <td>약 0.440 mm</td>
+                                <td>100 lb</td>
+                                <td>약 45.3 kg</td>
+                            </tr>
+                            <tr>
+                                <td>8.0호</td>
+                                <td>약 0.480 mm</td>
+                                <td>110 ~ 120 lb</td>
+                                <td>약 49.8 ~ 54.4 kg</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div id="info-board-page" class="tab-content">
-                <div class="points-management-wrapper">
-                    <div class="pm-header settings-header-flex">
-                        <button id="btnInfoBoardHeaderBack" type="button" onclick="window.handleNoticeBackNavigation()"
-                            class="settings-back-btn">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="19" y1="12" x2="5" y2="12"></line>
-                                <polyline points="12 19 5 12 12 5"></polyline>
-                            </svg>
-                        </button>
-                        <span id="lblInfoBoardHeaderTitle">금어기 정보</span>
-                        <button id="btnInfoBoardAction" class="notice-header-write-btn" title="글 등록">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                        </button>
-                    </div>
+    </main>
 
-                    <div class="board-sub-tab-container info-board-tab-scroll">
-                        <button type="button" id="btnSubTabFishingBan" class="board-sub-tab-btn active"
-                            onclick="window.switchInfoSubTab('fishing_ban')">금어기</button>
-                        <button type="button" id="btnSubTabSizeLimit" class="board-sub-tab-btn"
-                            onclick="window.switchInfoSubTab('size_limit')">금지체장</button>
-                        <button type="button" id="btnSubTabTideTable" class="board-sub-tab-btn"
-                            onclick="window.switchInfoSubTab('tide_table')">물때표</button>
-                        <button type="button" id="btnSubTabKnotGuide" class="board-sub-tab-btn"
-                            onclick="window.switchInfoSubTab('knot_guide')">매듭법</button>
-                    </div>
-
-                    <div class="info-search-wrapper" id="infoSearchWrapper">
-                        <input type="text" id="infoSearchInput" placeholder="검색할 어종을 입력하세요"
-                            oninput="window.handleInfoSearch(this.value)">
-                    </div>
-
-                    <div class="pm-container" id="infoBoardContentContainer">
-                    </div>
-                </div>
-            </div>
-
-            <div id="line-page" class="tab-content">
-                <div class="points-management-wrapper">
-                    <div class="pm-header settings-header-flex">
-                        <button type="button" onclick="window.handleNoticeBackNavigation()" class="settings-back-btn">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="19" y1="12" x2="5" y2="12"></line>
-                                <polyline points="12 19 5 12 12 5"></polyline>
-                            </svg>
-                        </button>
-                        <span>라인 규격 정보</span>
-                    </div>
-
-                    <div class="board-sub-tab-container">
-                        <button type="button" id="btnSubTabLineCarbonNylon" class="board-sub-tab-btn active"
-                            onclick="window.switchLineSubTab('carbon_nylon')">카본·나일론</button>
-                        <button type="button" id="btnSubTabLinePE" class="board-sub-tab-btn"
-                            onclick="window.switchLineSubTab('pe')">PE 합사</button>
-                    </div>
-
-                    <div class="pm-container">
-                        <div id="line-carbon-nylon-container" class="line-list-group active">
-                            <table class="line-spec-table">
-                                <thead>
-                                    <tr>
-                                        <th>호수 (#)</th>
-                                        <th>라인 직경 (mm)</th>
-                                        <th>LB CLASS (lb)</th>
-                                        <th>인장강도 (kg)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>0.2호</td>
-                                        <td>0.074 mm</td>
-                                        <td>1 lb</td>
-                                        <td>약 0.45 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>0.4호</td>
-                                        <td>0.104 mm</td>
-                                        <td>1.5 lb</td>
-                                        <td>약 0.70 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>0.6호</td>
-                                        <td>0.128 mm</td>
-                                        <td>2.5 lb</td>
-                                        <td>약 1.10 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>0.8호</td>
-                                        <td>0.148 mm</td>
-                                        <td>3 lb</td>
-                                        <td>약 1.35 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.0호</td>
-                                        <td>0.165 mm</td>
-                                        <td>4 lb</td>
-                                        <td>약 1.80 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.2호</td>
-                                        <td>0.185 mm</td>
-                                        <td>5 lb</td>
-                                        <td>약 2.25 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.5호</td>
-                                        <td>0.205 mm</td>
-                                        <td>6 lb</td>
-                                        <td>약 2.70 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>2.0호</td>
-                                        <td>0.235 mm</td>
-                                        <td>8 lb</td>
-                                        <td>약 3.60 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>2.5호</td>
-                                        <td>0.260 mm</td>
-                                        <td>10 lb</td>
-                                        <td>약 4.50 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>3.0호</td>
-                                        <td>0.285 mm</td>
-                                        <td>12 lb</td>
-                                        <td>약 5.40 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>3.5호</td>
-                                        <td>0.310 mm</td>
-                                        <td>14 lb</td>
-                                        <td>약 6.35 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>4.0호</td>
-                                        <td>0.330 mm</td>
-                                        <td>16 lb</td>
-                                        <td>약 7.25 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>5.0호</td>
-                                        <td>0.370 mm</td>
-                                        <td>20 lb</td>
-                                        <td>약 9.00 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>6.0호</td>
-                                        <td>0.405 mm</td>
-                                        <td>22 lb</td>
-                                        <td>약 10.00 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>7.0호</td>
-                                        <td>0.435 mm</td>
-                                        <td>25 lb</td>
-                                        <td>약 11.30 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>8.0호</td>
-                                        <td>0.470 mm</td>
-                                        <td>30 lb</td>
-                                        <td>약 13.60 kg</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div id="line-pe-container" class="line-list-group">
-                            <table class="line-spec-table">
-                                <thead>
-                                    <tr>
-                                        <th>호수 (#)</th>
-                                        <th>라인 직경 (mm)</th>
-                                        <th>LB CLASS (lb)</th>
-                                        <th>인장강도 (kg)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>0.2호</td>
-                                        <td>약 0.070 mm</td>
-                                        <td>4 ~ 5 lb</td>
-                                        <td>약 1.8 ~ 2.2 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>0.4호</td>
-                                        <td>약 0.100 mm</td>
-                                        <td>6 ~ 8 lb</td>
-                                        <td>약 2.7 ~ 3.6 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>0.6호</td>
-                                        <td>약 0.130 mm</td>
-                                        <td>10 ~ 12 lb</td>
-                                        <td>약 4.5 ~ 5.4 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>0.8호</td>
-                                        <td>약 0.150 mm</td>
-                                        <td>14 ~ 16 lb</td>
-                                        <td>약 6.3 ~ 7.2 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.0호</td>
-                                        <td>약 0.170 mm</td>
-                                        <td>18 ~ 20 lb</td>
-                                        <td>약 8.1 ~ 9.0 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.2호</td>
-                                        <td>약 0.190 mm</td>
-                                        <td>22 ~ 25 lb</td>
-                                        <td>약 10.0 ~ 11.3 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.5호</td>
-                                        <td>약 0.210 mm</td>
-                                        <td>28 ~ 30 lb</td>
-                                        <td>약 12.7 ~ 13.6 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>2.0호</td>
-                                        <td>약 0.240 mm</td>
-                                        <td>33 ~ 35 lb</td>
-                                        <td>약 15.0 ~ 15.8 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>2.5호</td>
-                                        <td>약 0.260 mm</td>
-                                        <td>40 lb</td>
-                                        <td>약 18.1 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>3.0호</td>
-                                        <td>약 0.290 mm</td>
-                                        <td>45 ~ 50 lb</td>
-                                        <td>약 20.4 ~ 22.6 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>3.5호</td>
-                                        <td>약 0.310 mm</td>
-                                        <td>55 lb</td>
-                                        <td>약 25.0 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>4.0호</td>
-                                        <td>약 0.330 mm</td>
-                                        <td>60 lb</td>
-                                        <td>약 27.2 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>5.0호</td>
-                                        <td>약 0.370 mm</td>
-                                        <td>70 ~ 80 lb</td>
-                                        <td>약 31.7 ~ 36.2 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>6.0호</td>
-                                        <td>약 0.410 mm</td>
-                                        <td>85 ~ 90 lb</td>
-                                        <td>약 38.5 ~ 40.8 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>7.0호</td>
-                                        <td>약 0.440 mm</td>
-                                        <td>100 lb</td>
-                                        <td>약 45.3 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>8.0호</td>
-                                        <td>약 0.480 mm</td>
-                                        <td>110 ~ 120 lb</td>
-                                        <td>약 49.8 ~ 54.4 kg</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </main>
-
-        <nav id="bottom-nav">
-            <div class="nav-item" onclick="window.switchTab('tab-home', this)">
-                <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
-                <span class="nav-label">홈</span>
-            </div>
-            <div class="nav-item active" onclick="window.switchTab('tab-map', this)">
-                <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-                    <line x1="8" y1="2" x2="8" y2="18"></line>
-                    <line x1="16" y1="6" x2="16" y2="22"></line>
-                </svg>
-                <span class="nav-label">지도</span>
-            </div>
-            <div class="nav-item" onclick="window.switchTab('tab-manage', this)">
-                <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="8" y1="6" x2="21" y2="6"></line>
-                    <line x1="8" y1="12" x2="21" y2="12"></line>
-                    <line x1="8" y1="18" x2="21" y2="18"></line>
-                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                </svg>
-                <span class="nav-label">포인트관리</span>
-            </div>
-            <div class="nav-item" onclick="window.switchTab('tab-more', this)">
-                <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="1"></circle>
-                    <circle cx="19" cy="12" r="1"></circle>
-                    <circle cx="5" cy="12" r="1"></circle>
-                </svg>
-                <span class="nav-label">더보기</span>
-            </div>
-        </nav>
+    <nav id="bottom-nav">
+        <div class="nav-item" onclick="window.switchTab('tab-home', this)">
+            <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span class="nav-label">홈</span>
+        </div>
+        <div class="nav-item active" onclick="window.switchTab('tab-map', this)">
+            <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                <line x1="8" y1="2" x2="8" y2="18"></line>
+                <line x1="16" y1="6" x2="16" y2="22"></line>
+            </svg>
+            <span class="nav-label">지도</span>
+        </div>
+        <div class="nav-item" onclick="window.switchTab('tab-manage', this)">
+            <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="#adb5bd" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            <span class="nav-label">포인트관리</span>
+        </div>
+        <div class="nav-item" onclick="window.switchTab('tab-more', this)">
+            <svg class="app-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="1"></circle>
+                <circle cx="19" cy="12" r="1"></circle>
+                <circle cx="5" cy="12" r="1"></circle>
+            </svg>
+            <span class="nav-label">더보기</span>
+        </div>
+    </nav>
     </div>
 
     <div id="firstModal" class="modal">
