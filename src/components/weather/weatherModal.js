@@ -119,7 +119,6 @@ window.fetchSunriseSunsetForDatesPromise = function (lat, lng, dateStrings) {
     } catch (e) {
       localStorage.removeItem(`cc_sun_${ck}_${ds}`);
     }
-    // 교정: 불안정한 로컬 프록시 단계를 패스하고 정식 공공데이터 포털 도메인으로 다이렉트 fetch 실행
     return fetch(`https://apis.data.go.kr/B090041/openapi/service/RiseSetInfoService/getLCRiseSetInfo?latitude=${lat}&longitude=${lng}&locdate=${ds}&ServiceKey=${safeServiceKey}&_type=json`)
       .then(res => res.json())
       .then(d => {
@@ -201,7 +200,8 @@ window.fetchTideData3DaysPromise = function (lat, lng) {
     const lData = localStorage.getItem(cacheKey);
     if (lData) {
       const parsed = JSON.parse(lData);
-      if (Date.now() - parsed.timestamp < 3 * 60 * 60 * 1000) {
+      // 최적화: 고정성 예보 데이터 특성에 맞춰 유효기간을 3시간에서 24시간(하루)으로 대폭 연장
+      if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
         safeLogger("TIDE_API", "캐시 적중");
         return Promise.resolve(parsed.data);
       }
@@ -226,7 +226,6 @@ window.fetchTideData3DaysPromise = function (lat, lng) {
     
     const requests = dates.map(async (sd) => {
       try {
-        // 교정: 404를 유발하던 로컬 프록시 주소를 완전히 걷어내고 정식 공공데이터 포털 URL만 호출하도록 단일화
         let res = await fetch(`https://apis.data.go.kr/1192136/tideFcstHghLw/GetTideFcstHghLwApiService?serviceKey=${safeKhoaKey}&type=json&pageNo=1&numOfRows=10&obsCode=${obsCode}&reqDate=${sd}`);
         const json = await res.json(); 
         const node = (json?.body || json?.response?.body)?.items?.item; 
@@ -284,7 +283,8 @@ window.fetchRealWaterTempPromise = function (lat, lng, dateStrings) {
     const lData = localStorage.getItem(cacheKey);
     if (lData) {
       const parsed = JSON.parse(lData);
-      if (Date.now() - parsed.timestamp < 3 * 60 * 60 * 1000) {
+      // 최적화: 예측치 업데이트 주기를 고려하여 수온 캐시 기간을 3시간에서 12시간으로 상향 조정
+      if (Date.now() - parsed.timestamp < 12 * 60 * 60 * 1000) {
         safeLogger("ROMS_WATER_TEMP", "캐시 적중");
         return Promise.resolve(parsed.data);
       }
@@ -302,7 +302,6 @@ window.fetchRealWaterTempPromise = function (lat, lng, dateStrings) {
   const offset = 0.15; 
   const targetPath = `/1192136/roms/GetRomsApiService?serviceKey=${safePortalKey}&type=json&ymin=${(lat - offset).toFixed(4)}&ymax=${(lat + offset).toFixed(4)}&xmin=${(lng - offset).toFixed(4)}&xmax=${(lng + offset).toFixed(4)}&pageNo=1&numOfRows=300`;
 
-  // 교정: 인코딩 및 인증 문제를 발생시킬 소지가 다분한 로컬 프록시 서버 우회 단계를 제거하고 정식 원본 주소로 곧바로 접근 유도
   const romsPromise = fetch(`https://apis.data.go.kr${targetPath}`).then(async res => { 
     const text = await res.text(); 
     if (!res.ok || text.includes("Unexpected errors") || text.trim().startsWith("<")) throw new Error(); 
@@ -380,13 +379,23 @@ window.loadTimelineWithOptimisticUI = async function (lat, lng) {
   const obsCode = safeGetStationFunc(lat, lng); 
   const stationObj = safeStations.find(s => s && s.code === obsCode) || safeStations[0] || { lat: lat, lng: lng };
 
+  // 최적화: 사용자 지정 좌표와 해안 관측소 좌표의 기상청 격자가 같으면 동일 프로미스를 바인딩하여 트래픽 반감
+  const stationLng = stationObj.lng !== undefined ? stationObj.lng : (stationObj.mesh !== undefined ? stationObj.mesh : lng);
+  const userGrid = window.convertLatLngToGrid(lat, lng);
+  const stationGrid = window.convertLatLngToGrid(stationObj.lat, stationLng);
+
+  const liveWeatherPromise = window.fetchKMAWeatherPromise(lat, lng);
+  const seaWeatherPromise = (userGrid.nx === stationGrid.nx && userGrid.ny === stationGrid.ny)
+    ? liveWeatherPromise
+    : window.fetchKMAWeatherPromise(stationObj.lat, stationLng);
+
   try {
     const [_, liveWeatherMap, realTidesSchedule, realWaterTempMap, seaWeatherMap] = await Promise.all([
       window.fetchSunriseSunsetForDatesPromise(lat, lng, dateStrings),
-      window.fetchKMAWeatherPromise(lat, lng),
+      liveWeatherPromise,
       window.fetchTideData3DaysPromise(lat, lng),
       window.fetchRealWaterTempPromise(lat, lng, dateStrings),
-      window.fetchKMAWeatherPromise(stationObj.lat, stationObj.lng !== undefined ? stationObj.lng : (stationObj.mesh !== undefined ? stationObj.mesh : lng))
+      seaWeatherPromise
     ]);
 
     document.getElementById('miniSplashBodyBlock')?.remove(); 
