@@ -148,7 +148,7 @@ window.openCategoryManageModal = function () {
   window.bindCategoryDragAndDropEvents(listContainer);
 };
 
-// 카테고리 관리 창 내 드래그 앤 드롭 이벤트를 처리하는 스레드
+// 카테고리 관리 창 내 드래그 앤 드롭 이벤트를 처리하는 스레드 (물리 트래킹 가속 최적화)
 window.bindCategoryDragAndDropEvents = function (container) {
   if (!container) return;
   container.addEventListener('pointerdown', (e) => {
@@ -156,24 +156,37 @@ window.bindCategoryDragAndDropEvents = function (container) {
     if (!handle) return;
     const item = handle.closest('.pm-item');
     if (!item) return;
+    
     e.preventDefault();
     item.classList.add('dragging');
-    handle.setPointerCapture(e.pointerId);
+    // 교정: 이동 노드가 아닌 상위 고정 컨테이너 보드에 포인터 가드를 걸어 트래킹 이탈 원천 제거
+    container.setPointerCapture(e.pointerId);
 
     const onPointerMove = (evt) => {
       const draggingItem = container.querySelector('.pm-item.dragging');
       if (!draggingItem) return;
-      const nextSibling = [...container.querySelectorAll('.pm-item:not(.dragging)')].find(sib => evt.clientY < sib.getBoundingClientRect().top + sib.getBoundingClientRect().height / 2);
-      if (nextSibling) container.insertBefore(draggingItem, nextSibling);
-      else container.appendChild(draggingItem);
+      
+      const siblings = [...container.querySelectorAll('.pm-item:not(.dragging)')];
+      const nextSibling = siblings.find(sib => evt.clientY < sib.getBoundingClientRect().top + sib.getBoundingClientRect().height / 2);
+      
+      if (nextSibling) {
+        if (draggingItem.nextSibling !== nextSibling) {
+          container.insertBefore(draggingItem, nextSibling);
+        }
+      } else {
+        if (container.lastChild !== draggingItem) {
+          container.appendChild(draggingItem);
+        }
+      }
     };
 
     const onPointerUp = (evt) => {
       item.classList.remove('dragging');
-      handle.releasePointerCapture(evt.pointerId);
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-      window.removeEventListener('pointercancel', onPointerUp);
+      try { container.releasePointerCapture(evt.pointerId); } catch(err) {}
+      
+      container.removeEventListener('pointermove', onPointerMove);
+      container.removeEventListener('pointerup', onPointerUp);
+      container.removeEventListener('pointercancel', onPointerUp);
 
       const newOrder = [...container.querySelectorAll('.pm-item')].map(el => el.getAttribute('data-name'));
       localStorage.setItem('pm-category-order', JSON.stringify(newOrder));
@@ -183,9 +196,9 @@ window.bindCategoryDragAndDropEvents = function (container) {
       }
     };
 
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
-    window.addEventListener('pointercancel', onPointerUp);
+    container.addEventListener('pointermove', onPointerMove);
+    container.addEventListener('pointerup', onPointerUp);
+    container.addEventListener('pointercancel', onPointerUp);
   });
 };
 
@@ -303,26 +316,50 @@ function createPointRowComponent(pt, isFavSection) {
   return row;
 }
 
-// 일반 포인트 리스트 내 아이템 드래그 앤 드롭 정렬 핸들러
+// 일반 포인트 리스트 내 아이템 드래그 앤 드롭 정렬 핸들러 (연동 래깅 완전 교정)
 window.bindDragAndDropEvents = function (container, isFavSection = false) {
   if (!container) return;
   container.addEventListener('pointerdown', (e) => {
     const handle = e.target.closest('.pm-drag-handle'); if (!handle) return;
     const item = handle.closest('.pm-item'); if (!item) return;
-    e.preventDefault(); item.classList.add('dragging'); handle.setPointerCapture(e.pointerId);
+    
+    e.preventDefault(); 
+    item.classList.add('dragging'); 
+    // 교정: 유동 엘리먼트가 아닌 정적 캔버스 컨테이너 스코프에 캡처 파이프라인을 밀착 바인딩
+    container.setPointerCapture(e.pointerId);
 
     const onPointerMove = (evt) => {
       const draggingItem = container.querySelector('.pm-item.dragging'); if (!draggingItem) return;
-      const nextSibling = [...container.querySelectorAll('.pm-item:not(.dragging)')].find(sib => evt.clientY < sib.getBoundingClientRect().top + sib.getBoundingClientRect().height / 2);
-      if (nextSibling) container.insertBefore(draggingItem, nextSibling); else container.appendChild(draggingItem);
+      
+      const siblings = [...container.querySelectorAll('.pm-item:not(.dragging)')];
+      const nextSibling = siblings.find(sib => evt.clientY < sib.getBoundingClientRect().top + sib.getBoundingClientRect().height / 2);
+      
+      if (nextSibling) {
+        if (draggingItem.nextSibling !== nextSibling) {
+          container.insertBefore(draggingItem, nextSibling);
+        }
+      } else {
+        if (container.lastChild !== draggingItem) {
+          container.appendChild(draggingItem);
+        }
+      }
     };
 
     const onPointerUp = (evt) => {
-      item.classList.remove('dragging'); handle.releasePointerCapture(evt.pointerId);
-      window.removeEventListener('pointermove', onPointerMove); window.removeEventListener('pointerup', onPointerUp); window.removeEventListener('pointercancel', onPointerUp);
-      if (isFavSection) saveFavoriteOrderToFirebase(container); else saveCategoryOrderWithinTabToFirebase(container);
+      item.classList.remove('dragging'); 
+      try { container.releasePointerCapture(evt.pointerId); } catch(err) {}
+      
+      container.removeEventListener('pointermove', onPointerMove); 
+      container.removeEventListener('pointerup', onPointerUp); 
+      container.removeEventListener('pointercancel', onPointerUp);
+      
+      if (isFavSection) saveFavoriteOrderToFirebase(container); 
+      else saveCategoryOrderWithinTabToFirebase(container);
     };
-    window.addEventListener('pointermove', onPointerMove); window.addEventListener('pointerup', onPointerUp); window.addEventListener('pointercancel', onPointerUp);
+    
+    container.addEventListener('pointermove', onPointerMove); 
+    container.addEventListener('pointerup', onPointerUp); 
+    container.addEventListener('pointercancel', onPointerUp);
   });
 };
 
