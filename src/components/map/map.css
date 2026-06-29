@@ -259,3 +259,38 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2) !important;
 
 }
+
+/* =========================================================================
+   기본 기본 구조 기반 - 투명 및 중간 눈금 축척도 미세 조정
+   ========================================================================= */
+.leaflet-control-scale {
+  margin-left: 12px !important;
+  margin-bottom: 12px !important;
+}
+
+.leaflet-control-scale-line {
+  position: relative;
+  background: transparent !important; /* 배경 투명화 */
+  border: 1.5px solid #333333 !important; /* 기본 순정 테두리 두께 미세 조정 */
+  border-top: none !important;
+  line-height: 1.1 !important;
+  padding: 1px 4px 2px 4px !important; /* 크기 축소를 위한 패딩 정비 */
+  font-size: 9px !important; /* 폰트 다운사이징 */
+  font-weight: 800 !important;
+  color: #333333 !important;
+  
+  /* 투명 배경 시 지도 타일에 글자가 묻히는 현상 방지용 투명 가드 */
+  text-shadow: -1px -1px 0 #ffffff, 1px -1px 0 #ffffff, -1px 1px 0 #ffffff, 1px 1px 0 #ffffff;
+}
+
+/* 정확히 정중앙에 위치하는 중간값 예측용 수직 가이드 눈금선 생성 */
+.leaflet-control-scale-line::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 1.5px; /* 하단 테두리와 일치하는 눈금 두께 */
+  height: 4px;  /* 중간값 예측용 눈금선 높이 */
+  background-color: #333333;
+  transform: translateX(-50%);
+}
