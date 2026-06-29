@@ -119,11 +119,8 @@ window.fetchSunriseSunsetForDatesPromise = function (lat, lng, dateStrings) {
     } catch (e) {
       localStorage.removeItem(`cc_sun_${ck}_${ds}`);
     }
-    return fetch(`/api-tide/B090041/openapi/service/RiseSetInfoService/getLCRiseSetInfo?latitude=${lat}&longitude=${lng}&locdate=${ds}&ServiceKey=${safeServiceKey}&_type=json`)
-      .then(async res => {
-        if (!res.ok) return fetch(`https://apis.data.go.kr/B090041/openapi/service/RiseSetInfoService/getLCRiseSetInfo?latitude=${lat}&longitude=${lng}&locdate=${ds}&ServiceKey=${safeServiceKey}&_type=json`);
-        return res;
-      })
+    // 교정: 불안정한 로컬 프록시 단계를 패스하고 정식 공공데이터 포털 도메인으로 다이렉트 fetch 실행
+    return fetch(`https://apis.data.go.kr/B090041/openapi/service/RiseSetInfoService/getLCRiseSetInfo?latitude=${lat}&longitude=${lng}&locdate=${ds}&ServiceKey=${safeServiceKey}&_type=json`)
       .then(res => res.json())
       .then(d => {
         const item = d?.response?.body?.items?.item; 
@@ -227,13 +224,10 @@ window.fetchTideData3DaysPromise = function (lat, lng) {
   const tidePromise = (async () => {
     let items = []; 
     
-    // 루프 대기를 제거하고 5일치 조석 스케줄을 동시 병렬 요청(Promise.all)하도록 고속화 정립
     const requests = dates.map(async (sd) => {
       try {
-        let res = await fetch(`/api-tide/1192136/tideFcstHghLw/GetTideFcstHghLwApiService?serviceKey=${safeKhoaKey}&type=json&pageNo=1&numOfRows=10&obsCode=${obsCode}&reqDate=${sd}`); 
-        if (!res.ok) {
-          res = await fetch(`https://apis.data.go.kr/1192136/tideFcstHghLw/GetTideFcstHghLwApiService?serviceKey=${safeKhoaKey}&type=json&pageNo=1&numOfRows=10&obsCode=${obsCode}&reqDate=${sd}`);
-        }
+        // 교정: 404를 유발하던 로컬 프록시 주소를 완전히 걷어내고 정식 공공데이터 포털 URL만 호출하도록 단일화
+        let res = await fetch(`https://apis.data.go.kr/1192136/tideFcstHghLw/GetTideFcstHghLwApiService?serviceKey=${safeKhoaKey}&type=json&pageNo=1&numOfRows=10&obsCode=${obsCode}&reqDate=${sd}`);
         const json = await res.json(); 
         const node = (json?.body || json?.response?.body)?.items?.item; 
         if (node) {
@@ -308,10 +302,8 @@ window.fetchRealWaterTempPromise = function (lat, lng, dateStrings) {
   const offset = 0.15; 
   const targetPath = `/1192136/roms/GetRomsApiService?serviceKey=${safePortalKey}&type=json&ymin=${(lat - offset).toFixed(4)}&ymax=${(lat + offset).toFixed(4)}&xmin=${(lng - offset).toFixed(4)}&xmax=${(lng + offset).toFixed(4)}&pageNo=1&numOfRows=300`;
 
-  const romsPromise = fetch(`/api-tide${targetPath}`).then(async res => {
-    if (!res.ok) return fetch(`https://apis.data.go.kr${targetPath}`);
-    return res;
-  }).then(async res => { 
+  // 교정: 인코딩 및 인증 문제를 발생시킬 소지가 다분한 로컬 프록시 서버 우회 단계를 제거하고 정식 원본 주소로 곧바로 접근 유도
+  const romsPromise = fetch(`https://apis.data.go.kr${targetPath}`).then(async res => { 
     const text = await res.text(); 
     if (!res.ok || text.includes("Unexpected errors") || text.trim().startsWith("<")) throw new Error(); 
     return JSON.parse(text); 
@@ -403,7 +395,6 @@ window.loadTimelineWithOptimisticUI = async function (lat, lng) {
     
     window.buildTimelineUI(lat, lng, liveWeatherMap, realTidesSchedule, realWaterTempMap, seaWeatherMap);
 
-    // [중요] 타임라인 UI 렌더링이 완료된 후 전역 스플래시 해제 및 상태 동기화
     window.isWeatherLoaded = true;
     if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
 
@@ -413,7 +404,6 @@ window.loadTimelineWithOptimisticUI = async function (lat, lng) {
     if (dateSticky) dateSticky.style.visibility = 'visible';
     if (bridge) { bridge.style.visibility = 'visible'; bridge.innerHTML = '<div class="pm-empty-msg">기상 정보 연동에 실패했습니다.</div>'; }
     
-    // 에러가 나더라도 스플래시는 걷어내어 앱 전체가 멈추는 것을 방지
     window.isWeatherLoaded = true;
     if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
   }
