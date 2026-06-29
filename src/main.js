@@ -296,7 +296,8 @@ window.bindCategoryDragAndDropEvents = function (container) {
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerUp);
 
-      const newOrder = [...container.querySelectorAll('.pm-item')].map(el => el.exportAttribute('data-name'));
+      // 교정: exportAttribute -> 표준 getAttribute 사용
+      const newOrder = [...container.querySelectorAll('.pm-item')].map(el => el.getAttribute('data-name'));
       localStorage.setItem('pm-category-order', JSON.stringify(newOrder));
 
       if (typeof window.renderPointsManagementTab === 'function') {
