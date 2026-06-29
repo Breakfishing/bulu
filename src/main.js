@@ -904,18 +904,23 @@ window.findNearestDepth = function(lat, lng) {
   return nearestDepth;
 };
 
-// 실시간 DB 스트리밍 및 공통 컴포넌트 데이터 바인딩 시퀀스
+// 실시간 DB 스트리밍 및 공통 컴포넌트 데이터 바인딩 시퀀스 (오류 로그 강제 출력 보완)
 db.collection('fishing_points').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
   try {
     window.cachedFishingPoints = []; snapshot.forEach(doc => window.cachedFishingPoints.push({ id: doc.id, ...doc.data() }));
     if (typeof window.updateVisibleMarkersOnMap === 'function') window.updateVisibleMarkersOnMap();
     window.renderPointsManagementTab(); window.populateHomeFavoritesDropdown();
   } catch (err) {
-    console.error("낚시 포인트 데이터 렌더링 중 오류 발생:", err);
+    console.error("낚시 포인트 데이터 렌더링 중 내부 파싱 오류:", err);
   } finally {
     window.isFishingPointsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
   }
-}, () => { window.isFishingPointsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash(); });
+}, (error) => {
+  // 파이어베이스 데이터 로드 실패 시 원인을 정확히 콘솔에 기록하도록 교정
+  console.error("[FIREBASE ERROR][fishing_points] 데이터를 가져오지 못했습니다. 상세 원인:", error);
+  window.isFishingPointsLoaded = true; 
+  if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
+});
 
 db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
   try {
@@ -923,11 +928,16 @@ db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot((snapsho
     if (typeof window.updateVisibleMarkersOnMap === 'function') window.updateVisibleMarkersOnMap();
     window.renderPointsManagementTab();
   } catch (err) {
-    console.error("화장실 데이터 렌더링 중 오류 발생:", err);
+    console.error("화장실 데이터 렌더링 중 내부 파싱 오류:", err);
   } finally {
     window.isPublicToiletsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
   }
-}, () => { window.isPublicToiletsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash(); });
+}, (error) => {
+  // 화장실 데이터 세션 오류 출력 교정
+  console.error("[FIREBASE ERROR][public_toilets] 데이터를 가져오지 못했습니다. 상세 원인:", error);
+  window.isPublicToiletsLoaded = true; 
+  if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash();
+});
 
 function saveCategoryOrderWithinTabToFirebase(container) {
   const batch = db.batch(); const baseTime = Date.now();
@@ -935,7 +945,7 @@ function saveCategoryOrderWithinTabToFirebase(container) {
     const docId = el.id.replace('pm-node-', '');
     if (!window.cachedPublicToilets.some(t => t.id === docId)) batch.update(db.collection('fishing_points').doc(docId), { createdAt: firebase.firestore.Timestamp.fromMillis(baseTime - (index * 1000)) });
   });
-  batch.commit().catch(err => console.error(err));
+  batch.commit().catch(err => console.error("순서 저장 중 파이어베이스 배치 트랜잭션 실패:", err));
 }
 
 // =========================================================================
