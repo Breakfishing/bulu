@@ -4,12 +4,13 @@
 import './style.css'; 
 import { db } from './utils/firebase.js'; 
 
-// 하위 컴포넌트 모듈 스레드 가동
+// 하위 컴포넌트 및 유틸리티 모듈 스레드 가동
+import './utils/geoUtils.js'; // 분리된 주소 역변환 및 해안 랜드마크 유틸리티 연동
 import './components/more/more.js';
 import './components/map/map.js';
 import './components/weather/weatherModal.js';
 import './components/home/home.js'; 
-import './components/management/management.js'; // 분리된 포인트 및 카테고리 관리 통합 모듈 연동
+import './components/management/management.js'; 
 
 // --- 전역 변수 및 상태 레이어 관리 ---
 window.cachedFishingPoints = [];
@@ -38,17 +39,6 @@ const KMA_AUTH_KEY = "RAp21103R7OKdtddNwezzw";
 // [COMMON UI] 라이프사이클 및 네비게이션 공통 UI 제어 영역
 // =========================================================================
 
-// [지연 로딩 체제] 초기 부팅 무거움을 방지하기 위해 스플래시가 제거된 직후 백그라운드 가동하도록 변경
-window.loadCoastalDepthData = async function() {
-  try {
-    const response = await fetch('coastal_depth_compact.json');
-    if (response.ok) {
-      window.coastalDepthData = await response.json();
-      console.log(`[수심 데이터 로드 완료] 총 ${window.coastalDepthData.length} 격자 확보`);
-    }
-  } catch (err) { console.error("수심 데이터 로드 중 에러 발생:", err); }
-};
-
 window.checkAndHideSplash = function () {
   const splashEl = document.getElementById('splash-screen');
   if (!splashEl) return;
@@ -57,7 +47,6 @@ window.checkAndHideSplash = function () {
   const pointsLoaded = window.isFishingPointsLoaded === true;
   const toiletsLoaded = window.isPublicToiletsLoaded === true;
 
-  // 교정: 임의의 강제 강하 타이머(Fallback)를 원천 삭제. 오직 모든 실시간 DB 스트리밍이 완료되어야만 스플래시 해제
   if (homeLoaded && pointsLoaded && toiletsLoaded) {
     splashEl.style.transition = 'opacity 0.35s ease-out';
     splashEl.style.opacity = '0';
@@ -66,7 +55,6 @@ window.checkAndHideSplash = function () {
         splashEl.remove();
         console.log("[SYSTEM] 전역 라이프사이클 부팅 정상 완료 - 스플래시 블록 제거");
         
-        // 최적화 핵심: 메인 UI가 완벽히 떠서 유저가 조작 가능한 상태가 된 직후 대용량 JSON 파싱 스레드 가동
         window.loadCoastalDepthData();
       }
     }, 350);
@@ -422,36 +410,6 @@ window.openPointDetailFromList = function (pt) {
   }
 };
 
-// =========================================================================
-// 주소 역변환 및 해안 랜드마크 탐색 유틸리티 (인스턴스 바인딩 보존)
-// =========================================================================
-window.fetchAddressForModal = function (lat, lng, elementId) {
-  const el = document.getElementById(elementId); if (el) el.innerText = "주소 변환 중...";
-  if (typeof kakao !== 'undefined' && kakao.maps) {
-    kakao.maps.load(() => {
-      new kakao.maps.services.Geocoder().coord2Address(lng, lat, (result, status) => {
-        if (status === kakao.maps.services.Status.OK && result[0]) {
-          const finalAddr = result[0].road_address?.address_name || result[0].address?.address_name || "주소 정보 없음";
-          if (finalAddr === "주소 정보 없음") window.searchNearestCoastalLandmark(lat, lng, n => { if (el) el.innerText = n; }, () => { if (el) el.innerText = "주소 정보 없음"; });
-          else { if (el) el.innerText = finalAddr; if (elementId === 'pointAddress') window.cachedActiveAddressStr = finalAddr; }
-        } else { window.searchNearestCoastalLandmark(lat, lng, n => { if (el) el.innerText = n; }, () => { if (el) el.innerText = "주소 정보 없음"; }); }
-      });
-    });
-  }
-};
-
-window.searchNearestCoastalLandmark = function (lat, lng, successCallback, errorCallback) {
-  if (typeof kakao === 'undefined' || !kakao.maps?.services?.Places) { if (errorCallback) errorCallback(); return; }
-  const ps = new kakao.maps.services.Places(); const keywords = ['방파제', '해수욕장', '항구', '선착장', '해안', '갯바위']; let idx = 0;
-  const tryNext = () => {
-    if (idx >= keywords.length) { if (errorCallback) errorCallback(); return; }
-    ps.keywordSearch(keywords[idx], (data, status) => {
-      if (status === kakao.maps.services.Status.OK && data?.[0]) { successCallback(`${data[0].place_name} 인근 ${(parseFloat(data[0].distance)/1000).toFixed(1)}km`); }
-      else { idx++; tryNext(); }
-    }, { location: new kakao.maps.LatLng(lat, lng), radius: 20000, sort: kakao.maps.services.SortBy.DISTANCE });
-  }; tryNext();
-};
-
 function getFishingPointSvg(color) {
   return `<svg width="26" height="39" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg" class="fishing-marker-svg-anchor">
     <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="${color}"/>
@@ -464,16 +422,6 @@ window.getFishingPointSvg = getFishingPointSvg;
 // [BACKEND AREA] 백엔드 데이터베이스 실시간 트래킹 모델 및 오버레이 렌더러
 // =========================================================================
 window.coastalDepthData = [];
-
-window.loadCoastalDepthData = async function() {
-  try {
-    const response = await fetch('coastal_depth_compact.json');
-    if (response.ok) {
-      window.coastalDepthData = await response.json();
-      console.log(`[수심 데이터 로드 완료] 총 ${window.coastalDepthData.length} 격자 확보`);
-    }
-  } catch (err) { console.error("수심 데이터 로드 중 에러 발생:", err); }
-};
 
 window.findNearestDepth = function(lat, lng) {
   if (!window.coastalDepthData || window.coastalDepthData.length === 0) return null;
@@ -490,7 +438,6 @@ window.findNearestDepth = function(lat, lng) {
   return nearestDepth;
 };
 
-// 실시간 DB 스트리밍 및 공통 컴포넌트 데이터 바인딩 시퀀스 (오류 로그 강제 출력 보완)
 db.collection('fishing_points').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
   try {
     window.cachedFishingPoints = []; snapshot.forEach(doc => window.cachedFishingPoints.push({ id: doc.id, ...doc.data() }));
@@ -528,4 +475,3 @@ db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot((snapsho
 // 전역 초기 부팅 실행 시퀀스
 // =========================================================================
 window.initHomeDataSequence();
-window.loadCoastalDepthData();
