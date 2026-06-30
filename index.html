@@ -247,27 +247,34 @@
                                 font-weight="800">--°C</text>
                             <text x="20" y="58" class="hc-txt-white hc-txt-shadow hc-weather" font-size="13"
                                 font-weight="700">--</text>
-                            <text x="20" y="76" class="hc-txt-muted hc-txt-shadow hc-rain" font-size="11">강수 --mm (-%)</text>
-                            <text x="20" y="91" class="hc-txt-muted hc-txt-shadow hc-wind" font-size="11">북동풍 · -.-m/s</text>
+                            <text x="20" y="76" class="hc-txt-muted hc-txt-shadow hc-rain" font-size="11">강수 --mm
+                                (-%)</text>
+                            <text x="20" y="91" class="hc-txt-muted hc-txt-shadow hc-wind" font-size="11">북동풍 ·
+                                -.-m/s</text>
 
                             <g class="hc-txt-white hc-txt-shadow hc-txt-data-upper-right" text-anchor="end"
                                 font-size="11" font-weight="700">
                                 <text x="380" y="30" class="hc-sunrise">일출 --:--</text>
                                 <text x="380" y="46" class="hc-sunset">일몰 --:--</text>
-                                <text x="380" y="66" class="hc-tide-idx" font-size="13" font-weight="700" fill="#ffdd00">--물</text>
+                                <text x="380" y="66" class="hc-tide-idx" font-size="13" font-weight="700"
+                                    fill="#ffdd00">--물</text>
                             </g>
 
                             <text x="20" y="174" class="hc-txt-white hc-txt-shadow hc-tide-status" font-size="16"
                                 font-weight="700">물때 계산중</text>
-                            <text x="20" y="194" class="hc-txt-white hc-txt-shadow hc-tide-low" font-size="11">간조 --:-- ▼--</text>
-                            <text x="20" y="234" class="hc-txt-white hc-txt-shadow hc-tide-high" font-size="11">만조 --:-- ▲--</text>
-                            <text x="20" y="214" class="hc-txt-muted hc-txt-shadow hc-ocean-summary" font-size="11">--.-°C · --.-m · -- · -.-m/s</text>
+                            <text x="20" y="194" class="hc-txt-white hc-txt-shadow hc-tide-low" font-size="11">간조 --:--
+                                ▼--</text>
+                            <text x="20" y="234" class="hc-txt-white hc-txt-shadow hc-tide-high" font-size="11">만조 --:--
+                                ▲--</text>
+                            <text x="20" y="214" class="hc-txt-muted hc-txt-shadow hc-ocean-summary"
+                                font-size="11">--.-°C · --.-m · -- · -.-m/s</text>
 
-                            <g class="hc-home-refresh-btn" transform="translate(365, 211)" cursor="pointer" onclick="window.refreshHomeLocation(this)">
+                            <g class="hc-home-refresh-btn" transform="translate(365, 211)" cursor="pointer"
+                                onclick="window.refreshHomeLocation(this)">
                                 <circle cx="10" cy="10" r="16" fill="transparent" />
-                                <path class="hc-refresh-icon" 
-                                      d="M 10,2.5 A 7.5,7.5 0 1,1 3,5 L 6,2 M 6,5 L 3,5 L 3,2" 
-                                      fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                <path class="hc-refresh-icon" d="M 10,2.5 A 7.5,7.5 0 1,1 3,5 L 6,2 M 6,5 L 3,5 L 3,2"
+                                    fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
                             </g>
                         </svg>
                     </div>
@@ -423,13 +430,18 @@
                             </path>
                         </svg>
                         <span class="grid-label">앱 설정</span>
-                    </div>  
+                    </div>
                 </div>
                 <!--1유형 -->
 
-<div class="codeView01" style="position:fixed;  bottom:72px; right:0; width: 100%;font-size:10px;color:#5c5c5c;font-weight:bold; padding:10px;"><img src="https://www.kogl.or.kr/open/web/images/images_2014/codetype/new_img_opentype01.png" alt="공공누리 1유형" style="height:35px;" /> <p>본 공공저작물은 공공누리 "출처표시" 조건에 따라 이용할 수 있습니다.</p></div>
+                <div class="codeView01"
+                    style="position:fixed;  bottom:72px; right:0; width: 100%;font-size:10px;color:#5c5c5c;font-weight:bold; padding:10px;">
+                    <img src="https://www.kogl.or.kr/open/web/images/images_2014/codetype/new_img_opentype01.png"
+                        alt="공공누리 1유형" style="height:35px;" />
+                    <p>본 공공저작물은 공공누리 "출처표시" 조건에 따라 이용할 수 있습니다.</p>
+                </div>
 
-<!--//1유형 -->
+                <!--//1유형 -->
             </div>
 
             <div id="settings-page" class="tab-content">
@@ -584,251 +596,253 @@
                 </div>
             </div>
 
-            <div id="line-page" class="tab-content">
-                <div class="points-management-wrapper">
-                    <div class="pm-header settings-header-flex">
-                        <button type="button" onclick="window.handleNoticeBackNavigation()" class="settings-back-btn">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="19" y1="12" x2="5" y2="12"></line>
-                                <polyline points="12 19 5 12 12 5"></polyline>
-                            </svg>
-                        </button>
-                        <span>라인 규격 정보</span>
-                    </div>
+            <!-- ========================================================================= -->
+<!-- [TAB AREA] 라인 규격 정보 및 두께·인장강도 서브 스왑 테이블 구역 -->
+<!-- ========================================================================= -->
+<div id="line-page" class="tab-content">
+  <div class="points-management-wrapper">
+    <div class="pm-header settings-header-flex">
+      <button type="button" onclick="window.handleNoticeBackNavigation()" class="settings-back-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
+      <span>라인 규격 정보</span>
+    </div>
 
-                    <div class="board-sub-tab-container">
-                        <button type="button" id="btnSubTabLineCarbonNylon" class="board-sub-tab-btn active"
-                            onclick="window.switchLineSubTab('carbon_nylon')">카본·나일론</button>
-                        <button type="button" id="btnSubTabLinePE" class="board-sub-tab-btn"
-                            onclick="window.switchLineSubTab('pe')">PE 합사</button>
-                    </div>
+    <div class="board-sub-tab-container">
+      <button type="button" id="btnSubTabLineCarbonNylon" class="board-sub-tab-btn active" onclick="window.switchLineSubTab('carbon_nylon')">카본·나일론</button>
+      <button type="button" id="btnSubTabLinePE" class="board-sub-tab-btn" onclick="window.switchLineSubTab('pe')">PE 합사</button>
+    </div>
 
-                    <div class="pm-container">
-                        <div id="line-carbon-nylon-container" class="line-list-group active">
-                            <table class="line-spec-table">
-                                <thead>
-                                    <tr>
-                                        <th>호수 (#)</th>
-                                        <th>라인 직경 (mm)</th>
-                                        <th>LB CLASS (lb)</th>
-                                        <th>인장강도 (kg)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>0.2호</td>
-                                        <td>0.074 mm</td>
-                                        <td>1 lb</td>
-                                        <td>약 0.45 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>0.4호</td>
-                                        <td>0.104 mm</td>
-                                        <td>1.5 lb</td>
-                                        <td>약 0.70 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>0.6호</td>
-                                        <td>0.128 mm</td>
-                                        <td>2.5 lb</td>
-                                        <td>약 1.10 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>0.8호</td>
-                                        <td>0.148 mm</td>
-                                        <td>3 lb</td>
-                                        <td>약 1.35 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.0호</td>
-                                        <td>0.165 mm</td>
-                                        <td>4 lb</td>
-                                        <td>약 1.80 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.2호</td>
-                                        <td>0.185 mm</td>
-                                        <td>5 lb</td>
-                                        <td>약 2.25 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.5호</td>
-                                        <td>0.205 mm</td>
-                                        <td>6 lb</td>
-                                        <td>약 2.70 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>2.0호</td>
-                                        <td>0.235 mm</td>
-                                        <td>8 lb</td>
-                                        <td>약 3.60 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>2.5호</td>
-                                        <td>0.260 mm</td>
-                                        <td>10 lb</td>
-                                        <td>약 4.50 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>3.0호</td>
-                                        <td>0.285 mm</td>
-                                        <td>12 lb</td>
-                                        <td>약 5.40 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>3.5호</td>
-                                        <td>0.310 mm</td>
-                                        <td>14 lb</td>
-                                        <td>약 6.35 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>4.0호</td>
-                                        <td>0.330 mm</td>
-                                        <td>16 lb</td>
-                                        <td>약 7.25 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>5.0호</td>
-                                        <td>0.370 mm</td>
-                                        <td>20 lb</td>
-                                        <td>약 9.00 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>6.0호</td>
-                                        <td>0.405 mm</td>
-                                        <td>22 lb</td>
-                                        <td>약 10.00 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>7.0호</td>
-                                        <td>0.435 mm</td>
-                                        <td>25 lb</td>
-                                        <td>약 11.30 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>8.0호</td>
-                                        <td>0.470 mm</td>
-                                        <td>30 lb</td>
-                                        <td>약 13.60 kg</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+    <div class="pm-container">
+      <!-- 카본 및 나일론 라인 스펙 데이터 뷰 테이블 -->
+      <div id="line-carbon-nylon-container" class="line-list-group active">
+        <table class="line-spec-table">
+          <thead>
+            <tr>
+              <th>호수 (#)</th>
+              <th>라인 직경 (mm)</th>
+              <th>LB CLASS (lb)</th>
+              <th>인장강도 (kg)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>0.2호</td>
+              <td>0.074 mm</td>
+              <td>1 lb</td>
+              <td>약 0.45 kg</td>
+            </tr>
+            <tr>
+              <td>0.4호</td>
+              <td>0.104 mm</td>
+              <td>1.5 lb</td>
+              <td>약 0.70 kg</td>
+            </tr>
+            <tr>
+              <td>0.6호</td>
+              <td>0.128 mm</td>
+              <td>2.5 lb</td>
+              <td>약 1.10 kg</td>
+            </tr>
+            <tr>
+              <td>0.8호</td>
+              <td>0.148 mm</td>
+              <td>3 lb</td>
+              <td>약 1.35 kg</td>
+            </tr>
+            <tr>
+              <td>1.0호</td>
+              <td>0.165 mm</td>
+              <td>4 lb</td>
+              <td>약 1.80 kg</td>
+            </tr>
+            <tr>
+              <td>1.2호</td>
+              <td>0.185 mm</td>
+              <td>5 lb</td>
+              <td>약 2.25 kg</td>
+            </tr>
+            <tr>
+              <td>1.5호</td>
+              <td>0.205 mm</td>
+              <td>6 lb</td>
+              <td>약 2.70 kg</td>
+            </tr>
+            <tr>
+              <td>2.0호</td>
+              <td>0.235 mm</td>
+              <td>8 lb</td>
+              <td>약 3.60 kg</td>
+            </tr>
+            <tr>
+              <td>2.5호</td>
+              <td>0.260 mm</td>
+              <td>10 lb</td>
+              <td>약 4.50 kg</td>
+            </tr>
+            <tr>
+              <td>3.0호</td>
+              <td>0.285 mm</td>
+              <td>12 lb</td>
+              <td>약 5.40 kg</td>
+            </tr>
+            <tr>
+              <td>3.5호</td>
+              <td>0.310 mm</td>
+              <td>14 lb</td>
+              <td>약 6.35 kg</td>
+            </tr>
+            <tr>
+              <td>4.0호</td>
+              <td>0.330 mm</td>
+              <td>16 lb</td>
+              <td>약 7.25 kg</td>
+            </tr>
+            <tr>
+              <td>5.0호</td>
+              <td>0.370 mm</td>
+              <td>20 lb</td>
+              <td>약 9.00 kg</td>
+            </tr>
+            <tr>
+              <td>6.0호</td>
+              <td>0.405 mm</td>
+              <td>22 lb</td>
+              <td>약 10.00 kg</td>
+            </tr>
+            <tr>
+              <td>7.0호</td>
+              <td>0.435 mm</td>
+              <td>25 lb</td>
+              <td>약 11.30 kg</td>
+            </tr>
+            <tr>
+              <td>8.0호</td>
+              <td>0.470 mm</td>
+              <td>30 lb</td>
+              <td>약 13.60 kg</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-                        <div id="line-pe-container" class="line-list-group">
-                            <table class="line-spec-table">
-                                <thead>
-                                    <tr>
-                                        <th>호수 (#)</th>
-                                        <th>라인 직경 (mm)</th>
-                                        <th>LB CLASS (lb)</th>
-                                        <th>인장강도 (kg)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>0.2호</td>
-                                        <td>약 0.070 mm</td>
-                                        <td>4 ~ 5 lb</td>
-                                        <td>약 1.8 ~ 2.2 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>0.4호</td>
-                                        <td>약 0.100 mm</td>
-                                        <td>6 ~ 8 lb</td>
-                                        <td>약 2.7 ~ 3.6 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>0.6호</td>
-                                        <td>약 0.130 mm</td>
-                                        <td>10 ~ 12 lb</td>
-                                        <td>약 4.5 ~ 5.4 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>0.8호</td>
-                                        <td>약 0.150 mm</td>
-                                        <td>14 ~ 16 lb</td>
-                                        <td>약 6.3 ~ 7.2 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.0호</td>
-                                        <td>약 0.170 mm</td>
-                                        <td>18 ~ 20 lb</td>
-                                        <td>약 8.1 ~ 9.0 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.2호</td>
-                                        <td>약 0.190 mm</td>
-                                        <td>22 ~ 25 lb</td>
-                                        <td>약 10.0 ~ 11.3 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>1.5호</td>
-                                        <td>약 0.210 mm</td>
-                                        <td>28 ~ 30 lb</td>
-                                        <td>약 12.7 ~ 13.6 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>2.0호</td>
-                                        <td>약 0.240 mm</td>
-                                        <td>33 ~ 35 lb</td>
-                                        <td>약 15.0 ~ 15.8 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>2.5호</td>
-                                        <td>약 0.260 mm</td>
-                                        <td>40 lb</td>
-                                        <td>약 18.1 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>3.0호</td>
-                                        <td>약 0.290 mm</td>
-                                        <td>45 ~ 50 lb</td>
-                                        <td>약 20.4 ~ 22.6 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>3.5호</td>
-                                        <td>약 0.310 mm</td>
-                                        <td>55 lb</td>
-                                        <td>약 25.0 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>4.0호</td>
-                                        <td>약 0.330 mm</td>
-                                        <td>60 lb</td>
-                                        <td>약 27.2 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>5.0호</td>
-                                        <td>약 0.370 mm</td>
-                                        <td>70 ~ 80 lb</td>
-                                        <td>약 31.7 ~ 36.2 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>6.0호</td>
-                                        <td>약 0.410 mm</td>
-                                        <td>85 ~ 90 lb</td>
-                                        <td>약 38.5 ~ 40.8 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>7.0호</td>
-                                        <td>약 0.440 mm</td>
-                                        <td>100 lb</td>
-                                        <td>약 45.3 kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>8.0호</td>
-                                        <td>약 0.480 mm</td>
-                                        <td>110 ~ 120 lb</td>
-                                        <td>약 49.8 ~ 54.4 kg</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      <!-- PE 합사 라인 스펙 데이터 뷰 테이블 -->
+      <div id="line-pe-container" class="line-list-group">
+        <table class="line-spec-table">
+          <thead>
+            <tr>
+              <th>호수 (#)</th>
+              <th>라인 직경 (mm)</th>
+              <th>LB CLASS (lb)</th>
+              <th>인장강도 (kg)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>0.2호</td>
+              <td>약 0.070 mm</td>
+              <td>4 ~ 5 lb</td>
+              <td>약 1.8 ~ 2.2 kg</td>
+            </tr>
+            <tr>
+              <td>0.4호</td>
+              <td>약 0.100 mm</td>
+              <td>6 ~ 8 lb</td>
+              <td>약 2.7 ~ 3.6 kg</td>
+            </tr>
+            <tr>
+              <td>0.6호</td>
+              <td>약 0.130 mm</td>
+              <td>10 ~ 12 lb</td>
+              <td>약 4.5 ~ 5.4 kg</td>
+            </tr>
+            <tr>
+              <td>0.8호</td>
+              <td>약 0.150 mm</td>
+              <td>14 ~ 16 lb</td>
+              <td>약 6.3 ~ 7.2 kg</td>
+            </tr>
+            <tr>
+              <td>1.0호</td>
+              <td>약 0.170 mm</td>
+              <td>18 ~ 20 lb</td>
+              <td>약 8.1 ~ 9.0 kg</td>
+            </tr>
+            <tr>
+              <td>1.2호</td>
+              <td>약 0.190 mm</td>
+              <td>22 ~ 25 lb</td>
+              <td>약 10.0 ~ 11.3 kg</td>
+            </tr>
+            <tr>
+              <td>1.5호</td>
+              <td>약 0.210 mm</td>
+              <td>28 ~ 30 lb</td>
+              <td>약 12.7 ~ 13.6 kg</td>
+            </tr>
+            <tr>
+              <td>2.0호</td>
+              <td>약 0.240 mm</td>
+              <td>33 ~ 35 lb</td>
+              <td>약 15.0 ~ 15.8 kg</td>
+            </tr>
+            <tr>
+              <td>2.5호</td>
+              <td>약 0.260 mm</td>
+              <td>40 lb</td>
+              <td>약 18.1 kg</td>
+            </tr>
+            <tr>
+              <td>3.0호</td>
+              <td>약 0.290 mm</td>
+              <td>45 ~ 50 lb</td>
+              <td>약 20.4 ~ 22.6 kg</td>
+            </tr>
+            <tr>
+              <td>3.5호</td>
+              <td>약 0.310 mm</td>
+              <td>55 lb</td>
+              <td>약 25.0 kg</td>
+            </tr>
+            <tr>
+              <td>4.0호</td>
+              <td>약 0.330 mm</td>
+              <td>60 lb</td>
+              <td>약 27.2 kg</td>
+            </tr>
+            <tr>
+              <td>5.0호</td>
+              <td>약 0.370 mm</td>
+              <td>70 ~ 80 lb</td>
+              <td>약 31.7 ~ 36.2 kg</td>
+            </tr>
+            <tr>
+              <td>6.0호</td>
+              <td>약 0.410 mm</td>
+              <td>85 ~ 90 lb</td>
+              <td>약 38.5 ~ 40.8 kg</td>
+            </tr>
+            <tr>
+              <td>7.0호</td>
+              <td>약 0.440 mm</td>
+              <td>100 lb</td>
+              <td>약 45.3 kg</td>
+            </tr>
+            <tr>
+              <td>8.0호</td>
+              <td>약 0.480 mm</td>
+              <td>110 ~ 120 lb</td>
+              <td>약 49.8 ~ 54.4 kg</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
 
         </main>
 
@@ -1024,9 +1038,12 @@
             <label>주차 요금</label>
             <div class="chip-group-row" id="editPointParkingChips">
                 <!-- 아래 함수가 selectEditPointParking 으로 변경되었습니다 -->
-                <button type="button" class="chip-btn" id="chipEditParkingNone" onclick="window.selectEditPointParking('none', this)">주차 불가</button>
-                <button type="button" class="chip-btn" id="chipEditParkingFree" onclick="window.selectEditPointParking('free', this)">무료 주차</button>
-                <button type="button" class="chip-btn" id="chipEditParkingPaid" onclick="window.selectEditPointParking('paid', this)">유료 주차</button>
+                <button type="button" class="chip-btn" id="chipEditParkingNone"
+                    onclick="window.selectEditPointParking('none', this)">주차 불가</button>
+                <button type="button" class="chip-btn" id="chipEditParkingFree"
+                    onclick="window.selectEditPointParking('free', this)">무료 주차</button>
+                <button type="button" class="chip-btn" id="chipEditParkingPaid"
+                    onclick="window.selectEditPointParking('paid', this)">유료 주차</button>
             </div>
         </div>
 
