@@ -149,8 +149,8 @@ map.locate({
   watch: true, 
   enableHighAccuracy: true, 
   setView: false,
-  timeout: 10000,     // 10초 이내에 위치 응답이 없으면 에러 핸들러로 넘기고 재시도
-  maximumAge: 0       // 캐시된 과거 위치를 절대 사용하지 않고 항상 실시간 새 위치 요청
+  timeout: 10000,
+  maximumAge: 0 
 });
 
 const CenterToMyLocationControl = L.Control.extend({
@@ -458,6 +458,14 @@ export function savePointEditData() {
   const name = document.getElementById('editPointName').value.trim(); 
   if (!name) return alert("포인트 이름을 입력하세요.");
 
+  // 안전 조닝 가드: 엘리먼트 추출 및 안전 널 방어 구축
+  const editCategorySelect = document.getElementById('editPointCategory');
+  const editCategory = editCategorySelect ? (editCategorySelect.value || '미분류') : '미분류';
+  let editColor = (editCategorySelect && editCategorySelect.options.length > 0 && editCategorySelect.selectedIndex !== -1) 
+    ? editCategorySelect.options[editCategorySelect.selectedIndex].getAttribute('data-color') 
+    : '#007aff';
+  if (editCategory === '미분류') editColor = '#868e96';
+
   let actualParkingType = 'none';
   const chipsContainer = document.getElementById('editPointParkingChips');
   if (chipsContainer) {
@@ -474,7 +482,9 @@ export function savePointEditData() {
   const parkingPrice = document.getElementById('editPointParkingPrice')?.value || '0';
 
   db.collection('fishing_points').doc(docId).update({
-    name, category: document.getElementById('editPointCategory')?.value || '미분류', color: document.getElementById('editPointCategory')?.options[document.getElementById('editPointCategory').selectedIndex]?.getAttribute('data-color') || '#007aff',
+    name, 
+    category: editCategory, 
+    color: editColor,
     memo: document.getElementById('editPointMemo').value.trim() || '등록된 메모가 없습니다.', 
     parkingType: actualParkingType, 
     parkingUnit: actualParkingUnit, 
@@ -672,4 +682,3 @@ window.selectEditToiletHours = selectEditToiletHours;
 window.renderPointDetailBottomSheet = renderPointDetailBottomSheet;
 window.openPointDetailFromList = openPointDetailFromList;
 window.getNearestTideStation = getNearestTideStation;
-window.findNearestDepth = findNearestDepth;
