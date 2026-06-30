@@ -287,16 +287,15 @@ export function savePointEditData() {
   const color = document.getElementById('editPointCategory')?.options[document.getElementById('editPointCategory').selectedIndex]?.getAttribute('data-color') || '#007aff';
   const memo = document.getElementById('editPointMemo').value.trim() || '등록된 메모가 없습니다.';
   const parkingType = selectedEditPointParkingType;
-  const parkingUnit = editPointParkingUnits[currentEditPointUnitIndex] || '10분';
+  const parkingUnit = editPointParkingUnits[currentEditPointUnitIndex];
   const parkingPrice = document.getElementById('editPointParkingPrice').value || '0';
-  const hasStore = document.getElementById('btnEditFacStore')?.classList.contains('active') || false;
-  const hasCafe = document.getElementById('btnEditFacCafe')?.classList.contains('active') || false;
-  const hasTackle = document.getElementById('btnEditFacTackle')?.classList.contains('active') || false;
+  const hasStore = document.getElementById('btnEditFacStore')?.classList.contains('active');
+  const hasCafe = document.getElementById('btnEditFacCafe')?.classList.contains('active');
+  const hasTackle = document.getElementById('btnEditFacTackle')?.classList.contains('active');
 
   db.collection('fishing_points').doc(docId).update({
     name, category, color, memo, parkingType, parkingUnit, parkingPrice, hasStore, hasCafe, hasTackle
   }).then(() => {
-    // 로컬 캐시 배열 즉시 동기화 연동하여 변경 데이터 보존
     if (window.cachedFishingPoints) {
       const targetPoint = window.cachedFishingPoints.find(p => p.id === docId);
       if (targetPoint) {
@@ -312,7 +311,6 @@ export function savePointEditData() {
         targetPoint.hasTackle = hasTackle;
       }
     }
-    // 지도 인스턴스 마커 레이어 즉시 바인딩 갱신 유도
     if (typeof window.updateVisibleMarkersOnMap === 'function') {
       window.updateVisibleMarkersOnMap();
     }
@@ -322,7 +320,9 @@ export function savePointEditData() {
 
 export function saveToiletEditData() {
   const docId = document.getElementById('editToiletDocId').value; let finalHours = selectedToiletHoursValue;
-  if (selectedToiletHoursValue === '지정시간') finalHours = `${document.getElementById('editToiletStartHour').value.trim()}:${document.getElementById('editToiletStartMin').value.trim()} ~ ${document.getElementById('editToiletEndHour').value.trim()}:${document.getElementById('editToiletEndMin').value.trim()}`;
+  if (selectedToiletHoursValue === '지정시간') {
+    finalHours = `${document.getElementById('editToiletStartHour').value.trim()}:${document.getElementById('editToiletStartMin').value.trim()} ~ ${document.getElementById('editToiletEndHour').value.trim()}:${document.getElementById('editToiletEndMin').value.trim()}`;
+  }
   db.collection('public_toilets').doc(docId).update({ name: document.getElementById('editToiletName').value.trim() || '공중화장실', memo: `${finalHours}||${document.getElementById('editToiletMemo').value.trim() || '양호'}` }).then(() => window.closeModals());
 }
 
