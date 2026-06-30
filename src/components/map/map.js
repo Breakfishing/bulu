@@ -411,11 +411,34 @@ export function openToiletEditModal(docId, name, memo, address) {
 }
 
 export function savePointEditData() {
-  const docId = document.getElementById('editPointDocId').value; const name = document.getElementById('editPointName').value.trim(); if (!name) return alert("포인트 이름을 입력하세요.");
+  const docId = document.getElementById('editPointDocId').value; 
+  const name = document.getElementById('editPointName').value.trim(); 
+  if (!name) return alert("포인트 이름을 입력하세요.");
+
+  let actualParkingType = 'none';
+  const chipsContainer = document.getElementById('editPointParkingChips');
+  if (chipsContainer) {
+    const chips = chipsContainer.querySelectorAll('.chip-btn');
+    if (chips[2]?.classList.contains('active')) {
+      actualParkingType = 'paid';
+    } else if (chips[1]?.classList.contains('active') || document.getElementById('chipEditParkingFree')?.classList.contains('active')) {
+      actualParkingType = 'free';
+    }
+  }
+
+  const unitBtn = document.getElementById('btnEditPointParkingUnit');
+  const actualParkingUnit = unitBtn ? unitBtn.innerText.trim() : '10분';
+  const parkingPrice = document.getElementById('editPointParkingPrice')?.value || '0';
+
   db.collection('fishing_points').doc(docId).update({
     name, category: document.getElementById('editPointCategory')?.value || '미분류', color: document.getElementById('editPointCategory')?.options[document.getElementById('editPointCategory').selectedIndex]?.getAttribute('data-color') || '#007aff',
-    memo: document.getElementById('editPointMemo').value.trim() || '등록된 메모가 없습니다.', parkingType: selectedEditPointParkingType, parkingUnit: editPointParkingUnits[currentEditPointUnitIndex], parkingPrice: document.getElementById('editPointParkingPrice').value || '0',
-    hasStore: document.getElementById('btnEditFacStore')?.classList.contains('active'), hasCafe: document.getElementById('btnEditFacCafe')?.classList.contains('active'), hasTackle: document.getElementById('btnEditFacTackle')?.classList.contains('active')
+    memo: document.getElementById('editPointMemo').value.trim() || '등록된 메모가 없습니다.', 
+    parkingType: actualParkingType, 
+    parkingUnit: actualParkingUnit, 
+    parkingPrice: parkingPrice,
+    hasStore: document.getElementById('btnEditFacStore')?.classList.contains('active'), 
+    hasCafe: document.getElementById('btnEditFacCafe')?.classList.contains('active'), 
+    hasTackle: document.getElementById('btnEditFacTackle')?.classList.contains('active')
   }).then(() => window.closeModals());
 }
 
@@ -427,7 +450,10 @@ export function saveToiletEditData() {
 
 export function openMarkerDeleteModal(docId, collectionName, displayName, onSuccess) {
   const deleteModal = document.getElementById('deleteConfirmModal'); if (!deleteModal) return;
-  document.getElementById('deleteModalTargetName').innerText = displayName;
+  
+  const targetNameEl = document.getElementById('deleteModalTargetName');
+  if (targetNameEl) targetNameEl.innerText = displayName;
+
   document.getElementById('btnDoDelete').onclick = function () { db.collection(collectionName).doc(docId).delete().then(() => { window.closeModals(); if (typeof onSuccess === 'function') onSuccess(); }); };
 
   document.getElementById('detailModalWrapper')?.classList.remove('active'); document.getElementById('detailModal')?.classList.remove('active');
