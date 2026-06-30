@@ -600,3 +600,68 @@ input[type="date"].modal-input-main {
 .pm-custom-table tr:nth-child(even) {
     background-color: var(--bg-main);
 }
+
+/* ========================================================================= */
+/* [COMPONENT] 라인 규격 정보 테이블 및 서브탭 디스플레이 제어 (line.css) */
+/* ========================================================================= */
+.line-list-group {
+  display: none;
+  width: 100%;
+  animation: fadeInLineTable 0.25s ease-out;
+}
+
+.line-list-group.active {
+  display: block;
+}
+
+.line-spec-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background-color: var(--bg-main, #ffffff);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border-color, #e5e7eb);
+  margin-bottom: 80px;
+}
+
+.line-spec-table thead {
+  background-color: var(--bg-sub, #f8f9fa);
+}
+
+.line-spec-table th {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted, #6c757d);
+  padding: 12px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.line-spec-table td {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-main, #212529);
+  padding: 14px 6px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color, #f1f3f5);
+}
+
+.line-spec-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.line-spec-table tbody tr:nth-child(even) {
+  background-color: var(--bg-table-stripe, rgba(0, 0, 0, 0.02));
+}
+
+@keyframes fadeInLineTable {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
