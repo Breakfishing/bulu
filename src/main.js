@@ -162,7 +162,7 @@ export function openToiletModal() {
 export function savePointMarker() {
   const name = document.getElementById('pointName')?.value.trim() || ''; if (!name) return alert("포인트 이름을 입력하세요.");
   const categorySelect = document.getElementById('pointCategory'); const category = categorySelect ? (categorySelect.value || '미분류') : '미분류';
-  let color = (categorySelect && categorySelect.options.length > 0) ? categorySelect.options[categorySelect.selectedIndex].getAttribute('data-color'] : '#007aff';
+  let color = (categorySelect && categorySelect.options.length > 0) ? categorySelect.options[categorySelect.selectedIndex].getAttribute('data-color') : '#007aff';
   if (category === '미분류') color = '#868e96';
 
   db.collection('fishing_points').add({
