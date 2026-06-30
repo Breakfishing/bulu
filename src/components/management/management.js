@@ -289,7 +289,7 @@ window.renderPointsManagementTab = function () {
 
 // 포인트 및 화장실 아이템 행 컴포넌트 동적 빌더
 // =========================================================================
-// [포인트 관리] 포인트 및 화장실 아이템 행 컴포넌트 동적 빌더 (모달 연동 교정)
+// [포인트 관리] 포인트 및 화장실 아이템 행 컴포넌트 동적 빌더 (기존 지도 모달 연동)
 // =========================================================================
 function createPointRowComponent(pt, isFavSection) {
   const row = document.createElement('div'); 
@@ -299,7 +299,7 @@ function createPointRowComponent(pt, isFavSection) {
   const isCurrentlyFav = pt.isFavorite === true; 
   const isToilet = (pt.category === 'toilet');
   
-  // 화장실 데이터와 일반 포인트 데이터의 주소 필드 병합 예외 처리
+  // 데이터 종류별 주소 필드 통합 추출
   const cleanAddress = pt.dbSavedAddress || pt.address || (isToilet ? "소재지 도로명 주소" : "주소 정보 없음");
 
   row.innerHTML = `
@@ -324,7 +324,7 @@ function createPointRowComponent(pt, isFavSection) {
     </div>
   `;
 
-  // 즐겨찾기 버튼 클릭 이벤트 핸들러
+  // 1. 즐겨찾기 버튼 연동
   const fBtn = row.querySelector('.pm-action-btn.favorite');
   if (fBtn && !isToilet) {
     fBtn.onclick = (e) => { 
@@ -336,31 +336,50 @@ function createPointRowComponent(pt, isFavSection) {
     };
   }
   
-  // 수정 버튼 클릭 이벤트 핸들러 (유형별 모달 바인딩 라우팅 분기 처리)
+  // 2. 수정 버튼 연동 (지도 모달 정의 파라미터 구조와 1:1 일치 확인 완료)
   const eBtn = row.querySelector('.pm-action-btn.edit');
   if (eBtn) {
     eBtn.onclick = (e) => { 
       e.stopPropagation(); 
       if (isToilet) {
-        // 공중화장실 전용 수정 모달 연동
+        // 지도 스크립트 내 window.openToiletEditModal(docId, name, memo, address) 호출
         window.openToiletEditModal(pt.id, pt.name || '공중화장실', pt.memo || '', cleanAddress);
       } else {
-        // 일반 낚시 포인트 전용 수정 모달 연동
-        window.openPointEditModal(pt.id, pt.name || '무명 포인트', pt.category || '미분류', pt.memo || '등록된 메모가 없습니다.', pt.parkingType || 'none', pt.parkingUnit || '10분', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, cleanAddress, pt.lat, pt.lng); 
+        // 지도 스크립트 내 window.openPointEditModal(docId, name, category, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, address, lat, lng) 호출
+        window.openPointEditModal(
+          pt.id, 
+          pt.name || '무명 포인트', 
+          pt.category || '미분류', 
+          pt.memo || '등록된 메모가 없습니다.', 
+          pt.parkingType || 'none', 
+          pt.parkingUnit || '10분', 
+          pt.parkingPrice || '0', 
+          pt.hasStore || false, 
+          pt.hasCafe || false, 
+          pt.hasTackle || false, 
+          cleanAddress, 
+          pt.lat, 
+          pt.lng
+        ); 
       }
     };
   }
   
-  // 삭제 버튼 클릭 이벤트 핸들러 (컬렉션 분기 매핑 완결)
+  // 3. 삭제 확인 모달 연동
   const dBtn = row.querySelector('.pm-action-btn.delete');
   if (dBtn) {
     dBtn.onclick = (e) => { 
       e.stopPropagation(); 
-      window.openMarkerDeleteModal(pt.id, isToilet ? 'public_toilets' : 'fishing_points', pt.name || (isToilet ? '공중화장실' : '무명 포인트')); 
+      // 지도 스크립트 내 window.openMarkerDeleteModal(docId, collectionName, displayName, onSuccess) 호출
+      window.openMarkerDeleteModal(
+        pt.id, 
+        isToilet ? 'public_toilets' : 'fishing_points', 
+        pt.name || (isToilet ? '공중화장실' : '무명 포인트')
+      ); 
     };
   }
 
-  // 행 자체 클릭 시 지도 이동 및 바텀시트 디테일 뷰 오픈
+  // 리스트 아이템 바디 클릭 시 해당 위치 지도 포커싱 및 디테일 바텀시트 활성화
   row.onclick = (e) => { 
     if (e.target.closest('.pm-action-btn') || e.target.closest('.pm-drag-handle')) return; 
     window.openPointDetailFromList(pt); 
