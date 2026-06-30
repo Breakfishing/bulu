@@ -251,20 +251,57 @@ db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot((snapsho
 }, () => { window.isPublicToiletsLoaded = true; if (typeof window.checkAndHideSplash === 'function') window.checkAndHideSplash(); });
 
 // =========================================================================
-// 실시간 격자 연안 수심 데이터 오버레이 매핑
+// [MAP INTERACTION] 실시간 격자 연안 수심 데이터 오버레이 매핑 및 컨텍스트 메뉴
 // =========================================================================
 map.on('click', function (e) {
-  const backdrop = document.getElementById('modalBackdrop'); if (backdrop && backdrop.classList.contains('active')) return;
-  const depth = (typeof window.findNearestDepth === 'function') ? window.findNearestDepth(e.latlng.lat, e.latlng.lng) : null;
-  if (depth !== null) L.popup({ className: 'custom-depth-popup', closeButton: false, offset: [0, -10] }).setLatLng(e.latlng).setContent(`<div style="font-weight: 800; font-size: 14px; text-align: center;">${depth}m</div>`).openOn(map);
-  else map.closePopup();
+  // 1. 모달 백드롭이 활성화된 상태(메뉴나 팝업을 닫는 터치 상황)라면 수심 연산을 차단
+  const backdrop = document.getElementById('modalBackdrop'); 
+  if (backdrop && backdrop.classList.contains('active')) return;
+
+  // 2. 전역 스코프 함수 존재 여부 검증 가드 및 예외 디버깅 로그
+  if (typeof window.findNearestDepth !== 'function') {
+    console.error("[DEPTH ERROR] window.findNearestDepth 함수가 전역에 바인딩되지 않았습니다. 수심 추적 알고리즘 모듈을 확인하세요.");
+    map.closePopup();
+    return;
+  }
+
+  // 3. 위경도 기반 최접점 격자 수심 연산 실행
+  const depth = window.findNearestDepth(e.latlng.lat, e.latlng.lng);
+
+  // 4. null, undefined, 빈 값 및 엄격한 예외 처리 방어 벽 구축
+  if (depth !== null && depth !== undefined && depth !== '') {
+    L.popup({ 
+      className: 'custom-depth-popup', 
+      closeButton: false, 
+      offset: [0, -10] 
+    })
+    .setLatLng(e.latlng)
+    .setContent(`<div style="font-weight: 800; font-size: 14px; text-align: center; color: var(--text-main, #212529);">${depth}m</div>`)
+    .openOn(map);
+  } else {
+    // 매칭되는 격자 수심 데이터가 반환되지 않은 음영 구역일 경우 기존 팝업 제거
+    map.closePopup();
+  }
 });
 
 map.on('contextmenu', function (e) {
-  window.tempLatLng = e.latlng; if (window.tempTargetVisual) map.removeLayer(window.tempTargetVisual);
-  window.tempTargetVisual = L.circleMarker(e.latlng, { radius: 10, color: 'var(--primary-color)', fillColor: '#fff', fillOpacity: 0.9, weight: 3 }).addTo(map);
-  document.querySelectorAll('.modal, .custom-modal-native, .bottom-sheet-modal-native, .bottom-sheet').forEach(m => m.classList.remove('active'));
-  document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('firstModal')?.classList.add('active');
+  window.tempLatLng = e.latlng; 
+  if (window.tempTargetVisual) map.removeLayer(window.tempTargetVisual);
+  
+  window.tempTargetVisual = L.circleMarker(e.latlng, { 
+    radius: 10, 
+    color: 'var(--primary-color)', 
+    fillColor: '#fff', 
+    fillOpacity: 0.9, 
+    weight: 3 
+  }).addTo(map);
+
+  document.querySelectorAll('.modal, .custom-modal-native, .bottom-sheet-modal-native, .bottom-sheet').forEach(m => {
+    m.classList.remove('active');
+  });
+
+  document.getElementById('modalBackdrop')?.classList.add('active'); 
+  document.getElementById('firstModal')?.classList.add('active');
 });
 
 // =========================================================================
