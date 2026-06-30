@@ -278,7 +278,6 @@ window.saveToiletEditData = function () {
 
 window.openMarkerDeleteModal = function (docId, collectionName, displayName, onSuccess) {
   const deleteModal = document.getElementById('deleteConfirmModal'); if (!deleteModal) return;
-  document.getElementById('deleteModalTargetName').innerText = displayName;
   document.getElementById('btnDoDelete').onclick = function () { db.collection(collectionName).doc(docId).delete().then(() => { window.closeModals(); if (typeof onSuccess === 'function') onSuccess(); }); };
 
   document.getElementById('detailModalWrapper')?.classList.remove('active'); document.getElementById('detailModal')?.classList.remove('active');
@@ -294,9 +293,9 @@ window.selectEditPointParking = function (type, element) { selectedEditPointPark
 window.selectEditToiletHours = function (type, element) { selectedToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('editToiletHoursDetailRow')?.classList.toggle('active', type === '지정시간'); };
 
 // =========================================================================
-// [SHEET AREA] 실시간 연안 종합 타임라인 바텀시트 정보 렌더링 엔진
+// 연안 종합 대시보드 바텀시트 정보 매핑 제어 엔진
 // =========================================================================
-window.renderPointDetailBottomSheet = function (docId, name, category, color, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, lat, lng, isFavorite, dbSavedAddress) {
+export function renderPointDetailBottomSheet(docId, name, category, color, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, lat, lng, isFavorite, dbSavedAddress) {
   const wrapper = document.getElementById('detailModalWrapper'); const sheet = document.getElementById('detailModal');
   if (wrapper) wrapper.classList.add('active'); if (sheet) sheet.classList.add('active');
 
@@ -351,8 +350,26 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
     try { if (typeof window.buildTimelineUI === 'function') window.buildTimelineUI(lat, lng, null, []); } catch (err) {}
   }
 
-  document.getElementById('btnDetailPointDelete').onclick = function (e) { e.stopPropagation(); window.openMarkerDeleteModal(docId, (category === 'toilet') ? 'public_toilets' : 'fishing_points', name || '지정 포인트'); };
-  document.getElementById('btnDetailPointEditTrigger').onclick = function (e) { e.stopPropagation(); if (sheet) sheet.classList.remove('active'); if (wrapper) wrapper.classList.remove('active'); if (category === 'toilet') window.openToiletEditModal(docId, name, memo, addrField.innerText); else window.openPointEditModal(docId, name, category, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, addrField.innerText, lat, lng); };
+  // 삭제 버튼 클릭 시: 전역 클린업 후 기존 삭제 모달 함수와 안전하게 인스턴스 브릿지 연동
+  document.getElementById('btnDetailPointDelete').onclick = function (e) { 
+    e.stopPropagation(); 
+    if (typeof window.closeModals === 'function') window.closeModals();
+    window.openMarkerDeleteModal(docId, (category === 'toilet') ? 'public_toilets' : 'fishing_points', name || '지정 포인트'); 
+  };
+
+  // 수정 버튼 클릭 시: 레이어 충돌 및 주소 텍스트 null 가드 적용 후 기존 수정 모달 함수 호출
+  document.getElementById('btnDetailPointEditTrigger').onclick = function (e) { 
+    e.stopPropagation(); 
+    const currentAddrText = addrField ? addrField.innerText : (dbSavedAddress || "주소 정보 없음");
+    
+    if (typeof window.closeModals === 'function') window.closeModals();
+    
+    if (category === 'toilet') {
+      window.openToiletEditModal(docId, name, memo, currentAddrText); 
+    } else {
+      window.openPointEditModal(docId, name, category, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, currentAddrText, lat, lng); 
+    }
+  };
 
   if (weatherOpenBtn) {
     weatherOpenBtn.onclick = function (e) {
@@ -397,47 +414,32 @@ window.renderPointDetailBottomSheet = function (docId, name, category, color, me
       }
     };
   }
-};
+}
 
-window.openPointDetailFromList = function (pt) {
+export function openPointDetailFromList(pt) {
   window.closeModals(); const mapNavItem = document.querySelector('.nav-item[onclick*="tab-map"]') || document.querySelector('.nav-item');
   if (typeof window.switchTab === 'function') window.switchTab('tab-map', mapNavItem);
-  if (window.mapObj) window.mapObj.panTo([pt.lat, pt.lng]);
+  if (map) map.panTo([pt.lat, pt.lng]);
 
   if (pt.category === 'toilet') {
-    if (window.tempToiletMarker && window.mapObj) window.mapObj.removeLayer(window.tempToiletMarker);
-    if (typeof window.L !== 'undefined' && window.mapObj) {
-      const toiletHtml = `<svg width="24" height="36" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#ff9500"/><circle cx="12" cy="12" r="4" fill="#ffffff"/></svg>`;
-      window.tempToiletMarker = window.L.marker([pt.lat, pt.lng], { icon: window.L.divIcon({ html: toiletHtml, className: 'custom-marker-wrapper-toilet temp-list-injected-toilet-node', iconSize: [24, 36], iconAnchor: [12, 36] }), zIndexOffset: 1000 }).addTo(window.mapObj);
-    }
+    if (window.tempToiletMarker) map.removeLayer(window.tempToiletMarker);
+    const toiletHtml = `<svg width="24" height="36" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#ff9500"/><circle cx="12" cy="12" r="4" fill="#ffffff"/></svg>`;
+    window.tempToiletMarker = L.marker([pt.lat, pt.lng], { icon: L.divIcon({ html: toiletHtml, className: 'custom-marker-wrapper-toilet temp-list-injected-toilet-node', iconSize: [24, 36], iconAnchor: [12, 36] }), zIndexOffset: 1000 }).addTo(map);
     window.renderPointDetailBottomSheet(pt.id, pt.name || '공중화장실', 'toilet', '#ff9500', pt.memo || '', '', '', 0, false, false, false, pt.lat, pt.lng, false, pt.dbSavedAddress || pt.address || '주소 정보 없음');
   } else {
     window.renderPointDetailBottomSheet(pt.id, pt.name, pt.category, pt.color, pt.memo, pt.parkingType || 'none', pt.parkingUnit || '', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, pt.lat, pt.lng, pt.isFavorite || false, pt.address || "주소 정보 없음");
   }
-};
-
-function getFishingPointSvg(color) {
-  return `<svg width="26" height="39" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg" class="fishing-marker-svg-anchor">
-    <path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="${color}"/>
-    <circle cx="12" cy="12" r="4" fill="#ffffff"/>
-  </svg>`;
 }
-window.getFishingPointSvg = getFishingPointSvg;
 
-window.findNearestDepth = function(lat, lng) {
-  if (!window.coastalDepthData || window.coastalDepthData.length === 0) return null;
-  let minDstSquare = Infinity; let nearestDepth = null;
-  const latToMeters = 111000; const lngToMeters = 91000; const maxSearchRadiusMeters = 150;
-  
-  for (let i = 0; i < window.coastalDepthData.length; i++) {
-    const pt = window.coastalDepthData[i];
-    const dLatMeters = (pt[0] - lat) * latToMeters; const dLngMeters = (pt[1] - lng) * lngToMeters;
-    const dstSquare = dLatMeters * dLatMeters + dLngMeters * dLngMeters;
-    if (dstSquare < minDstSquare) { minDstSquare = dstSquare; nearestDepth = pt[2]; }
-  }
-  if (Math.sqrt(minDstSquare) > maxSearchRadiusMeters) return null;
-  return nearestDepth;
-};
+export function getNearestTideStation(lat, lng) {
+  let minDistance = Infinity; let nearestStation = TIDE_STATIONS[0];
+  TIDE_STATIONS.forEach(station => {
+    const stationLng = station.lng !== undefined ? station.lng : station.mesh;
+    const dist = Math.sqrt(Math.pow(station.lat - lat, 2) + Math.pow(stationLng - lng, 2));
+    if (dist < minDistance) { minDistance = dist; nearestStation = station; }
+  });
+  return nearestStation.code;
+}
 
 // =========================================================================
 // [3. PHASE THREE] 하위 컴포넌트 및 모듈 스레드 가동 (함수 선언 완료 후 안전 로드)
