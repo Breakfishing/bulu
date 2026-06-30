@@ -288,7 +288,7 @@ export function savePointEditData() {
   const color = (editCatEl && editCatEl.selectedIndex >= 0) ? (editCatEl.options[editCatEl.selectedIndex]?.getAttribute('data-color') || '#007aff') : '#868e96';
   const memo = document.getElementById('editPointMemo').value.trim() || '등록된 메모가 없습니다.';
 
-  // [핵심 교정]: 변수의 엇갈림을 방지하기 위해 사용자가 실제로 클릭하여 활성화된(.active) UI에서 직접 상태를 추출합니다.
+  // DOM 구조에서 실제로 활성화된(.active) 요소를 찾아 상태 유실 현상을 완벽히 차단합니다.
   let actualParkingType = 'none';
   const chipsContainer = document.getElementById('editPointParkingChips');
   if (chipsContainer) {
@@ -329,7 +329,11 @@ export function saveToiletEditData() {
 
 export function openMarkerDeleteModal(docId, collectionName, displayName, onSuccess) {
   const deleteModal = document.getElementById('deleteConfirmModal'); if (!deleteModal) return;
-  document.getElementById('deleteModalTargetName').innerText = displayName;
+  
+  // 에러 차단 가드: HTML 내 엘리먼트 존재 여부를 검증한 뒤 innerText를 변경합니다.
+  const targetNameEl = document.getElementById('deleteModalTargetName');
+  if (targetNameEl) targetNameEl.innerText = displayName;
+
   document.getElementById('btnDoDelete').onclick = function () { db.collection(collectionName).doc(docId).delete().then(() => { window.closeModals(); if (typeof onSuccess === 'function') onSuccess(); }); };
 
   document.getElementById('detailModalWrapper')?.classList.remove('active'); 
@@ -350,7 +354,6 @@ window.selectEditToiletHours = function (type, element) { selectedToiletHoursVal
 // 연안 종합 대시보드 바텀시트 정보 매핑 제어 엔진
 // =========================================================================
 export function renderPointDetailBottomSheet(docId, name, category, color, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, lat, lng, isFavorite, dbSavedAddress) {
-  // 교정: 캐시 핫 루크업 가드 구축 (구형 데이터를 덮어쓰기 전 최신 데이터 보장)
   if (category !== 'toilet' && window.cachedFishingPoints) {
     const freshPt = window.cachedFishingPoints.find(p => p.id === docId);
     if (freshPt) {
@@ -422,14 +425,12 @@ export function renderPointDetailBottomSheet(docId, name, category, color, memo,
     try { if (typeof window.buildTimelineUI === 'function') window.buildTimelineUI(lat, lng, null, []); } catch (err) {}
   }
 
-  // 삭제 버튼 클릭 시: 전역 클린업 후 기존 삭제 모달 함수와 안전하게 인스턴스 브릿지 연동
   document.getElementById('btnDetailPointDelete').onclick = function (e) { 
     e.stopPropagation(); 
     if (typeof window.closeModals === 'function') window.closeModals();
     window.openMarkerDeleteModal(docId, (category === 'toilet') ? 'public_toilets' : 'fishing_points', name || '지정 포인트'); 
   };
 
-  // 수정 버튼 클릭 시: 레이어 충돌 및 주소 텍스트 null 가드 적용 후 기존 수정 모달 함수 호출
   document.getElementById('btnDetailPointEditTrigger').onclick = function (e) { 
     e.stopPropagation(); 
     const currentAddrText = addrField ? addrField.innerText : (dbSavedAddress || "주소 정보 없음");
@@ -560,8 +561,14 @@ db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot((snapsho
 });
 
 // =========================================================================
-// 전역 초기 부팅 실행 시퀀스
+// [CORE OVERRIDE GUARD] 타 모듈에 의한 글로벌 스코프 변조 원천 차단 시퀀스
 // =========================================================================
+window.openPointEditModal = openPointEditModal;
+window.openToiletEditModal = openToiletEditModal;
+window.savePointEditData = savePointEditData;
+window.saveToiletEditData = saveToiletEditData;
+window.openMarkerDeleteModal = openMarkerDeleteModal;
+
 if (typeof window.initHomeDataSequence === 'function') {
   window.initHomeDataSequence();
 }
