@@ -79,6 +79,7 @@ window.loadCoastalDepthData = async function() {
     }
   } catch (err) { console.error("수심 데이터 로드 중 에러 발생:", err); }
 };
+window.findNearestDepth = findNearestDepth;
 
 window.checkAndHideSplash = function () {
   const splashEl = document.getElementById('splash-screen');
@@ -100,7 +101,7 @@ window.checkAndHideSplash = function () {
     }, 350);
   }
 };
-window.findNearestDepth = findNearestDepth;
+
 
 window.logApiStatus = function(apiName, status, details = {}) {
   const time = new Date().toLocaleTimeString();
