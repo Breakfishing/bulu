@@ -99,7 +99,7 @@
                                 </linearGradient>
                                 <linearGradient id="hc-sky-night" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="0%" stop-color="#030408" />
-                                    <stop offset="100%" stop-color="#0d111d" />
+                                    <stop offset="100%" stop-color="#0d1117" />
                                 </linearGradient>
                                 <linearGradient id="hc-sea-night" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="0%" stop-color="#050812" />
@@ -248,25 +248,20 @@
                             <text x="20" y="58" class="hc-txt-white hc-txt-shadow hc-weather" font-size="13"
                                 font-weight="700">--</text>
                             <text x="20" y="76" class="hc-txt-muted hc-txt-shadow hc-rain" font-size="11">강수 --mm (-%)</text>
-                            <text x="20" y="91" class="hc-txt-muted hc-txt-shadow hc-wind" font-size="11">북동풍 ·
-                                -.-m/s</text>
+                            <text x="20" y="91" class="hc-txt-muted hc-txt-shadow hc-wind" font-size="11">북동풍 · -.-m/s</text>
 
                             <g class="hc-txt-white hc-txt-shadow hc-txt-data-upper-right" text-anchor="end"
                                 font-size="11" font-weight="700">
                                 <text x="380" y="30" class="hc-sunrise">일출 --:--</text>
                                 <text x="380" y="46" class="hc-sunset">일몰 --:--</text>
-                                <text x="380" y="66" class="hc-tide-idx" font-size="13" font-weight="700"
-                                    fill="#ffdd00">--물</text>
+                                <text x="380" y="66" class="hc-tide-idx" font-size="13" font-weight="700" fill="#ffdd00">--물</text>
                             </g>
 
                             <text x="20" y="174" class="hc-txt-white hc-txt-shadow hc-tide-status" font-size="16"
                                 font-weight="700">물때 계산중</text>
-                            <text x="20" y="194" class="hc-txt-white hc-txt-shadow hc-tide-low" font-size="11"
-                                font-weight="700">간조 --:-- ▼--</text>
-                            <text x="20" y="234" class="hc-txt-white hc-txt-shadow hc-tide-high" font-size="11"
-                                font-weight="700">만조 --:-- ▲--</text>
-                            <text x="20" y="214" class="hc-txt-muted hc-txt-shadow hc-ocean-summary"
-                                font-size="11">--.-°C · --.-m · -- · -.-m/s</text>
+                            <text x="20" y="194" class="hc-txt-white hc-txt-shadow hc-tide-low" font-size="11">간조 --:-- ▼--</text>
+                            <text x="20" y="234" class="hc-txt-white hc-txt-shadow hc-tide-high" font-size="11">만조 --:-- ▲--</text>
+                            <text x="20" y="214" class="hc-txt-muted hc-txt-shadow hc-ocean-summary" font-size="11">--.-°C · --.-m · -- · -.-m/s</text>
 
                             <g class="hc-home-refresh-btn" transform="translate(365, 211)" cursor="pointer" onclick="window.refreshHomeLocation(this)">
                                 <circle cx="10" cy="10" r="16" fill="transparent" />
@@ -1028,9 +1023,9 @@
         <div class="modal-form-group">
             <label>주차 요금</label>
             <div class="chip-group-row" id="editPointParkingChips">
-                <button type="button" class="chip-btn" id="chipEditParkingNone">없음</button>
-                <button type="button" class="chip-btn" id="chipEditParkingFree">무료</button>
-                <button type="button" class="chip-btn">유료</button>
+                <button type="button" class="chip-btn" id="chipEditParkingNone" onclick="window.selectEditPointParking('none', this)">없음</button>
+                <button type="button" class="chip-btn" id="chipEditParkingFree" onclick="window.selectEditPointParking('free', this)">무료</button>
+                <button type="button" class="chip-btn" onclick="window.selectEditPointParking('paid', this)">유료</button>
             </div>
         </div>
 
