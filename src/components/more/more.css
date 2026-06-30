@@ -618,33 +618,33 @@ input[type="date"].modal-input-main {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  background-color: var(--bg-main, #ffffff);
+  background-color: var(--bg-main);
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid var(--border-color, #e5e7eb);
+  border: 1px solid var(--border-color);
   margin-bottom: 80px;
 }
 
 .line-spec-table thead {
-  background-color: var(--bg-sub, #f8f9fa);
+  background-color: var(--bg-sub);
 }
 
 .line-spec-table th {
   font-size: 12px;
   font-weight: 700;
-  color: var(--text-muted, #6c757d);
+  color: var(--text-main);
   padding: 12px 6px;
   text-align: center;
-  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .line-spec-table td {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-main, #212529);
+  color: var(--text-main);
   padding: 14px 6px;
   text-align: center;
-  border-bottom: 1px solid var(--border-color, #f1f3f5);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .line-spec-table tbody tr:last-child td {
