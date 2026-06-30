@@ -672,3 +672,4 @@ window.selectEditToiletHours = selectEditToiletHours;
 window.renderPointDetailBottomSheet = renderPointDetailBottomSheet;
 window.openPointDetailFromList = openPointDetailFromList;
 window.getNearestTideStation = getNearestTideStation;
+window.findNearestDepth = findNearestDepth;
