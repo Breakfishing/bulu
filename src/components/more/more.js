@@ -749,12 +749,54 @@ export function saveInfoEditData() {
 }
 
 // -------------------------------------------------------------------------
-// [SUB-THREAD 3] 라인 정보 전용 페이지 및 서브 탭 제어 스레드
+// [SUB-THREAD 3] 라인 정보 전용 페이지 및 데이터 기반 동적 렌더링 스레드
 // -------------------------------------------------------------------------
+const CARBON_NYLON_DATA = [
+  { spec: "0.2호", diameter: "0.074 mm", lb: "1 lb", strength: "약 0.45 kg" },
+  { spec: "0.4호", diameter: "0.104 mm", lb: "1.5 lb", strength: "약 0.70 kg" },
+  { spec: "0.6호", diameter: "0.128 mm", lb: "2.5 lb", strength: "약 1.10 kg" },
+  { spec: "0.8호", diameter: "0.148 mm", lb: "3 lb", strength: "약 1.35 kg" },
+  { spec: "1.0호", diameter: "0.165 mm", lb: "4 lb", strength: "약 1.80 kg" },
+  { spec: "1.2호", diameter: "0.185 mm", lb: "5 lb", strength: "약 2.25 kg" },
+  { spec: "1.5호", diameter: "0.205 mm", lb: "6 lb", strength: "약 2.70 kg" },
+  { spec: "2.0호", diameter: "0.235 mm", lb: "8 lb", strength: "약 3.60 kg" },
+  { spec: "2.5호", diameter: "0.260 mm", lb: "10 lb", strength: "약 4.50 kg" },
+  { spec: "3.0호", diameter: "0.285 mm", lb: "12 lb", strength: "약 5.40 kg" },
+  { spec: "3.5호", diameter: "0.310 mm", lb: "14 lb", strength: "약 6.35 kg" },
+  { spec: "4.0호", diameter: "0.330 mm", lb: "16 lb", strength: "약 7.25 kg" },
+  { spec: "5.0호", diameter: "0.370 mm", lb: "20 lb", strength: "약 9.00 kg" },
+  { spec: "6.0호", diameter: "0.405 mm", lb: "22 lb", strength: "약 10.00 kg" },
+  { spec: "7.0호", diameter: "0.435 mm", lb: "25 lb", strength: "약 11.30 kg" },
+  { spec: "8.0호", diameter: "0.470 mm", lb: "30 lb", strength: "약 13.60 kg" }
+];
+
+const PE_DATA = [
+  { spec: "0.2호", diameter: "약 0.070 mm", lb: "4 ~ 5 lb", strength: "약 1.8 ~ 2.2 kg" },
+  { spec: "0.4호", diameter: "약 0.100 mm", lb: "6 ~ 8 lb", strength: "약 2.7 ~ 3.6 kg" },
+  { spec: "0.6호", diameter: "약 0.130 mm", lb: "10 ~ 12 lb", strength: "약 4.5 ~ 5.4 kg" },
+  { spec: "0.8호", diameter: "약 0.150 mm", lb: "14 ~ 16 lb", strength: "약 6.3 ~ 7.2 kg" },
+  { spec: "1.0호", diameter: "약 0.170 mm", lb: "18 ~ 20 lb", strength: "약 8.1 ~ 9.0 kg" },
+  { spec: "1.2호", diameter: "약 0.190 mm", lb: "22 ~ 25 lb", strength: "약 10.0 ~ 11.3 kg" },
+  { spec: "1.5호", diameter: "약 0.210 mm", lb: "28 ~ 30 lb", strength: "약 12.7 ~ 13.6 kg" },
+  { spec: "2.0호", diameter: "약 0.240 mm", lb: "33 ~ 35 lb", strength: "약 15.0 ~ 15.8 kg" },
+  { spec: "2.5호", diameter: "약 0.260 mm", lb: "40 lb", strength: "약 18.1 kg" },
+  { spec: "3.0호", diameter: "약 0.290 mm", lb: "45 ~ 50 lb", strength: "약 20.4 ~ 22.6 kg" },
+  { spec: "3.5호", diameter: "약 0.310 mm", lb: "55 lb", strength: "약 25.0 kg" },
+  { spec: "4.0호", diameter: "약 0.330 mm", lb: "60 lb", strength: "약 27.2 kg" },
+  { spec: "5.0호", diameter: "약 0.370 mm", lb: "70 ~ 80 lb", strength: "약 31.7 ~ 36.2 kg" },
+  { spec: "6.0호", diameter: "약 0.410 mm", lb: "85 ~ 90 lb", strength: "약 38.5 ~ 40.8 kg" },
+  { spec: "7.0호", diameter: "약 0.440 mm", lb: "100 lb", strength: "약 45.3 kg" },
+  { spec: "8.0호", diameter: "약 0.480 mm", lb: "110 ~ 120 lb", strength: "약 49.8 ~ 54.4 kg" }
+];
+
 export function showLinePage(initialTab) {
   window.closeModals();
   document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
   document.getElementById('line-page')?.classList.add('active');
+  
+  // 데이터 컴파일 및 테이블 동적 출력 호출
+  renderLineSpecTables();
+  
   window.switchLineSubTab(initialTab || 'carbon_nylon');
 }
 
@@ -773,6 +815,34 @@ export function switchLineSubTab(subTabId) {
 
   if (buttons[subTabId]) buttons[subTabId].classList.add('active');
   if (sections[subTabId]) sections[subTabId].classList.add('active');
+}
+
+function renderLineSpecTables() {
+  const carbonTbody = document.getElementById('line-carbon-nylon-tbody');
+  const peTbody = document.getElementById('line-pe-tbody');
+
+  // 중복 렌더링을 방지하기 위해 비어있을 때만 데이터를 주입합니다.
+  if (carbonTbody && carbonTbody.children.length === 0) {
+    carbonTbody.innerHTML = CARBON_NYLON_DATA.map(item => `
+      <tr>
+        <td>${item.spec}</td>
+        <td>${item.diameter}</td>
+        <td>${item.lb}</td>
+        <td>${item.strength}</td>
+      </tr>
+    `).join('');
+  }
+
+  if (peTbody && peTbody.children.length === 0) {
+    peTbody.innerHTML = PE_DATA.map(item => `
+      <tr>
+        <td>${item.spec}</td>
+        <td>${item.diameter}</td>
+        <td>${item.lb}</td>
+        <td>${item.strength}</td>
+      </tr>
+    `).join('');
+  }
 }
 
 // -------------------------------------------------------------------------
