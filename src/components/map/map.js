@@ -145,7 +145,13 @@ if (window.DeviceOrientationEvent) {
   if (typeof DeviceOrientationEvent.requestPermission === 'function') window.addEventListener('deviceorientation', handleDeviceOrientation, true);
   else { window.addEventListener('deviceorientationabsolute', handleDeviceOrientation, true); window.addEventListener('deviceorientation', handleDeviceOrientation, true); }
 }
-map.locate({ watch: true, enableHighAccuracy: true, setView: false });
+map.locate({ 
+  watch: true, 
+  enableHighAccuracy: true, 
+  setView: false,
+  timeout: 10000,     // 10초 이내에 위치 응답이 없으면 에러 핸들러로 넘기고 재시도
+  maximumAge: 0       // 캐시된 과거 위치를 절대 사용하지 않고 항상 실시간 새 위치 요청
+});
 
 const CenterToMyLocationControl = L.Control.extend({
   options: { position: 'bottomright' },
