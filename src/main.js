@@ -121,20 +121,23 @@ const editPointParkingUnits = ['10분', '30분', '일'];
 let currentEditPointUnitIndex = 0;
 let selectedToiletHoursValue = '모름';
 
-window.openPointModal = function () {
-  document.getElementById('firstModal').classList.remove('active');
+// =========================================================================
+// 마커 신규 등록 및 정보 수정 수동 인스턴스 모달 시스템 브릿지 연동
+// =========================================================================
+export function openPointModal() {
+  document.getElementById('firstModal')?.classList.remove('active');
   document.getElementById('modalBackdrop')?.classList.add('active');
-  document.getElementById('pointModal').classList.add('active');
+  document.getElementById('pointModal')?.classList.add('active');
 
   const categorySelect = document.getElementById('pointCategory');
   if (categorySelect) {
     categorySelect.innerHTML = '';
     let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]');
-    let activeCategories = [...new Set([...savedCatOrder, ...window.cachedFishingPoints.map(p => (p.category || '미분류').trim())])].filter(cat => cat !== '공중화장실 정보' && cat !== 'toilet' && cat !== '미분류');
+    let activeCategories = [...new Set([...savedCatOrder, ...window.cachedFishingPoints.map(p => String(p.category || '미분류').trim())])].filter(cat => cat !== '공중화장실 정보' && cat !== 'toilet' && cat !== '미분류');
     activeCategories.push('미분류'); const savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
 
     activeCategories.forEach(catName => {
-      const matchPoints = window.cachedFishingPoints.filter(p => (p.category || '미분류') === catName);
+      const matchPoints = window.cachedFishingPoints.filter(p => String(p.category || '미분류').trim() === catName.trim());
       const groupColor = catName === '미분류' ? '#868e96' : (matchPoints.length > 0 ? matchPoints[0].color : (savedCatColors[catName] || '#007aff'));
       const option = document.createElement('option'); option.value = catName; option.setAttribute('data-color', groupColor); option.innerText = catName;
       categorySelect.appendChild(option);
@@ -142,24 +145,23 @@ window.openPointModal = function () {
     categorySelect.value = '미분류';
   }
   if (typeof window.fetchAddressForModal === 'function') window.fetchAddressForModal(window.tempLatLng.lat, window.tempLatLng.lng, 'pointAddress');
-};
+}
 
-window.openToiletModal = function () {
-  document.getElementById('firstModal').classList.remove('active');
+export function openToiletModal() {
+  document.getElementById('firstModal')?.classList.remove('active');
   document.getElementById('modalBackdrop')?.classList.add('active');
-  document.getElementById('toiletModal').classList.add('active');
+  document.getElementById('toiletModal')?.classList.add('active');
   window.selectedNewToiletHoursValue = "24시간";
 
   const chips = document.getElementById('newToiletHoursChips');
   if (chips) { chips.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active')); document.getElementById('chipNewHours24')?.classList.add('active'); }
-  document.getElementById('newToiletHoursDetailRow').classList.remove('active');
+  document.getElementById('newToiletHoursDetailRow')?.classList.remove('active');
   if (typeof window.fetchAddressForModal === 'function') window.fetchAddressForModal(window.tempLatLng.lat, window.tempLatLng.lng, 'toiletAddress');
-};
+}
 
-window.savePointMarker = function () {
-  const name = document.getElementById('pointName').value.trim(); if (!name) return alert("포인트 이름을 입력하세요.");
+export function savePointMarker() {
+  const name = document.getElementById('pointName')?.value.trim() || ''; if (!name) return alert("포인트 이름을 입력하세요.");
   const categorySelect = document.getElementById('pointCategory'); const category = categorySelect ? (categorySelect.value || '미분류') : '미분류';
-  
   let color = (categorySelect && categorySelect.options.length > 0) ? categorySelect.options[categorySelect.selectedIndex].getAttribute('data-color') : '#007aff';
   if (category === '미분류') color = '#868e96';
 
@@ -172,13 +174,15 @@ window.savePointMarker = function () {
     address: window.cachedActiveAddressStr || "주소 정보 없음", lat: window.tempLatLng.lat, lng: window.tempLatLng.lng, isFavorite: false, createdAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => { window.closeModals(); });
 
-  document.getElementById('pointName').value = ''; document.getElementById('pointMemo').value = ''; document.getElementById('parkingPrice').value = '';
+  if (document.getElementById('pointName')) document.getElementById('pointName').value = ''; 
+  if (document.getElementById('pointMemo')) document.getElementById('pointMemo').value = ''; 
+  if (document.getElementById('parkingPrice')) document.getElementById('parkingPrice').value = '';
   document.getElementById('btnNewFacStore')?.classList.remove('active'); document.getElementById('btnNewFacCafe')?.classList.remove('active'); document.getElementById('btnNewFacTackle')?.classList.remove('active');
-  selectedParkingType = 'none'; currentUnitIndex = 0; document.getElementById('btnParkingUnit').innerText = '10분'; document.getElementById('parkingDetailRow').classList.remove('active');
+  selectedParkingType = 'none'; currentUnitIndex = 0; const pUnitBtn = document.getElementById('btnParkingUnit'); if (pUnitBtn) pUnitBtn.innerText = '10분'; document.getElementById('parkingDetailRow')?.classList.remove('active');
   window.cachedActiveAddressStr = "";
-};
+}
 
-window.saveToiletMarker = function () {
+export function saveToiletMarker() {
   const name = document.getElementById('toiletName')?.value.trim() || '공중화장실';
   const memo = document.getElementById('newToiletMemo')?.value.trim() || '양호';
   let finalHours = window.selectedNewToiletHoursValue;
@@ -187,10 +191,19 @@ window.saveToiletMarker = function () {
   }
   db.collection('public_toilets').add({ name, memo: `${finalHours}||${memo}`, category: 'toilet', lat: window.tempLatLng.lat, lng: window.tempLatLng.lng, createdAt: firebase.firestore.FieldValue.serverTimestamp() }).then(() => { window.closeModals(); });
   if (document.getElementById('toiletName')) document.getElementById('toiletName').value = ''; if (document.getElementById('newToiletMemo')) document.getElementById('newToiletMemo').value = '';
-};
+}
 
-window.openPointEditModal = function (docId, name, category, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, address, lat, lng) {
-  document.getElementById('editPointDocId').value = docId; document.getElementById('editPointName').value = name; document.getElementById('editPointMemo').value = memo;
+export function openPointEditModal(docId, name, category, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, address, lat, lng) {
+  // 모달 제어 표준 시퀀스 통일 (기존 바텀시트 제거 -> 화면 정리 -> 백드롭 활성화 -> 모달 활성화)
+  document.getElementById('detailModalWrapper')?.classList.remove('active'); 
+  document.getElementById('detailModal')?.classList.remove('active');
+  document.querySelectorAll('.modal, .custom-modal-native').forEach(m => { if (m.id !== 'pointEditModal') m.classList.remove('active'); });
+  document.getElementById('modalBackdrop')?.classList.add('active'); 
+  document.getElementById('pointEditModal')?.classList.add('active');
+
+  const docIdInput = document.getElementById('editPointDocId'); if (docIdInput) docIdInput.value = docId;
+  const nameInput = document.getElementById('editPointName'); if (nameInput) nameInput.value = name;
+  const memoInput = document.getElementById('editPointMemo'); if (memoInput) memoInput.value = memo;
   const pointEditAddrEl = document.getElementById('pointEditAddress'); if (pointEditAddrEl) pointEditAddrEl.innerText = address || "주소 정보 없음";
 
   if ((!address || address.includes("없음") || address.includes("중...")) && lat && lng && typeof window.searchNearestCoastalLandmark === 'function') {
@@ -201,14 +214,15 @@ window.openPointEditModal = function (docId, name, category, memo, pType, pUnit,
   if (catSelect) {
     catSelect.innerHTML = '';
     let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]');
-    let activeCategories = [...new Set([...savedCatOrder, ...window.cachedFishingPoints.map(p => (p.category || '미분류').trim())])].filter(cat => cat !== '공중화장실 정보' && cat !== 'toilet' && cat !== '미분류');
+    // 교정: 데이터 미비로 인한 .trim() 자바스크립트 폭해 크래시 방지 안전 가드(String 변환) 확립
+    let activeCategories = [...new Set([...savedCatOrder, ...window.cachedFishingPoints.map(p => String(p.category || '미분류').trim())])].filter(cat => cat !== '공중화장실 정보' && cat !== 'toilet' && cat !== '미분류');
     activeCategories.push('미분류'); const savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
 
     activeCategories.forEach(catName => {
-      const matchPoints = window.cachedFishingPoints.filter(p => (p.category || '미분류') === catName);
+      const matchPoints = window.cachedFishingPoints.filter(p => String(p.category || '미분류').trim() === catName.trim());
       const groupColor = catName === '미분류' ? '#868e96' : (matchPoints.length > 0 ? matchPoints[0].color : (savedCatColors[catName] || '#007aff'));
       const option = document.createElement('option'); option.value = catName; option.setAttribute('data-color', groupColor); option.innerText = catName;
-      categorySelect.appendChild(option);
+      catSelect.appendChild(option);
     });
     catSelect.value = category || '미분류';
   }
@@ -223,21 +237,29 @@ window.openPointEditModal = function (docId, name, category, memo, pType, pUnit,
   }
 
   if (pType === 'paid') {
-    document.getElementById('editPointParkingDetailRow').classList.add('active'); document.getElementById('editPointParkingPrice').value = pPrice || '0';
+    document.getElementById('editPointParkingDetailRow')?.classList.add('active'); 
+    const priceInput = document.getElementById('editPointParkingPrice'); if (priceInput) priceInput.value = pPrice || '0';
     const unitBtn = document.getElementById('btnEditPointParkingUnit'); if (unitBtn) { unitBtn.innerText = pUnit || '10분'; currentEditPointUnitIndex = Math.max(0, editPointParkingUnits.indexOf(pUnit || '10분')); }
-  } else { document.getElementById('editPointParkingDetailRow').classList.remove('active'); }
+  } else { document.getElementById('editPointParkingDetailRow')?.classList.remove('active'); }
 
   document.getElementById('btnEditFacStore')?.classList.toggle('active', hasStore);
   document.getElementById('btnEditFacCafe')?.classList.toggle('active', hasCafe);
   document.getElementById('btnEditFacTackle')?.classList.toggle('active', hasTackle);
+}
 
-  document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('pointEditModal').classList.add('active');
-};
+export function openToiletEditModal(docId, name, memo, address) {
+  // 모달 제어 표준 시퀀스 통일 (기존 바텀시트 제거 -> 화면 정리 -> 백드롭 활성화 -> 모달 활성화)
+  document.getElementById('detailModalWrapper')?.classList.remove('active'); 
+  document.getElementById('detailModal')?.classList.remove('active');
+  document.querySelectorAll('.modal, .custom-modal-native').forEach(m => { if (m.id !== 'toiletEditModal') m.classList.remove('active'); });
+  document.getElementById('modalBackdrop')?.classList.add('active'); 
+  document.getElementById('toiletEditModal')?.classList.add('active');
 
-window.openToiletEditModal = function (docId, name, memo, address) {
-  document.getElementById('editToiletDocId').value = docId; document.getElementById('editToiletName').value = name || '공중화장실';
-  document.getElementById('toiletEditAddress').innerText = address || "주소 정보 없음";
-  const tokens = (memo || '').split('||'); const hoursText = tokens[0] || '모름'; document.getElementById('editToiletMemo').value = tokens[1] || '';
+  const docIdInput = document.getElementById('editToiletDocId'); if (docIdInput) docIdInput.value = docId;
+  const nameInput = document.getElementById('editToiletName'); if (nameInput) nameInput.value = name || '공중화장실';
+  const addrEl = document.getElementById('toiletEditAddress'); if (addrEl) addrEl.innerText = address || "주소 정보 없음";
+  const tokens = (memo || '').split('||'); const hoursText = tokens[0] || '모름'; 
+  const memoInput = document.getElementById('editToiletMemo'); if (memoInput) memoInput.value = tokens[1] || '';
 
   const chipsContainer = document.getElementById('editToiletHoursChips');
   if (chipsContainer) {
@@ -248,7 +270,7 @@ window.openToiletEditModal = function (docId, name, memo, address) {
   }
 
   if (hoursText !== '24시간' && hoursText !== '모름') {
-    document.getElementById('editToiletHoursDetailRow').classList.add('active'); selectedToiletHoursValue = '지정시간';
+    document.getElementById('editToiletHoursDetailRow')?.classList.add('active'); selectedToiletHoursValue = '지정시간';
     try {
       const times = hoursText.split('~').map(t => t.trim());
       if (times.length === 2) {
@@ -256,34 +278,36 @@ window.openToiletEditModal = function (docId, name, memo, address) {
         document.getElementById('editToiletEndHour').value = times[1].split(':')[0]; document.getElementById('editToiletEndMin').value = times[1].split(':')[1];
       }
     } catch {}
-  } else { document.getElementById('editToiletHoursDetailRow').classList.remove('active'); selectedToiletHoursValue = hoursText; }
+  } else { document.getElementById('editToiletHoursDetailRow')?.classList.remove('active'); selectedToiletHoursValue = hoursText; }
+}
 
-  document.getElementById('modalBackdrop')?.classList.add('active'); document.getElementById('toiletEditModal').classList.add('active');
-};
-
-window.savePointEditData = function () {
+export function savePointEditData() {
   const docId = document.getElementById('editPointDocId').value; const name = document.getElementById('editPointName').value.trim(); if (!name) return alert("포인트 이름을 입력하세요.");
   db.collection('fishing_points').doc(docId).update({
     name, category: document.getElementById('editPointCategory')?.value || '미분류', color: document.getElementById('editPointCategory')?.options[document.getElementById('editPointCategory').selectedIndex]?.getAttribute('data-color') || '#007aff',
     memo: document.getElementById('editPointMemo').value.trim() || '등록된 메모가 없습니다.', parkingType: selectedEditPointParkingType, parkingUnit: editPointParkingUnits[currentEditPointUnitIndex], parkingPrice: document.getElementById('editPointParkingPrice').value || '0',
     hasStore: document.getElementById('btnEditFacStore')?.classList.contains('active'), hasCafe: document.getElementById('btnEditFacCafe')?.classList.contains('active'), hasTackle: document.getElementById('btnEditFacTackle')?.classList.contains('active')
   }).then(() => window.closeModals());
-};
+}
 
-window.saveToiletEditData = function () {
+export function saveToiletEditData() {
   const docId = document.getElementById('editToiletDocId').value; let finalHours = selectedToiletHoursValue;
   if (selectedToiletHoursValue === '지정시간') finalHours = `${document.getElementById('editToiletStartHour').value.trim()}:${document.getElementById('editToiletStartMin').value.trim()} ~ ${document.getElementById('editToiletEndHour').value.trim()}:${document.getElementById('editToiletEndMin').value.trim()}`;
   db.collection('public_toilets').doc(docId).update({ name: document.getElementById('editToiletName').value.trim() || '공중화장실', memo: `${finalHours}||${document.getElementById('editToiletMemo').value.trim() || '양호'}` }).then(() => window.closeModals());
-};
+}
 
-window.openMarkerDeleteModal = function (docId, collectionName, displayName, onSuccess) {
+export function openMarkerDeleteModal(docId, collectionName, displayName, onSuccess) {
   const deleteModal = document.getElementById('deleteConfirmModal'); if (!deleteModal) return;
+  document.getElementById('deleteModalTargetName').innerText = displayName;
   document.getElementById('btnDoDelete').onclick = function () { db.collection(collectionName).doc(docId).delete().then(() => { window.closeModals(); if (typeof onSuccess === 'function') onSuccess(); }); };
 
-  document.getElementById('detailModalWrapper')?.classList.remove('active'); document.getElementById('detailModal')?.classList.remove('active');
+  // 모달 제어 표준 시퀀스 통일 (기존 바텀시트 제거 -> 화면 정리 -> 백드롭 활성화 -> 모달 활성화)
+  document.getElementById('detailModalWrapper')?.classList.remove('active'); 
+  document.getElementById('detailModal')?.classList.remove('active');
   document.querySelectorAll('.modal, .custom-modal-native').forEach(m => { if (m !== deleteModal) m.classList.remove('active'); });
-  document.getElementById('modalBackdrop')?.classList.add('active'); deleteModal.classList.add('active');
-};
+  document.getElementById('modalBackdrop')?.classList.add('active'); 
+  deleteModal.classList.add('active');
+}
 
 window.selectNewToiletHours = function (type, element) { window.selectedNewToiletHoursValue = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('newToiletHoursDetailRow')?.classList.toggle('active', type === '지정시간'); };
 window.selectParking = function (type, element) { selectedParkingType = type; element.parentElement.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active')); element.classList.add('active'); document.getElementById('parkingDetailRow')?.classList.toggle('active', type === 'paid'); };
