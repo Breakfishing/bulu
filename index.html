@@ -918,10 +918,10 @@
         <div class="modal-form-group">
             <label>주차 요금</label>
             <div class="chip-group-row">
-                <button type="button" class="chip-btn active" onclick="window.selectEditPointParking('none', this)">주차
+                <button type="button" class="chip-btn active" onclick="window.selectParking('none', this)">주차
                     불가</button>
-                <button type="button" class="chip-btn" onclick="window.selectEditPointParking('free', this)">무료 주차</button>
-                <button type="button" class="chip-btn" onclick="window.selectEditPointParking('paid', this)">유료 주차</button>
+                <button type="button" class="chip-btn" onclick="window.selectParking('free', this)">무료 주차</button>
+                <button type="button" class="chip-btn" onclick="window.selectParking('paid', this)">유료 주차</button>
             </div>
         </div>
 
@@ -1023,13 +1023,15 @@
         <div class="modal-form-group">
             <label>주차 요금</label>
             <div class="chip-group-row" id="editPointParkingChips">
+                <!-- 아래 함수가 selectEditPointParking 으로 변경되었습니다 -->
                 <button type="button" class="chip-btn" id="chipEditParkingNone" onclick="window.selectEditPointParking('none', this)">주차 불가</button>
                 <button type="button" class="chip-btn" id="chipEditParkingFree" onclick="window.selectEditPointParking('free', this)">무료 주차</button>
-                <button type="button" class="chip-btn" onclick="window.selectEditPointParking('paid', this)">유료 주차</button>
+                <button type="button" class="chip-btn" id="chipEditParkingPaid" onclick="window.selectEditPointParking('paid', this)">유료 주차</button>
             </div>
         </div>
 
         <div class="modal-form-group parking-detail-row-flex" id="editPointParkingDetailRow">
+            <!-- 아래 함수가 shiftEditPointParkingUnit 으로 변경되었습니다 -->
             <button type="button" id="btnEditPointParkingUnit" class="chip-btn parking-unit-btn-reset"
                 onclick="window.shiftEditPointParkingUnit(this)">10분</button>
             <input type="number" id="editPointParkingPrice" placeholder="금액" class="parking-price-input-reset">
