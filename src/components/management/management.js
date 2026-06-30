@@ -288,9 +288,19 @@ window.renderPointsManagementTab = function () {
 };
 
 // 포인트 및 화장실 아이템 행 컴포넌트 동적 빌더
+// =========================================================================
+// [포인트 관리] 포인트 및 화장실 아이템 행 컴포넌트 동적 빌더 (모달 연동 교정)
+// =========================================================================
 function createPointRowComponent(pt, isFavSection) {
-  const row = document.createElement('div'); row.className = "pm-item"; row.id = `pm-node-${pt.id}`;
-  const isCurrentlyFav = pt.isFavorite === true; const isToilet = (pt.category === 'toilet');
+  const row = document.createElement('div'); 
+  row.className = "pm-item"; 
+  row.id = `pm-node-${pt.id}`;
+  
+  const isCurrentlyFav = pt.isFavorite === true; 
+  const isToilet = (pt.category === 'toilet');
+  
+  // 화장실 데이터와 일반 포인트 데이터의 주소 필드 병합 예외 처리
+  const cleanAddress = pt.dbSavedAddress || pt.address || (isToilet ? "소재지 도로명 주소" : "주소 정보 없음");
 
   row.innerHTML = `
     <div class="pm-item-left" style="width: calc(100% - 100px);">
@@ -304,24 +314,58 @@ function createPointRowComponent(pt, isFavSection) {
       ${isFavSection ? `<div class="pm-color-dot" style="background-color: ${isToilet ? '#ff9500' : (pt.color || '#007aff')}; margin-right: 4px;"></div>` : ''}
       <div class="pm-item-info" style="padding-left: 4px; min-width: 0; flex: 1;">
         <span class="pm-item-name" style="outline:none; font-weight:600;">${pt.name || (isToilet ? '공중화장실' : '무명 포인트')}</span>
-        <span style="font-size:11px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; margin-top:2px;">${pt.address || (isToilet ? "소재지 도로명 주소" : "주소 정보 없음")}</span>
+        <span style="font-size:11px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; margin-top:2px;">${cleanAddress}</span>
       </div>
     </div>
     <div class="pm-item-actions">
       <button class="pm-action-btn favorite ${isCurrentlyFav ? 'active' : ''}" style="${isToilet ? 'display:none;' : ''}"><svg width="15" height="15" viewBox="0 0 24 24" fill="${isCurrentlyFav ? '#ffcc00' : 'none'}" stroke="${isCurrentlyFav ? '#ffcc00' : '#adb5bd'}" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></button>
-      <button class="pm-action-btn edit" style="${isToilet ? 'display:none;' : ''}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+      <button class="pm-action-btn edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
       <button class="pm-action-btn delete"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
     </div>
   `;
 
+  // 즐겨찾기 버튼 클릭 이벤트 핸들러
   const fBtn = row.querySelector('.pm-action-btn.favorite');
-  if (fBtn && !isToilet) fBtn.onclick = (e) => { e.stopPropagation(); db.collection('fishing_points').doc(pt.id).update({ isFavorite: !isCurrentlyFav, favoritedAt: !isCurrentlyFav ? Date.now() : firebase.firestore.FieldValue.delete() }); };
+  if (fBtn && !isToilet) {
+    fBtn.onclick = (e) => { 
+      e.stopPropagation(); 
+      db.collection('fishing_points').doc(pt.id).update({ 
+        isFavorite: !isCurrentlyFav, 
+        favoritedAt: !isCurrentlyFav ? Date.now() : firebase.firestore.FieldValue.delete() 
+      }); 
+    };
+  }
+  
+  // 수정 버튼 클릭 이벤트 핸들러 (유형별 모달 바인딩 라우팅 분기 처리)
   const eBtn = row.querySelector('.pm-action-btn.edit');
-  if (eBtn && !isToilet) eBtn.onclick = (e) => { e.stopPropagation(); window.openPointEditModal(pt.id, pt.name || '무명 포인트', pt.category || '미분류', pt.memo || '등록된 메모가 없습니다.', pt.parkingType || 'none', pt.parkingUnit || '10분', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, pt.address || "주소 정보 없음", pt.lat, pt.lng); };
+  if (eBtn) {
+    eBtn.onclick = (e) => { 
+      e.stopPropagation(); 
+      if (isToilet) {
+        // 공중화장실 전용 수정 모달 연동
+        window.openToiletEditModal(pt.id, pt.name || '공중화장실', pt.memo || '', cleanAddress);
+      } else {
+        // 일반 낚시 포인트 전용 수정 모달 연동
+        window.openPointEditModal(pt.id, pt.name || '무명 포인트', pt.category || '미분류', pt.memo || '등록된 메모가 없습니다.', pt.parkingType || 'none', pt.parkingUnit || '10분', pt.parkingPrice || '0', pt.hasStore || false, pt.hasCafe || false, pt.hasTackle || false, cleanAddress, pt.lat, pt.lng); 
+      }
+    };
+  }
+  
+  // 삭제 버튼 클릭 이벤트 핸들러 (컬렉션 분기 매핑 완결)
   const dBtn = row.querySelector('.pm-action-btn.delete');
-  if (dBtn) dBtn.onclick = (e) => { e.stopPropagation(); window.openMarkerDeleteModal(pt.id, isToilet ? 'public_toilets' : 'fishing_points', pt.name || (isToilet ? '공중화장실' : '무명 포인트')); };
+  if (dBtn) {
+    dBtn.onclick = (e) => { 
+      e.stopPropagation(); 
+      window.openMarkerDeleteModal(pt.id, isToilet ? 'public_toilets' : 'fishing_points', pt.name || (isToilet ? '공중화장실' : '무명 포인트')); 
+    };
+  }
 
-  row.onclick = (e) => { if (e.target.closest('.pm-action-btn') || e.target.closest('.pm-drag-handle')) return; window.openPointDetailFromList(pt); };
+  // 행 자체 클릭 시 지도 이동 및 바텀시트 디테일 뷰 오픈
+  row.onclick = (e) => { 
+    if (e.target.closest('.pm-action-btn') || e.target.closest('.pm-drag-handle')) return; 
+    window.openPointDetailFromList(pt); 
+  };
+  
   return row;
 }
 
