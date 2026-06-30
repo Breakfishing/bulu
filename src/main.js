@@ -563,6 +563,46 @@ db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot((snapsho
 });
 
 // =========================================================================
+// [LAYOUT CORE] 전역 하단 내비게이션 바 및 메인 탭 전환(switchTab) 제어 엔진
+// =========================================================================
+export function switchTab(tabId, element) {
+  // 1. 모든 메인 탭 콘텐츠 레이어의 활성화 클래스 초기화
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.remove('active');
+  });
+
+  // 2. 인자로 전달된 대상 탭 구역 활성화
+  const targetTab = document.getElementById(tabId);
+  if (targetTab) {
+    targetTab.classList.add('active');
+  }
+
+  // 3. 하단 내비게이션 버튼들의 active 상태 갱신
+  if (element) {
+    document.querySelectorAll('#bottom-nav .nav-item').forEach(item => {
+      item.classList.remove('active');
+    });
+    element.classList.add('active');
+  }
+
+  // 4. 지도 탭으로 복귀 시 카카오/Leaflet 지도 API 크기 재조정 연동 가드
+  if (tabId === 'tab-map') {
+    setTimeout(() => {
+      if (window.map) {
+        if (typeof window.map.relayout === 'function') {
+          window.map.relayout();
+        }
+        if (typeof window.map.invalidateSize === 'function') {
+          window.map.invalidateSize();
+        }
+      }
+    }, 100);
+  }
+}
+
+// 브라우저 인라인 onclick 선언부와 매핑하기 위한 전역 스코프 바인딩 가드
+window.switchTab = switchTab;
+// =========================================================================
 // [CORE OVERRIDE GUARD] 타 모듈에 의한 글로벌 스코프 변조 원천 차단 시퀀스
 // =========================================================================
 window.openPointEditModal = openPointEditModal;
