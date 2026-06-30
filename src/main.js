@@ -283,15 +283,19 @@ export function savePointEditData() {
   const name = document.getElementById('editPointName').value.trim(); 
   if (!name) return alert("포인트 이름을 입력하세요.");
 
-  const category = document.getElementById('editPointCategory')?.value || '미분류';
-  const color = document.getElementById('editPointCategory')?.options[document.getElementById('editPointCategory').selectedIndex]?.getAttribute('data-color') || '#007aff';
+  const editCatEl = document.getElementById('editPointCategory');
+  const category = editCatEl?.value || '미분류';
+  
+  // 교정: 셀렉트 박스 options 참조 시 -1인덱스 접근으로 인한 TypeError 크래시 방지 안전 가드 적용
+  const color = (editCatEl && editCatEl.selectedIndex >= 0) ? (editCatEl.options[editCatEl.selectedIndex]?.getAttribute('data-color') || '#007aff') : '#868e96';
+  
   const memo = document.getElementById('editPointMemo').value.trim() || '등록된 메모가 없습니다.';
   const parkingType = selectedEditPointParkingType;
-  const parkingUnit = editPointParkingUnits[currentEditPointUnitIndex];
+  const parkingUnit = editPointParkingUnits[currentEditPointUnitIndex] || '10분';
   const parkingPrice = document.getElementById('editPointParkingPrice').value || '0';
-  const hasStore = document.getElementById('btnEditFacStore')?.classList.contains('active');
-  const hasCafe = document.getElementById('btnEditFacCafe')?.classList.contains('active');
-  const hasTackle = document.getElementById('btnEditFacTackle')?.classList.contains('active');
+  const hasStore = document.getElementById('btnEditFacStore')?.classList.contains('active') || false;
+  const hasCafe = document.getElementById('btnEditFacCafe')?.classList.contains('active') || false;
+  const hasTackle = document.getElementById('btnEditFacTackle')?.classList.contains('active') || false;
 
   db.collection('fishing_points').doc(docId).update({
     name, category, color, memo, parkingType, parkingUnit, parkingPrice, hasStore, hasCafe, hasTackle
@@ -349,6 +353,24 @@ window.selectEditToiletHours = function (type, element) { selectedToiletHoursVal
 // 연안 종합 대시보드 바텀시트 정보 매핑 제어 엔진
 // =========================================================================
 export function renderPointDetailBottomSheet(docId, name, category, color, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, lat, lng, isFavorite, dbSavedAddress) {
+  // 교정: 이벤트 클로저에 동결된 구형 데이터 참조 현상을 차단하기 위해, 호출 즉시 캐시 데이터 실시간 핫 루크업(Hot-Lookup Guard) 레이어 구축
+  if (category !== 'toilet' && window.cachedFishingPoints) {
+    const freshPt = window.cachedFishingPoints.find(p => p.id === docId);
+    if (freshPt) {
+      name = freshPt.name || name;
+      category = freshPt.category || category;
+      color = freshPt.color || color;
+      memo = freshPt.memo || memo;
+      pType = freshPt.parkingType || 'none';
+      pUnit = freshPt.parkingUnit || '';
+      pPrice = freshPt.parkingPrice || '0';
+      hasStore = freshPt.hasStore || false;
+      hasCafe = freshPt.hasCafe || false;
+      hasTackle = freshPt.hasTackle || false;
+      dbSavedAddress = freshPt.address || dbSavedAddress;
+    }
+  }
+
   const wrapper = document.getElementById('detailModalWrapper'); const sheet = document.getElementById('detailModal');
   if (wrapper) wrapper.classList.add('active'); if (sheet) sheet.classList.add('active');
 
