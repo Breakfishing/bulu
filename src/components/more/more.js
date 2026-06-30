@@ -403,7 +403,7 @@ export function renderInfoContentCards(filterKeyword = "") {
 
   if (currentInfoTab === 'fishing_ban') {
     const filtered = cachedFishingBans.filter(b => (b.species || "").toLowerCase().includes(kw));
-    if (filtered.length === 0) { container.innerHTML = '<div class="pm-empty-msg">검색된 금어기 정보가 없습니다.</div>'; return; }
+    if (filtered.length === 0) { container.innerHTML = '<div class="pm-empty-msg">검색된 어종이 없습니다.</div>'; return; }
     
     filtered.forEach(item => {
       const card = document.createElement('div');
@@ -434,7 +434,7 @@ export function renderInfoContentCards(filterKeyword = "") {
   } 
   else if (currentInfoTab === 'size_limit') {
     const filtered = cachedSizeLimits.filter(s => (s.species || "").toLowerCase().includes(kw));
-    if (filtered.length === 0) { container.innerHTML = '<div class="pm-empty-msg">검색된 금지체장 기준이 없습니다.</div>'; return; }
+    if (filtered.length === 0) { container.innerHTML = '<div class="pm-empty-msg">검색된 어종이 없습니다.</div>'; return; }
     
     filtered.forEach(item => {
       const card = document.createElement('div');
@@ -449,7 +449,7 @@ export function renderInfoContentCards(filterKeyword = "") {
       if (min > 0 && max > 0) sizeRenderStr = `${min}cm 이상 ~ ${max}cm 이하`;
       else if (min > 0) sizeRenderStr = `${min}cm 이상`;
       else if (max > 0) sizeRenderStr = `${max}cm 이하`;
-      else sizeRenderStr = "제한 규격 없음";
+      else sizeRenderStr = "금지 체장 없음";
 
       card.innerHTML = `
         <div class="info-card-img-box">${imgContent}</div>
@@ -755,17 +755,17 @@ export function showLinePage(initialTab) {
   window.closeModals();
   document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
   document.getElementById('line-page')?.classList.add('active');
-  window.switchLineSubTab(initialTab || 'type');
+  window.switchLineSubTab(initialTab || 'carbon_nylon');
 }
 
 export function switchLineSubTab(subTabId) {
   const buttons = {
-    'type': document.getElementById('btnSubTabLineType'),
-    'strength': document.getElementById('btnSubTabLineStrength')
+    'carbon_nylon': document.getElementById('btnSubTabLineCarbonNylon'),
+    'pe': document.getElementById('btnSubTabLinePE')
   };
   const sections = {
-    'type': document.getElementById('line-type-section'),
-    'strength': document.getElementById('line-strength-section')
+    'carbon_nylon': document.getElementById('line-carbon-nylon-container'),
+    'pe': document.getElementById('line-pe-container')
   };
 
   Object.values(buttons).forEach(btn => btn?.classList.remove('active'));
