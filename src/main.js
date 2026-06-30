@@ -100,6 +100,7 @@ window.checkAndHideSplash = function () {
     }, 350);
   }
 };
+window.findNearestDepth = findNearestDepth;
 
 window.logApiStatus = function(apiName, status, details = {}) {
   const time = new Date().toLocaleTimeString();
