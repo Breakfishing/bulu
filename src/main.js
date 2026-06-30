@@ -162,7 +162,7 @@ export function openToiletModal() {
 export function savePointMarker() {
   const name = document.getElementById('pointName')?.value.trim() || ''; if (!name) return alert("포인트 이름을 입력하세요.");
   const categorySelect = document.getElementById('pointCategory'); const category = categorySelect ? (categorySelect.value || '미분류') : '미분류';
-  let color = (categorySelect && categorySelect.options.length > 0) ? categorySelect.options[categorySelect.selectedIndex].getAttribute('data-color') : '#007aff';
+  let color = (categorySelect && categorySelect.options.length > 0) ? categorySelect.options[categorySelect.selectedIndex].getAttribute('data-color'] : '#007aff';
   if (category === '미분류') color = '#868e96';
 
   db.collection('fishing_points').add({
@@ -194,7 +194,6 @@ export function saveToiletMarker() {
 }
 
 export function openPointEditModal(docId, name, category, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, address, lat, lng) {
-  // 모달 제어 표준 시퀀스 통일 (기존 바텀시트 제거 -> 화면 정리 -> 백드롭 활성화 -> 모달 활성화)
   document.getElementById('detailModalWrapper')?.classList.remove('active'); 
   document.getElementById('detailModal')?.classList.remove('active');
   document.querySelectorAll('.modal, .custom-modal-native').forEach(m => { if (m.id !== 'pointEditModal') m.classList.remove('active'); });
@@ -214,7 +213,6 @@ export function openPointEditModal(docId, name, category, memo, pType, pUnit, pP
   if (catSelect) {
     catSelect.innerHTML = '';
     let savedCatOrder = JSON.parse(localStorage.getItem('pm-category-order') || '[]');
-    // 교정: 데이터 미비로 인한 .trim() 자바스크립트 폭해 크래시 방지 안전 가드(String 변환) 확립
     let activeCategories = [...new Set([...savedCatOrder, ...window.cachedFishingPoints.map(p => String(p.category || '미분류').trim())])].filter(cat => cat !== '공중화장실 정보' && cat !== 'toilet' && cat !== '미분류');
     activeCategories.push('미분류'); const savedCatColors = JSON.parse(localStorage.getItem('pm-category-colors') || '{}');
 
@@ -248,7 +246,6 @@ export function openPointEditModal(docId, name, category, memo, pType, pUnit, pP
 }
 
 export function openToiletEditModal(docId, name, memo, address) {
-  // 모달 제어 표준 시퀀스 통일 (기존 바텀시트 제거 -> 화면 정리 -> 백드롭 활성화 -> 모달 활성화)
   document.getElementById('detailModalWrapper')?.classList.remove('active'); 
   document.getElementById('detailModal')?.classList.remove('active');
   document.querySelectorAll('.modal, .custom-modal-native').forEach(m => { if (m.id !== 'toiletEditModal') m.classList.remove('active'); });
@@ -282,12 +279,45 @@ export function openToiletEditModal(docId, name, memo, address) {
 }
 
 export function savePointEditData() {
-  const docId = document.getElementById('editPointDocId').value; const name = document.getElementById('editPointName').value.trim(); if (!name) return alert("포인트 이름을 입력하세요.");
+  const docId = document.getElementById('editPointDocId').value; 
+  const name = document.getElementById('editPointName').value.trim(); 
+  if (!name) return alert("포인트 이름을 입력하세요.");
+
+  const category = document.getElementById('editPointCategory')?.value || '미분류';
+  const color = document.getElementById('editPointCategory')?.options[document.getElementById('editPointCategory').selectedIndex]?.getAttribute('data-color') || '#007aff';
+  const memo = document.getElementById('editPointMemo').value.trim() || '등록된 메모가 없습니다.';
+  const parkingType = selectedEditPointParkingType;
+  const parkingUnit = editPointParkingUnits[currentEditPointUnitIndex] || '10분';
+  const parkingPrice = document.getElementById('editPointParkingPrice').value || '0';
+  const hasStore = document.getElementById('btnEditFacStore')?.classList.contains('active') || false;
+  const hasCafe = document.getElementById('btnEditFacCafe')?.classList.contains('active') || false;
+  const hasTackle = document.getElementById('btnEditFacTackle')?.classList.contains('active') || false;
+
   db.collection('fishing_points').doc(docId).update({
-    name, category: document.getElementById('editPointCategory')?.value || '미분류', color: document.getElementById('editPointCategory')?.options[document.getElementById('editPointCategory').selectedIndex]?.getAttribute('data-color') || '#007aff',
-    memo: document.getElementById('editPointMemo').value.trim() || '등록된 메모가 없습니다.', parkingType: selectedEditPointParkingType, parkingUnit: editPointParkingUnits[currentEditPointUnitIndex], parkingPrice: document.getElementById('editPointParkingPrice').value || '0',
-    hasStore: document.getElementById('btnEditFacStore')?.classList.contains('active'), hasCafe: document.getElementById('btnEditFacCafe')?.classList.contains('active'), hasTackle: document.getElementById('btnEditFacTackle')?.classList.contains('active')
-  }).then(() => window.closeModals());
+    name, category, color, memo, parkingType, parkingUnit, parkingPrice, hasStore, hasCafe, hasTackle
+  }).then(() => {
+    // 로컬 캐시 배열 즉시 동기화 연동하여 변경 데이터 보존
+    if (window.cachedFishingPoints) {
+      const targetPoint = window.cachedFishingPoints.find(p => p.id === docId);
+      if (targetPoint) {
+        targetPoint.name = name;
+        targetPoint.category = category;
+        targetPoint.color = color;
+        targetPoint.memo = memo;
+        targetPoint.parkingType = parkingType;
+        targetPoint.parkingUnit = parkingUnit;
+        targetPoint.parkingPrice = parkingPrice;
+        targetPoint.hasStore = hasStore;
+        targetPoint.hasCafe = hasCafe;
+        targetPoint.hasTackle = hasTackle;
+      }
+    }
+    // 지도 인스턴스 마커 레이어 즉시 바인딩 갱신 유도
+    if (typeof window.updateVisibleMarkersOnMap === 'function') {
+      window.updateVisibleMarkersOnMap();
+    }
+    window.closeModals();
+  });
 }
 
 export function saveToiletEditData() {
@@ -301,7 +331,6 @@ export function openMarkerDeleteModal(docId, collectionName, displayName, onSucc
   document.getElementById('deleteModalTargetName').innerText = displayName;
   document.getElementById('btnDoDelete').onclick = function () { db.collection(collectionName).doc(docId).delete().then(() => { window.closeModals(); if (typeof onSuccess === 'function') onSuccess(); }); };
 
-  // 모달 제어 표준 시퀀스 통일 (기존 바텀시트 제거 -> 화면 정리 -> 백드롭 활성화 -> 모달 활성화)
   document.getElementById('detailModalWrapper')?.classList.remove('active'); 
   document.getElementById('detailModal')?.classList.remove('active');
   document.querySelectorAll('.modal, .custom-modal-native').forEach(m => { if (m !== deleteModal) m.classList.remove('active'); });
@@ -325,9 +354,9 @@ export function renderPointDetailBottomSheet(docId, name, category, color, memo,
 
   if (dbSavedAddress && dbSavedAddress.startsWith('소재지 도로명 주소:')) dbSavedAddress = dbSavedAddress.replace('소재지 도로명 주소:', '').trim();
   document.getElementById('lblDetailName').innerText = name;
-  const addrField = document.getElementById('lblDetailAddressField'); if (addrField) addrField.innerText = dbSavedAddress || "주소 변환 중...";
+  const addrField = document.getElementById('lblDetailAddressField'); if (addrField) addrField.innerText = dbSavedAddress || "주소 변환 중";
 
-  if ((!dbSavedAddress || dbSavedAddress.includes("중...") || dbSavedAddress.includes("없음")) && typeof window.kakao !== 'undefined' && window.kakao.maps) {
+  if ((!dbSavedAddress || dbSavedAddress.includes("중") || dbSavedAddress.includes("없음")) && typeof window.kakao !== 'undefined' && window.kakao.maps) {
     window.kakao.maps.load(function () {
       if (window.kakao.maps.services?.Geocoder) {
         new window.kakao.maps.services.Geocoder().coord2Address(lng, lat, function (result, status) {
@@ -447,7 +476,7 @@ export function openPointDetailFromList(pt) {
 
   if (pt.category === 'toilet') {
     if (window.tempToiletMarker) map.removeLayer(window.tempToiletMarker);
-    const toiletHtml = `<svg width="24" height="36" viewBox="0 0 24 36" xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#ff9500"/><circle cx="12" cy="12" r="4" fill="#ffffff"/></svg>`;
+    const toiletHtml = `<svg width="24" height="36" viewBox="0 0 24 36"  xmlns="http://www.w3.org/2000/svg"><path d="M12 0C5.4 0 0 5.4 0 12c0 9 12 24 12 24s12-15 12-24c0-6.6-5.4-12-12-12z" fill="#ff9500"/><circle cx="12" cy="12" r="4" fill="#ffffff"/></svg>`;
     window.tempToiletMarker = L.marker([pt.lat, pt.lng], { icon: L.divIcon({ html: toiletHtml, className: 'custom-marker-wrapper-toilet temp-list-injected-toilet-node', iconSize: [24, 36], iconAnchor: [12, 36] }), zIndexOffset: 1000 }).addTo(map);
     window.renderPointDetailBottomSheet(pt.id, pt.name || '공중화장실', 'toilet', '#ff9500', pt.memo || '', '', '', 0, false, false, false, pt.lat, pt.lng, false, pt.dbSavedAddress || pt.address || '주소 정보 없음');
   } else {
