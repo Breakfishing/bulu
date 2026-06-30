@@ -330,9 +330,11 @@ export function saveToiletEditData() {
 export function openMarkerDeleteModal(docId, collectionName, displayName, onSuccess) {
   const deleteModal = document.getElementById('deleteConfirmModal'); if (!deleteModal) return;
   
-  // 에러 차단 가드: HTML 내 엘리먼트 존재 여부를 검증한 뒤 innerText를 변경합니다.
-  const targetNameEl = document.getElementById('deleteModalTargetName');
-  if (targetNameEl) targetNameEl.innerText = displayName;
+  // 기존 HTML 구조의 클래스명을 그대로 추적하여 텍스트를 안전하게 변경합니다.
+  const textEl = deleteModal.querySelector('.delete-modal-text');
+  if (textEl) {
+    textEl.innerText = `'${displayName}' 데이터를 삭제하시겠습니까?`;
+  }
 
   document.getElementById('btnDoDelete').onclick = function () { db.collection(collectionName).doc(docId).delete().then(() => { window.closeModals(); if (typeof onSuccess === 'function') onSuccess(); }); };
 
