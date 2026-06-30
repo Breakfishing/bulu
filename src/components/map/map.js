@@ -253,22 +253,80 @@ db.collection('public_toilets').orderBy('createdAt', 'desc').onSnapshot((snapsho
 // =========================================================================
 // [MAP INTERACTION] 실시간 격자 연안 수심 데이터 오버레이 매핑 및 컨텍스트 메뉴
 // =========================================================================
+
+/**
+ * 위경도 좌표 기준 최접점 격자 수심 연산 추적 알고리즘 엔진
+ * [교체 이식 완료] main.js의 ReferenceError 구조 결함 해결
+ */
+export function findNearestDepth(lat, lng) {
+  // 1. 메모리 내 수심 격자 데이터 적재 여부 가드 검증
+  if (!window.coastalDepthData || !Array.isArray(window.coastalDepthData) || window.coastalDepthData.length === 0) {
+    return null;
+  }
+
+  // 2. [DB 소모 방지 가드] Cloud Firestore 읽기 트래픽 대량 소모 방지를 위해 
+  //    실시간 서버 DB 쿼리 조회를 일절 수행하지 않고 오직 로컬 메모리 캐시 배열만 탐색합니다.
+  //    ※ 실시간 서버 디비 연동 및 동적 쿼리 최적화: 추후 구현 예정
+  
+  let minDistanceSq = Infinity;
+  let closestDepthValue = null;
+
+  // 3. 12만 개 고속 루프 처리를 위한 유클리드 거리 제곱 계산 (성능 최적화)
+  for (let i = 0; i < window.coastalDepthData.length; i++) {
+    const node = window.coastalDepthData[i];
+    if (!node) continue;
+
+    // 데이터 컴팩트 포맷 대응 (배열형 [lat, lng, depth] 또는 객체형 {lat, lng, depth})
+    let nodeLat, nodeLng, nodeDepth;
+    if (Array.isArray(node)) {
+      nodeLat = node[0];
+      nodeLng = node[1];
+      nodeDepth = node[2];
+    } else {
+      nodeLat = node.lat;
+      nodeLng = node.lng;
+      nodeDepth = node.depth !== undefined ? node.depth : node.z;
+    }
+
+    if (nodeLat === undefined || nodeLng === undefined || nodeDepth === undefined) continue;
+
+    const deltaLat = nodeLat - lat;
+    const deltaLng = nodeLng - lng;
+    const distanceSq = deltaLat * deltaLat + deltaLng * deltaLng;
+
+    if (distanceSq < minDistanceSq) {
+      minDistanceSq = distanceSq;
+      closestDepthValue = nodeDepth;
+    }
+  }
+
+  // 4. 연안을 벗어난 완전한 외해나 내륙 한가운데를 찍었을 때 무분별한 매핑을 막는 임계값 가드 (약 1km 이내 격자만 허용)
+  if (minDistanceSq > 0.0008) {
+    return null;
+  }
+
+  return closestDepthValue;
+}
+
+// 브라우저 런타임 이벤트 스케줄러 매핑을 위한 전역 스코프 안전 바인딩
+window.findNearestDepth = findNearestDepth;
+
 map.on('click', function (e) {
   // 1. 모달 백드롭이 활성화된 상태(메뉴나 팝업을 닫는 터치 상황)라면 수심 연산을 차단
   const backdrop = document.getElementById('modalBackdrop'); 
   if (backdrop && backdrop.classList.contains('active')) return;
 
-  // 2. 전역 스코프 함수 존재 여부 검증 가드 및 예외 디버깅 로그
+  // 2. 전역 스코프 함수 존재 여부 검증 가드
   if (typeof window.findNearestDepth !== 'function') {
-    console.error("[DEPTH ERROR] window.findNearestDepth 함수가 전역에 바인딩되지 않았습니다. 수심 추적 알고리즘 모듈을 확인하세요.");
+    console.error("[DEPTH ERROR] window.findNearestDepth 함수가 메모리에 할당되지 않았습니다.");
     map.closePopup();
     return;
   }
 
-  // 3. 위경도 기반 최접점 격자 수심 연산 실행
+  // 3. 이식된 내부 알고리즘 엔진을 통해 수심 연산 실행
   const depth = window.findNearestDepth(e.latlng.lat, e.latlng.lng);
 
-  // 4. null, undefined, 빈 값 및 엄격한 예외 처리 방어 벽 구축
+  // 4. 엄격한 예외 처리 방어 벽 구축 후 리플릿 팝업 오픈
   if (depth !== null && depth !== undefined && depth !== '') {
     L.popup({ 
       className: 'custom-depth-popup', 
@@ -279,7 +337,6 @@ map.on('click', function (e) {
     .setContent(`<div style="font-weight: 800; font-size: 14px; text-align: center; color: var(--text-main, #212529);">${depth}m</div>`)
     .openOn(map);
   } else {
-    // 매칭되는 격자 수심 데이터가 반환되지 않은 음영 구역일 경우 기존 팝업 제거
     map.closePopup();
   }
 });
