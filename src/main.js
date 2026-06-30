@@ -167,7 +167,7 @@ export function savePointMarker() {
 
   db.collection('fishing_points').add({
     name, category, color, memo: document.getElementById('pointMemo')?.value.trim() || '등록된 메모가 없습니다.',
-    parkingType: selectedParkingType, parkingUnit: parkingUnits[currentUnitIndex], parkingPrice: document.getElementById('parkingPrice').value || '0',
+    parkingType: selectedParkingType, parkingUnit: parkingUnits[currentUnitIndex] || '10분', parkingPrice: document.getElementById('parkingPrice')?.value || '0',
     hasStore: document.getElementById('btnNewFacStore')?.classList.contains('active') || false,
     hasCafe: document.getElementById('btnNewFacCafe')?.classList.contains('active') || false,
     hasTackle: document.getElementById('btnNewFacTackle')?.classList.contains('active') || false,
@@ -285,39 +285,36 @@ export function savePointEditData() {
 
   const editCatEl = document.getElementById('editPointCategory');
   const category = editCatEl?.value || '미분류';
-  
-  // 교정: 셀렉트 박스 options 참조 시 -1인덱스 접근으로 인한 TypeError 크래시 방지 안전 가드 적용
   const color = (editCatEl && editCatEl.selectedIndex >= 0) ? (editCatEl.options[editCatEl.selectedIndex]?.getAttribute('data-color') || '#007aff') : '#868e96';
-  
   const memo = document.getElementById('editPointMemo').value.trim() || '등록된 메모가 없습니다.';
-  const parkingType = selectedEditPointParkingType;
-  const parkingUnit = editPointParkingUnits[currentEditPointUnitIndex] || '10분';
-  const parkingPrice = document.getElementById('editPointParkingPrice').value || '0';
+
+  // [핵심 교정]: 변수의 엇갈림을 방지하기 위해 사용자가 실제로 클릭하여 활성화된(.active) UI에서 직접 상태를 추출합니다.
+  let actualParkingType = 'none';
+  const chipsContainer = document.getElementById('editPointParkingChips');
+  if (chipsContainer) {
+    const chips = chipsContainer.querySelectorAll('.chip-btn');
+    if (chips[2]?.classList.contains('active')) {
+      actualParkingType = 'paid';
+    } else if (chips[1]?.classList.contains('active') || document.getElementById('chipEditParkingFree')?.classList.contains('active')) {
+      actualParkingType = 'free';
+    }
+  }
+
+  const unitBtn = document.getElementById('btnEditPointParkingUnit');
+  const actualParkingUnit = unitBtn ? unitBtn.innerText.trim() : '10분';
+  const parkingPrice = document.getElementById('editPointParkingPrice')?.value || '0';
+
   const hasStore = document.getElementById('btnEditFacStore')?.classList.contains('active') || false;
   const hasCafe = document.getElementById('btnEditFacCafe')?.classList.contains('active') || false;
   const hasTackle = document.getElementById('btnEditFacTackle')?.classList.contains('active') || false;
 
   db.collection('fishing_points').doc(docId).update({
-    name, category, color, memo, parkingType, parkingUnit, parkingPrice, hasStore, hasCafe, hasTackle
+    name, category, color, memo,
+    parkingType: actualParkingType,
+    parkingUnit: actualParkingUnit,
+    parkingPrice,
+    hasStore, hasCafe, hasTackle
   }).then(() => {
-    if (window.cachedFishingPoints) {
-      const targetPoint = window.cachedFishingPoints.find(p => p.id === docId);
-      if (targetPoint) {
-        targetPoint.name = name;
-        targetPoint.category = category;
-        targetPoint.color = color;
-        targetPoint.memo = memo;
-        targetPoint.parkingType = parkingType;
-        targetPoint.parkingUnit = parkingUnit;
-        targetPoint.parkingPrice = parkingPrice;
-        targetPoint.hasStore = hasStore;
-        targetPoint.hasCafe = hasCafe;
-        targetPoint.hasTackle = hasTackle;
-      }
-    }
-    if (typeof window.updateVisibleMarkersOnMap === 'function') {
-      window.updateVisibleMarkersOnMap();
-    }
     window.closeModals();
   });
 }
@@ -353,7 +350,7 @@ window.selectEditToiletHours = function (type, element) { selectedToiletHoursVal
 // 연안 종합 대시보드 바텀시트 정보 매핑 제어 엔진
 // =========================================================================
 export function renderPointDetailBottomSheet(docId, name, category, color, memo, pType, pUnit, pPrice, hasStore, hasCafe, hasTackle, lat, lng, isFavorite, dbSavedAddress) {
-  // 교정: 이벤트 클로저에 동결된 구형 데이터 참조 현상을 차단하기 위해, 호출 즉시 캐시 데이터 실시간 핫 루크업(Hot-Lookup Guard) 레이어 구축
+  // 교정: 캐시 핫 루크업 가드 구축 (구형 데이터를 덮어쓰기 전 최신 데이터 보장)
   if (category !== 'toilet' && window.cachedFishingPoints) {
     const freshPt = window.cachedFishingPoints.find(p => p.id === docId);
     if (freshPt) {
